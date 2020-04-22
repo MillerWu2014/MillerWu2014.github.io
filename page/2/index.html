@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 100vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+          </div>
+
+          
+            <div class="scroll-down-bar">
+              <i class="fas fa-angle-down scroll-down-arrow"></i>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-md">
+        <div class="py-5 z-depth-3" id="board"
+          style=margin-top:0>
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/04/09/python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">python中的元类编程详解</p>
+      </a>
+
+      <a href="/2019/04/09/python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">类是动态创建的我们知道Python 里一切都是对象，那么是对象就有对应的“类(Class)”，或称“类型(type)”。 Python 中可以用 type(obj) 来得到对象的“类”。既然一切都是对象，一个“类(class)”也可以认为是一个对象，那么类的“类型(type)”是什么呢？“类(class)”的类型(type) 都是 type。那 type 的类型又是什么呢？抱歉，type 的类型还是 type，是一个递归的类型。“普通类(class)”可以用来生成实例(instance)，同样的，元类 (meta-class)也可以生成实例，生成的实例就是“普通类”了。类(class)可以有多个实例(instance)。而创建实例的方法就是调用类的构造函数(constructor)：
+class Spam(object):
+    def __init__(self, name):
+        self.name = name
+        spam = Spam(&#39;name&#39;)
+上例我们定义了一个类，并调用类的构造函数创建了该类的一个实例。我们知道类也可以看作类 type 的一个实例，那么如何用 type 的构造函数来动态创建一个类呢？我们先看看type的构造函数：class type(name, bases, dict)
+
+name: 字符串类型，存放新类的名字
+bases: 元组(tuple)类型，指定类的基类/父类
+dict: 字典类型，存放该类的所有属性(attributes)和方法(method)
+
+&gt;&gt;&gt; class X:
+        a = 1
+&gt;&gt;&gt; X = type(&#39;X&#39;, (object,), dict(a=1))...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-04-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/metaclass/">metaclass</a>&nbsp;
+          
+            <a href="/tags/python3/">python3</a>&nbsp;
+          
+            <a href="/tags/%E5%85%83%E7%B1%BB/">元类</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/01/21/pyarrow%E5%88%9D%E6%8E%A2/">
+        <p class="h4 index-header">arrow的性能分析及在python中的使用</p>
+      </a>
+
+      <a href="/2019/01/21/pyarrow%E5%88%9D%E6%8E%A2/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">Apache Arrow 是 Apache 基金会全新孵化的一个顶级项目。它设计的目的在于作为一个跨平台的数据层，来加快大数据分析项目的运行速度。
+现在大数据处理模型很多，用户在应用大数据分析时，除了将 Hadoop 等大数据平台作为一个存储和批处理平台之外，同样也得关注系统的扩展性和性能。过去开源社区已经发布了很多工具来完善大数据分析的生态系统，这些工具包含了数据分析的各个层面，例如列式存储格式（Parquet，ORC），内存计算模型（Drill，Spark，Impala 和 Storm）以及其强大的 API 接口。而 Arrow 则是最新加入的一员，它提供了一种跨平台应用的内存数据交换格式。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-01-21&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/arrow/">arrow</a>&nbsp;
+          
+            <a href="/tags/ray/">ray</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/11/24/KL%E6%95%A3%E5%BA%A6,JS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB/">
+        <p class="h4 index-header">KL散度,JS散度和wasserstein距离</p>
+      </a>
+
+      <a href="/2018/11/24/KL%E6%95%A3%E5%BA%A6,JS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">最初了解信息度量是通过熵的概念，比如信息增益，GINI等都是基于熵。而这三者也是基于信息熵，在信息论中主要对分布的相似度（距离的度量），但是三者差异性也是很强的；对这三种信息度量的方式进行详细的说明。
+1.KL散度KL散度又称为相对熵，信息散度，信息增益。KL散度是是两个概率分布P和Q 差别的非对称性的度量。 KL散度是用来 度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。在之前了解KL散度的时候也写过KL散度的博文.$$DL(p||q)=\sum_{i=1}^{n} p(x) \log{\frac{p(x)}{q(x)}}$$KL散度性质：
+
+因为对数函数是凸函数，所以KL散度的值为非负数。
+KL散度不是对称的。
+KL散度不满足三角不等式。
+
+2.JS（Jensen-Shannon）散度JS散度度量了两个概率分布的相似度，基于KL散度的变体，解决了KL散度非对称的问题。一般地，JS散度是对称的，其取值是0到1之间。定义如下：$$JS(P_1||P_2)={\frac {1} {2}} KL(P_1 || \frac {P_1+P_2} {2})+{\frac {1} {2}} KL(P_2 || \frac {P_1+P_2} {2}）$$如果P1，P2完全相同那么JS散度的值为0，否则为1. JS散度的时对称的而且是有界的[0, 1]。在深度学习中的GAN网络中会有JS散度的概念。
+KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得很远，完全没有重叠的时候，那么KL散度值是没有意义的，而JS散度值是一个常数。这在学习算法中是比较致命的，这就意味这这一点的梯度为0。梯度消失了。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-11-24&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/GNN/">GNN</a>&nbsp;
+          
+            <a href="/tags/KL%E6%95%A3%E5%BA%A6/">KL散度</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/JS%E6%95%A3%E5%BA%A6/">JS散度</a>&nbsp;
+          
+            <a href="/tags/Wasserstein/">Wasserstein</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/11/06/GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        <p class="h4 index-header">深度学习-GAN网络详解及TensorFlow实现</p>
+      </a>
+
+      <a href="/2018/11/06/GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">GAN的基本介绍2014 年，Ian Goodfellow 及其蒙特利尔大学的同事引入了生成对抗网络（GAN）。这是一种学习数据的基本分布的全新方法，让生成出的人工对象可以和真实对象之间达到惊人的相似度。
+基本概念GAN（Generative Adversarial Networks），是一种生成式的，对抗网络。再具体一点，就是通过对抗的方式，去学习数据分布的生成式模型。所谓的对抗，指的是生成网络和判别网络的互相对抗。生成网络尽可能生成逼真样本，判别网络则尽可能去判别该样本是真实样本，还是生成的假样本。示意图如下：
+
+基本原理生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器$G$的目标是基于噪声变量$z$生成一个对象$x^{‘}$，并使其看起来和真的$x$一样。而判别器$D$的目标就是找到生成出的结果和真实$x$之间的差异，差异越小越好。如上图所示。隐变量$ z $（通常为服从高斯分布的随机噪声）通过 Generator 生成 $X_{fake}$, 判别器负责判别输入的 data 是生成的样本 $X_{fake}$还是真实样本 $X_{real}$。通过公式描述如下所示：$$\min {G} \max _{D} V(D, G)=\mathbb{E}{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}{\boldsymbol{z} \sim p{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]$$对于判别器 $D$ 来说，这是一个二分类问题，$V(D,G)$ 为二分类问题中常见的交叉熵损失。对于生成器 $G$ 来说，为了尽可能欺骗 $D$，所以需要最大化生成样本的判别概率 $D(G(z))$，即最小化 $log(1-D(G(z)))$，注意：$log(D(x))$ 一项与生成器 $G$ 无关，所以可以忽略。
+实际训练时，生成器和判别器采取交替训练，即先训练 $D$，然后训练 $G$，不断往复。值得注意的是，对于生成器，其最小化的是$\max _{D} V(D, G)$，即最小化$V(D,G)$ 的最大值，这样形成一个对抗的过程。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-11-06&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/GNN/">GNN</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/generator/">generator</a>&nbsp;
+          
+            <a href="/tags/discriminator/">discriminator</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/10/26/TensorFlow%E4%B8%AD%E7%9A%84KeyPoint/">
+        <p class="h4 index-header">TensorFlow中的KeyPoint</p>
+      </a>
+
+      <a href="/2018/10/26/TensorFlow%E4%B8%AD%E7%9A%84KeyPoint/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">1.线程，队列和流水线在TensorFlow中也会使用线程和队列，主要在模型开始训练时对数据的处理时，通过多线程来读取数据，一个线程来消费数据(模型训练)。在TensorFlow中的线程主要通过Coordinator和QueueRunner来进行配合管理，队列Queue主要有四种队列。
+一句话概括就是：Queue-&gt;（构建图阶段）创建队列；QueueRunner-&gt;（构建图阶段）创建线程进行入队操作；f.train.start_queue_runners()-&gt;（执行图阶段）填充队列；tf.train.Coordinator() 在线程出错时关闭之。 
+1.1 线程管理-CoordinatorCoordinator类主要对多线程进行同步停止。它和TensorFlow内的队列没有必然关系，可以和python的线程(threading)配合使用。Coordinator类主要有三个方法：
+
+tf.train.Coordinator.should_stop：如果线程停止，则返回True。
+tf.train.Coordinator.request_stop：请求线程停止。
+tf.train.Coordinator.join：等待直到指定的线程停止。
+
+在使用Coordinator时，首先创建一个Coordinator对象，再创建一些Coordinator使用的线程。线程通常一直循环运行，直到should_stop()返回True时停止。任何线程也可以被请求停止，只需要Coordinator对象调用request_stop方法，调用该方法时，其他线程下的should_stop都被返回为True，其他线程停止。如下，通过Coordinator管理python的线程：
+# -*- coding: utf-8 -*-
+import tensorflow as tf
+import threading
+
+
+def thread_func(coord, id_num):
+    &quot;&quot;&quot;
+    :param coord: tensorflow Coordinator object.
+    :param id_num: int, the constant number
+    :return:
+        id_num, int
+    &quot;&quot;&quot;
+    while not coord.should_stop():
+        print(&quot;This thread id is %d&quot; % id_num)
+        if id_num &gt;= 9:
+            print(&quot;Stop thread id is %d&quot; % id_num)
+            coord.request_stop()
+
+
+# init coord object
+coord_object = tf.train.Coordinator()
+
+# create 10 threads and run thread function
+threads = [threading.Thread(target=thread_func, args=(coord_object, num)) for num in range(10)]
+for t in threads:
+    t.start()
+
+coord_object.join()
+Coordinator还支持捕获和报告异常，如try:.......except Exception as error: coord.request_stop(errr) finally: coord.request_stop()。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-10-26&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/tensorflow/">tensorflow</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/Queue/">Queue</a>&nbsp;
+          
+            <a href="/tags/Coordinator/">Coordinator</a>&nbsp;
+          
+            <a href="/tags/Dataset/">Dataset</a>&nbsp;
+          
+            <a href="/tags/collection/">collection</a>&nbsp;
+          
+            <a href="/tags/%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F/">共享变量</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/07/03/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        <p class="h4 index-header">深度学习-详解CNN网络和TensorFlow实现</p>
+      </a>
+
+      <a href="/2018/07/03/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">1. 卷积神经网络概述卷积神经网络（Convolutional Neural Network, CNN） 也是神经网络中的一种结构，主要针对图像，音频，视频等方面应用。卷积神经网络较早的架构是LeNet，被认为是CNN的开端，当时主要将LeNet应用于字符识别任务，如手写数字的识别等。下面是一个LeNet的网络结构：
+
+1.1 CNN的一般结构从上面LeNet的结构中基本可以看出，CNN的大体结构：卷积层(一个或多个，包括ReLU操作等)，池化或者亚采样，分类(全连接层)几个部分组成。每个部分当然有很多细节的地方。比如卷积是如何计算，卷积核的定义等；池化操作的方式，计算方式等。但CNN模型一般都会存在这几个组件。下面对一些名词进行解释，便于后面的理解：
+
+通道：常用于表示图像的某种组成。一个标准数字相机拍摄的图像会有三通道 - 红、绿和蓝；你可以把它们看作是互相堆叠在一起的二维矩阵（每一个通道代表一个颜色），每个通道的像素值在 0 到 255 的范围内。
+灰度图像，仅仅只有一个通道。在本篇文章中，我们仅考虑灰度图像，这样我们就只有一个二维的矩阵来表示图像。矩阵中各个像素的值在 0 到 255 的范围内——零表示黑色，255 表示白色。 
+
+2.卷积层2.1 卷积的数学定义卷积神经网络中很重要的就是卷积的概念，卷积本身是在泛函分析中的定义：卷积、旋积或摺积(Convolution)是通过两个函数f 和g 生成第三个函数的一种数学算子，表征函数f 与g经过翻转和平移的重叠部分的面积。 
+从定义可以看出，卷积是一种运算，因为从定义上得出的面积，基本可以看出可以通过积分来定义，这个积分就定义 了一个新的函数,如下，就不用数学公式来详细展开了，具体可以参考维基百科上的定义（如：连续定义(积分)和离散定义(求和)）。$$h(x)=f(x)g(x)=(fg)(x)$$
+2.2 卷积的物理意义从卷积的定义上可以看出，卷积主要是进行反转，平移，加权求和(积分)；从定义上比较抽象，不易理解，从物理意义上进行解释便于理解，那么卷积计算的意义是什么呢？
+
+平滑：卷积运算是一种线性运算，比如在图像中，将某个像素点用周围所有点进行加权求和值代替。
+消除”噪声”：在1中的平滑和噪声消除相似，因为卷积本身就是进行加权求和，因此卷积后的值会过滤部分”噪声”。
+空间显著性：卷积是对某一部分值进行操作，体现了空间的特性，能对空间中的特征进行增强。
+空间变换：卷积在空间上有显著性，但是卷积本身是反转平移等操作，相当于进行了空间变换；比如某个物体，无论在空间的某个位置，卷积操作都可以将其特征抽取出来。
+
+卷积在其他领域也有很多应用，比如频谱分析，信号处理等；也有很多其他物理意义，在这儿只是列举了部分具有代表性的物理意义。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-07-03&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/CNN/">CNN</a>&nbsp;
+          
+            <a href="/tags/ReLU/">ReLU</a>&nbsp;
+          
+            <a href="/tags/convolution/">convolution</a>&nbsp;
+          
+            <a href="/tags/pooling/">pooling</a>&nbsp;
+          
+            <a href="/tags/BN/">BN</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
+        <p class="h4 index-header">深度学习-详解LSTM网络和TensorFlow实现</p>
+      </a>
+
+      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">LSTM网络是RNN网络中的特殊网络，再RNN文章中已经提到，RNN在时间步过长时，学习不到依赖关系。主要是RNN会引起梯度消失和梯度爆炸这两个问题，因此为了解决问题，研究者们提出了很多方式，其中GRU和LSTM网络就是这样诞生的。LSTM网络在应用中也取得了非凡的成就，特别是在语音识别，语言建模，翻译等等方面。
+##1.长期依赖问题 
+RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是time step过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。
+2.什么是LSTM网络LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？
+在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。
+下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，LSTM Cell中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-06-21&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/RNN/">RNN</a>&nbsp;
+          
+            <a href="/tags/LSTM/">LSTM</a>&nbsp;
+          
+            <a href="/tags/gate/">gate</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/05/01/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        <p class="h4 index-header">深度学习-详解RNN网络及TensorFlow实现</p>
+      </a>
+
+      <a href="/2018/05/01/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">1.RNN是什么RNN在维基上面有两种定义，但是一般默认的为时间递归神经网络，全称为(Recurrent Neural Network，简称为RNN)。RNN主要解决序列数据的处理，如文本，语音，视频等。典型应用在语言模型中，比如下面的示例：
+我昨天上学迟到了，老师批评了____。
+让机器在空的地方填词，这儿填写的词最有可能是”我”，但对于这样的模型通过什么来实现呢？RNN就是很好的选择，它很擅长处理序列数据。
+传统的神经网络是层与层之间进行连接，但是每层之间的神经元是没有连接的（假设各个数据之间是相互独立的）。而RNN的结构就是当前层的数据和之前的输出也有关系，即每层之间的神经元不再是无连接，而是有连接的。基本结构可以通过下面表示：
+ 
+上面的结构中非常清晰的表示了layer的结构，主要针对序列型的数据，各个神经元之间存在关联，每个时刻的状态会输入到后续的时刻中。
+2.RNN结构RNN的大体结构如上图所示，也可以更加详细的表示，如下图中，输入，输出，状态项等。如下图中，存在一个循环结构，每个时间点的状态进行了下一时间点输入。
+ 
+在上图中，输入单元（input units）为：$x_{t-1}, x_t, x_{t+1}$，输出单元（output units）为：$o_{t-1}, o_t, o_{t+1}$，隐藏单元（hidden units）为：$s_{t-1}, s_t, s_{t+1}$。
+在某个时刻的隐层单元的输出：$s_t=f(Ws_{t-1}+Ux_t)$ ，其中$f$函数为激活函数，一般为sigmoid,tanh,relu等函数。在计算$s_0$时需要前面的状态，但是并不存在，因此一般设置为0向量。
+某个时刻$t$的输出为：$o_t=softmax(Vs_t)=softmax(V(f(Ws_{t-1}+Ux_t)))$，其中$s_t$为时刻$t$的记忆单元。$s_t$包含了前面所有步的记忆，但是在实际使用过程中，$s_t$只会包含前面若干步的记忆，而不是所有步。
+RNN中，每输入一步，每一层都共享参数$U,V,W$，RNN中主要在于隐藏层，在隐藏层能够捕捉到序列的关键信息。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-05-01&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/SGD/">SGD</a>&nbsp;
+          
+            <a href="/tags/RNN/">RNN</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/04/26/TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
+        <p class="h4 index-header">TensorBoard的使用教程</p>
+      </a>
+
+      <a href="/2018/04/26/TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">TensorFlow 可用于训练大规模深度神经网络所需的计算，使用该工具涉及的计算往往复杂而深奥。很多人也认为NN为一个黑盒，对训练过程种的很多东西不太了解。因此Google推出了基于TensorFlow的深度学习可视化工具TensorBoard 。您可以用 TensorBoard 来展现 TensorFlow 图，绘制图像生成的定量指标图以及显示附加数据（如其中传递的图像），也可以通过该工具了解模型训练过程种参数的收敛过程，判断模型是否过拟合，是否是欠拟合等。
+1.summary首先明确一点,summary也是op。要对某些变量或值进行可视化，就必须在创建图的过程中将这些变量或标量给记录下来，后续将训练过程得记录给写入log，再通过tensorboard进行展示。
+1.1 标量可视化如果我们想对标量在训练中可视化，可以使用tf.summary.scalar()，比如损失loss，accuracy等。这个API得接口如下所示，主要用于标量，会得到一个标量得summary：
+tf.summary.scalar(name, tensor, collections=None, family=None)
+&quot;&quot;&quot;
+调用这个函数来观察Tensorflow的Graph中某个节点
+parameters
+----------
+tensor: 想要在TensorBoard中观察的节点
+name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以name命名
+&quot;&quot;&quot;...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-04-26&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/tensorflow/">tensorflow</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/tensorboard/">tensorboard</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/04/25/CentOS7(1708)%E4%B8%8B%E5%9F%BA%E4%BA%8E%E5%8F%8C%E6%98%BE%E5%8D%A1%E7%9A%84TensorFlow%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+        <p class="h4 index-header">CentOS_7(1708)下基于Tensorflow对双GPU深度学习环境配置</p>
+      </a>
+
+      <a href="/2018/04/25/CentOS7(1708)%E4%B8%8B%E5%9F%BA%E4%BA%8E%E5%8F%8C%E6%98%BE%E5%8D%A1%E7%9A%84TensorFlow%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">在工作种需要对tensorflow的GPU环境进行配置，主要是基于centos7下的单机多显卡环境进行部署，因此首先需要对centos7进行安装。其次对显卡驱动的安装，因为是多显卡，在安装多显卡驱动的时候和但显卡驱动安装有一定的区别。下面对整个过程进行详细的说明，如果遇到类似的环境部署，可以参考该文档。
+1.Linux系统centos7-1708的安装通过镜像写入软件将系统镜像写入到U盘，再对整个系统进行安装。在安装过程中通过U盘启动，在选择时有UEFI模式和非UEFI模式，选择非UEFI模式的U盘启动。进入到安装选择界面。
+1.1 修改镜像挂载地址选择Install CentOS7选项后，进入到安装过程，如果整个过程顺利，则可以继续，本1.1就可以忽略。如出现问题：failed to map image memory......的情况，那么就需要修改镜像挂载地址。在出现该错误后继续，间隔1-2分钟后会出现命令行。可以查看dev下的目录(ls /dev)。我的U盘被挂载到了/dev/sdb4，需要把该目录记录下来，后续会使用。
+再重启计算机，进入到U盘启动后的界面，选择Install CentOS7，然后按tab进入到编辑模式，修改其中的命令行：Linuxefi /images/pxeboot/vmlinuzinst.stage22=hd:LABEL=CentOS\x207\x20x\86_64 quiet，将修改为：Linuxefi /images/pxeboot/vmlinuzinst.stage22=hd:/dev/sdb4 quiet，再通过Enter快捷键执行安装。然后进入到图形安装界面。如果还是不能进入到图形界面，安装出错，请参考下面。
+1.2 图形界面出错问题解决如果图形界面安装出现问题(x startup failed falling back to text mod)，一般是安装基础的图形界面出问题。解决方法是重启计算机，U盘启动，不选择Install CentOS7，选择Troubleshooting --&gt;，进入到选项，并选择第一项，修改镜像地址(tab或e修改，修改的地方和1.1中的一样)。
+1.3 配置SSH服务安装完系统后配置ssh服务，本文中将ssh端口修改为22222，需要开放22222端口。ssh具体配置就不详细说明。
+2.Linux查看显卡的相关命令lspci命令查看硬件接口信息，可以通过lspci |grep -i vga来查询显卡，可以看出电脑的所有显卡，显示显卡型号。也可以显示显卡比较详细的信息：lspci -vnn | grep VGA -A 12...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-04-25&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/gpu/">gpu</a>&nbsp;
+          
+            <a href="/tags/deeplearning/">deeplearning</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+
+
+  <nav aria-label="index posts navigation">
+    <span class="pagination pg-blue justify-content-center mt-5" id="pagination">
+      <a class="extend prev" rel="prev" href="/"><i class="fas fa-angle-double-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/"><i class="fas fa-angle-double-right"></i></a>
+    </span>
+  </nav>
+  
+  <script>
+    for (ele of document.getElementById("pagination").getElementsByTagName("a")) {
+      ele.href += '#board';
+    }
+  </script>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "记录个人知识,分享知识和经验;多记录,多思考&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

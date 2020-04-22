@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>TensorFlow中的KeyPoint - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 十月 26日 2018, 10:34 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    8.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      39 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="1-线程，队列和流水线"><a href="#1-线程，队列和流水线" class="headerlink" title="1.线程，队列和流水线"></a>1.线程，队列和流水线</h2><p>在TensorFlow中也会使用线程和队列，主要在模型开始训练时对数据的处理时，通过多线程来读取数据，一个线程来消费数据(模型训练)。在TensorFlow中的线程主要通过Coordinator和QueueRunner来进行配合管理，队列Queue主要有四种队列。</p>
+<p>一句话概括就是：<code>Queue</code>-&gt;（构建图阶段）创建队列；<code>QueueRunner</code>-&gt;（构建图阶段）创建线程进行入队操作；<code>f.train.start_queue_runners()</code>-&gt;（执行图阶段）填充队列；<code>tf.train.Coordinator()</code> 在线程出错时关闭之。 </p>
+<h3 id="1-1-线程管理-Coordinator"><a href="#1-1-线程管理-Coordinator" class="headerlink" title="1.1 线程管理-Coordinator"></a>1.1 线程管理-Coordinator</h3><p><code>Coordinator</code>类主要对多线程进行同步停止。它和TensorFlow内的队列没有必然关系，可以和python的线程(threading)配合使用。<code>Coordinator</code>类主要有三个方法：</p>
+<ul>
+<li><a href="https://www.tensorflow.org/api_docs/python/tf/train/Coordinator#should_stop" target="_blank" rel="noopener"><code>tf.train.Coordinator.should_stop</code></a>：如果线程停止，则返回True。</li>
+<li><a href="https://www.tensorflow.org/api_docs/python/tf/train/Coordinator#request_stop" target="_blank" rel="noopener"><code>tf.train.Coordinator.request_stop</code></a>：请求线程停止。</li>
+<li><a href="https://www.tensorflow.org/api_docs/python/tf/train/Coordinator#join" target="_blank" rel="noopener"><code>tf.train.Coordinator.join</code></a>：等待直到指定的线程停止。</li>
+</ul>
+<p>在使用Coordinator时，首先创建一个Coordinator对象，再创建一些Coordinator使用的线程。线程通常一直循环运行，直到should_stop()返回True时停止。任何线程也可以被请求停止，只需要Coordinator对象调用<code>request_stop</code>方法，调用该方法时，其他线程下的<code>should_stop</code>都被返回为True，其他线程停止。如下，通过Coordinator管理python的线程：</p>
+<pre><code class="python"># -*- coding: utf-8 -*-
+import tensorflow as tf
+import threading
+
+
+def thread_func(coord, id_num):
+    &quot;&quot;&quot;
+    :param coord: tensorflow Coordinator object.
+    :param id_num: int, the constant number
+    :return:
+        id_num, int
+    &quot;&quot;&quot;
+    while not coord.should_stop():
+        print(&quot;This thread id is %d&quot; % id_num)
+        if id_num &gt;= 9:
+            print(&quot;Stop thread id is %d&quot; % id_num)
+            coord.request_stop()
+
+
+# init coord object
+coord_object = tf.train.Coordinator()
+
+# create 10 threads and run thread function
+threads = [threading.Thread(target=thread_func, args=(coord_object, num)) for num in range(10)]
+for t in threads:
+    t.start()
+
+coord_object.join()</code></pre>
+<p>Coordinator还支持捕获和报告异常，如<code>try:.......except Exception as error: coord.request_stop(errr) finally: coord.request_stop()</code>。</p>
+<a id="more"></a>
+<h3 id="1-2-队列-Queue"><a href="#1-2-队列-Queue" class="headerlink" title="1.2 队列-Queue"></a>1.2 队列-Queue</h3><p>像TensorFlow中的所有组件一样，队列是TensorFlow图中的一个<strong>节点</strong>。它是一个<strong>有状态</strong>的节点，像变量一样：<strong>其他节点可以修改其内容</strong>。特别地，节点可以将新元素插入队列，或者从现有队列中取出队列。在TensorFlow中，队列主要有四种类型：</p>
+<ul>
+<li><code>tf.FIFOQueue</code> ：按入列顺序出列的队列，先进先出队列</li>
+<li><code>tf.RandomShuffleQueue</code>： 随机顺序出列的队列</li>
+<li><code>tf.PaddingFIFOQueue</code> ：以固定长度批量出列的队列</li>
+<li><code>tf.PriorityQueue</code> ：带优先级出列的队列</li>
+</ul>
+<p>这些队列的使用方法都是一样，主要有：<code>dequeue</code>，<code>enqueue</code>，<code>enqueue_many</code>，<code>dequeue_many</code>等方法。enqueue操作返回计算图中的一个Operation节点，dequeue操作返回一个Tensor值，队列操作同样只是声明或定义，要通过session来运行，才能获取这个值。下面时操作queue：</p>
+<pre><code class="python">queue = tf.FIFOQueue(10, tf.int32)
+# 如果队列中的值超过了queue size, 在enqueue会卡主,直到queue中的值被消费
+queue_init = queue.enqueue_many(([0],), name=&quot;init_queue&quot;)  
+x = queue.dequeue()
+with tf.Session() as sess:
+    sess.run(queue_init)
+    for i in range(9):
+        print(&quot;--- the %d times enqueue ---&quot; % (i+1))
+        sess.run(queue.enqueue([i+1]))
+    for j in range(10):
+        # 对一个已经取空的队列使用dequeue操作也会卡住,直到有新的数据写入
+        print(&quot;Get value from queue:&quot;, sess.run(x), &quot;The queue size:&quot;, sess.run(queue.size()))</code></pre>
+<p>还可以将上面的代码进行修改：</p>
+<pre><code class="python">index = tf.placeholder(tf.int32)
+
+queue = tf.FIFOQueue(10, tf.int32)
+queue_init = queue.enqueue_many(([0],), name=&quot;init_queue&quot;)
+x = queue.dequeue()
+enqueue_op = queue.enqueue([index+1], name=&quot;enqueue&quot;)
+with tf.Session() as sess:
+    sess.run(queue_init)
+    for i in range(9):
+        print(&quot;--- the %d times enqueue ---&quot; % (i+1))
+        sess.run(enqueue_op, feed_dict={index: i})
+    for j in range(10):
+        print(&quot;Get value from queue:&quot;, sess.run(x), &quot;The queue size:&quot;, sess.run(queue.size()))</code></pre>
+<h3 id="1-3-QueueRunner"><a href="#1-3-QueueRunner" class="headerlink" title="1.3 QueueRunner"></a>1.3 QueueRunner</h3><p>Tensorflow的计算主要在使用CPU/GPU和内存，而数据读取涉及磁盘操作，速度远低于前者操作。因此通常会使用多个线程读取数据，然后使用一个线程消费数据。QueueRunner就是来管理这些读写队列的线程的（创建线程，对队列进行enqueue或dequeue操作），QueueRunner是一个不存在于代码中的东西，而是后台运作的一个概念；可以通过两种方式来使用QueueRunner；一种是显示的使用QueueRunner，另外一种是隐式使用：<code>tf.train.start_queue_runners</code>。下面是一个多线程读取文件的例子：</p>
+<p><img src="http://wiki.jikexueyuan.com/project/tensorflow-zh/images/AnimatedFileQueues.gif" srcset="/img/loading.gif" alt="img"></p>
+<p>QueueRunner的API和关键方法create_threads的api说明：</p>
+<pre><code class="python">def __init__(self, queue=None, enqueue_ops=None, close_op=None, cancel_op=None, 
+             queue_closed_exception_types=None, queue_runner_def=None, import_scope=None):
+    &quot;&quot;&quot;
+    queue：为tensorflow的队列对象,如FIFOQueue, RandomShuffleQueue等
+    enqueue_ops: 为入队操作(enqueue ops)的列表，列表的长度为定义的线程数
+    &quot;&quot;&quot;
+
+def create_threads(self, sess, coord=None, daemon=False, start=False):
+    &quot;&quot;&quot;
+    parameters
+    ----------
+    sess: A session
+    coord: Optional `Coordinator` object 
+    start: Boolean.  If `True` starts the threads.  If `False` the caller must call the `start()` method of the returned threads.
+
+    return
+    ------
+    A list of threads.
+    &quot;&quot;&quot;</code></pre>
+<p>下面使用队列和QueueRunner：</p>
+<pre><code class="python">q = tf.FIFOQueue(10, &quot;float&quot;)
+counter = tf.Variable(0.0)  # 定义计数器
+
+increment_op = tf.assign_add(counter, 1.0)  # 给计数器加一
+enqueue_op = q.enqueue(counter)  # 将计数器加入队列
+
+# 创建QueueRunner, 用多个线程向队列添加数据, 这里实际上定义了4个线程, 两个增加计数, 两个执行入队, 但是还没有执行
+qr = tf.train.QueueRunner(q, enqueue_ops=[increment_op, enqueue_op] * 2)
+with tf.Session() as sess:
+    tf.global_variables_initializer().run()
+    qr.create_threads(sess, start=True)  # 启动入队线程,开始执行
+    for i in range(20):
+        print(sess.run(q.dequeue()))</code></pre>
+<p>上面的运行结束会产生异常，但是整个运行过程是正确的。因此，QueueRunner和Coordinator会配合使用，避免这种情况。下面一起合使用。</p>
+<h3 id="1-4-输入流水线（线程队列配合使用）"><a href="#1-4-输入流水线（线程队列配合使用）" class="headerlink" title="1.4 输入流水线（线程队列配合使用）"></a>1.4 输入流水线（线程队列配合使用）</h3><p>下面将1.3中的示例稍加修改就可以避免后面异常的情况。修改后的代码如下所示。通过Coordinator来对所有线程进行同步和停止。</p>
+<h4 id="1-4-1-Coordinator和QueueRunner配合使用"><a href="#1-4-1-Coordinator和QueueRunner配合使用" class="headerlink" title="1.4.1 Coordinator和QueueRunner配合使用"></a>1.4.1 Coordinator和QueueRunner配合使用</h4><pre><code class="python">q = tf.FIFOQueue(10, &quot;float&quot;)
+counter = tf.Variable(0.0)  # 定义计数器
+
+increment_op = tf.assign_add(counter, 1.0)  # 给计数器加一
+enqueue_op = q.enqueue(counter)  # 将计数器加入队列
+
+qr = tf.train.QueueRunner(q, enqueue_ops=[increment_op, enqueue_op] * 2)  # 创建多个线程
+with tf.Session() as sess:
+    tf.global_variables_initializer().run()
+    coord = tf.train.Coordinator()
+    enqueue_threads = qr.create_threads(sess, coord=coord, start=True)  # 启动入队线程
+    for i in range(20):
+        print(sess.run(q.dequeue()))
+
+    coord.request_stop()
+    coord.join(enqueue_threads)</code></pre>
+<p>使用QueueRunner有两种方式，一种是显示的使用QueueRunner，如上面的示例所示，另外一种就是隐式的使用，后面的例子中都是通过隐式（<code>tf.train.start_queue_runners</code>）的使用，在隐式的使用中也是调用的<code>QueueRunner.create_threads</code>的方法。下面将mnist的数据进行流水线操作：</p>
+<pre><code class="python">from tensorflow.examples.tutorials.mnist import input_data
+import tensorflow as tf
+import numpy as np
+
+mnist = input_data.read_data_sets(&quot;/opt/workspace/project/deep-st-nn/data/MNIST_DATA&quot;, one_hot=True)
+all_data = mnist.train.images
+all_target = mnist.train.labels
+queue = tf.FIFOQueue(capacity=50, dtypes=[tf.float32, tf.float32], shapes=[[784], [10]])
+
+enqueue_op = queue.enqueue_many([all_data, all_target])
+
+data_sample, label_sample = queue.dequeue()
+qr = tf.train.QueueRunner(queue, [enqueue_op] * 4)
+with tf.Session() as sess:
+    # create a coordinator, launch the queue runner threads.
+    coord = tf.train.Coordinator()
+    enqueue_threads = qr.create_threads(sess, coord=coord, start=True)
+    for step in range(100):
+        # do to 100 iterations
+        if coord.should_stop():
+            break
+        one_data, one_label = sess.run([data_sample, label_sample])
+        print(one_data.shape, one_label.shape)
+    coord.request_stop()
+    coord.join(enqueue_threads)</code></pre>
+<h4 id="1-4-2-流水线"><a href="#1-4-2-流水线" class="headerlink" title="1.4.2 流水线"></a>1.4.2 流水线</h4><p>tensorflow的输入流水线：<strong>准备文件名 -&gt; 创建一个<code>Reader</code>从文件中读取数据 -&gt; 定义文件中数据的解码规则 -&gt; 解析数据</strong>。下面是官方给的一个例子，下面的代码中对关键部分进行了注释</p>
+<pre><code class="python">import tensorflow as tf
+
+
+# 一个Queue,用来保存文件名字.对此Queue,只读取,不dequeue
+filename_queue = tf.train.string_input_producer([&quot;/opt/workspace/project/deep-st-nn/data/file0.csv&quot;,
+                                                 &quot;/opt/workspace/project/deep-st-nn/data/file1.csv&quot;])
+
+reader = tf.TextLineReader()  # 用来从文件中读取数据, LineReader, 每次读一行
+key, value = reader.read(filename_queue)
+
+# Default values, in case of empty columns. Also specifies the type of the
+record_defaults = [[1.0], [1.0], [1.0], [1.0], [1.0]]
+col1, col2, col3, col4, col5 = tf.decode_csv(value, record_defaults=record_defaults)  # 如果有控制就会用record_defaults填充缺失值
+features = tf.stack([col1, col2, col3, col4])
+
+with tf.Session() as sess:
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)  # 启动线程, 返回所有的线程
+
+    for i in range(10):
+        # Retrieve a single instance:
+        example, label = sess.run([features, col5])
+        print(&quot;The times: %d\n&quot; % i, example, label)
+    coord.request_stop()
+    coord.join(threads)</code></pre>
+<p>再对上面的代码进行解析：</p>
+<p>（1）<code>tf.train.string_input_producer([&#39;file0.csv&#39;, &#39;file1.csv&#39;])</code>，下面是该函数的关键代码：</p>
+<pre><code class="python">q = data_flow_ops.FIFOQueue(capacity=capacity,
+                                dtypes=[input_tensor.dtype.base_dtype],
+                                shapes=[element_shape],
+                                shared_name=shared_name, name=name)
+    enq = q.enqueue_many([input_tensor])
+    queue_runner.add_queue_runner(
+        queue_runner.QueueRunner(
+            q, [enq], cancel_op=cancel_op))
+    if summary_name is not None:
+      summary.scalar(summary_name,
+                     math_ops.to_float(q.size()) * (1. / capacity))
+    return q</code></pre>
+<p>上面，首先创建了一个queue，进行了入队(enqueue)操作；通过QueueRunner创建了一个线程来执行enqueue_op，并将QueueRunner放入了一个collections中。并返回queue。</p>
+<p>（2）定义了数据解析的OP，主要通过TextLineReader来按行进行解析。解析完成后返回了一个Tensor的label和data。<code>TextLineReader.read()</code>方法直接接收一个Queue对象。</p>
+<p>（3）通过session来获取到真实的数据，并进行下一步操作。在session中通过<code>start_queue_runners</code>方法启动所有的线程，并返回所有线程。获取自己需要的值。</p>
+<h4 id="1-4-3-流水线的过程中准备minibatch数据"><a href="#1-4-3-流水线的过程中准备minibatch数据" class="headerlink" title="1.4.3 流水线的过程中准备minibatch数据"></a>1.4.3 流水线的过程中准备minibatch数据</h4><p>在数据输入流水线的过程中，利用多线程来准备好batch数据，并通过dequeue的方式来获取一个minibatch的数据集，在TensorFlow中也实现了，如下所示将上面的代码进行修改：</p>
+<pre><code class="python"># -*- coding: utf-8 -*-
+import tensorflow as tf
+
+
+def read_my_file_format(filename_queue):
+    &quot;&quot;&quot;定义数据的读取与解析规则&quot;&quot;&quot;
+    reader = tf.TextLineReader()
+    key, record_string = reader.read(filename_queue)
+    col1, col2, col3, col4, label = tf.decode_csv(record_string, 
+                                                  record_defaults=[[1.0], [1.0], [1.0], [1.0], [1.0]])
+    processed_example = tf.stack([col1, col2, col3, col4])
+    return processed_example, label
+
+
+def input_pipeline(filenames, batch_size, num_epochs=None):
+    filename_queue = tf.train.string_input_producer(filenames, num_epochs=num_epochs, shuffle=True)
+    example, label = read_my_file_format(filename_queue)
+    min_after_dequeue = 10000
+    capacity = min_after_dequeue + 3 * batch_size  # queue size
+    example_batch, label_batch = tf.train.shuffle_batch([example, label], batch_size=batch_size,
+                                                        capacity=capacity,
+                                                        min_after_dequeue=min_after_dequeue)
+    return example_batch, label_batch
+
+
+files = [&quot;/opt/workspace/project/deep-st-nn/data/file0.csv&quot;, 
+         &quot;/opt/workspace/project/deep-st-nn/data/file1.csv&quot;]
+x, y = input_pipeline(files, 5)
+
+with tf.Session() as sess:
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord, start=True)
+    for num_step in range(10):
+        data, label = sess.run([x, y])
+        print(data, label)
+    coord.request_stop()
+    coord.join(threads)</code></pre>
+<p>上面代码中最关键的部分为<code>shuffle_batch</code>方法，shuffle_batch接受的参数如下所示，该方法所做的事情主要有：</p>
+<ol>
+<li>创建一个<code>RandomShuffleQueue</code>用来保存样本。</li>
+<li>使用<code>QueueRunner</code>创建多个<code>enqueue</code>线程向<code>Queue</code>中放数据。</li>
+<li>创建一个<code>dequeue_many</code> OP。</li>
+<li>返回<code>dequeue_many</code> OP。</li>
+</ol>
+<p>然后我们就可以使用<code>dequeue</code>出来的<code>mini-batch</code>来训练网络了。</p>
+<pre><code class="python">def shuffle_batch(tensors, batch_size, capacity, min_after_dequeue, num_threads=1, seed=None, 
+                  enqueue_many=False, shapes=None, allow_smaller_final_batch=False, shared_name=None, 
+                  name=None):
+    &quot;&quot;&quot;
+    parameters
+    ----------
+        tensors: The list of tensors, this tensor will to enqueue.
+        batch_size: The new batch size pulled from the queue.
+        capacity: An integer. The maximum number of elements in the queue. 
+        min_after_dequeue: Minimum number elements in the queue after a dequeue, used to ensure a level of mixing of elements.
+        num_threads: The number of threads enqueuing `tensor_list`.
+
+    return
+    ------
+    Returns:
+    A list or dictionary of tensors with the types as `tensors`.
+    &quot;&quot;&quot;</code></pre>
+<p>通过<code>shuff_batch</code>来实现mnist数据的队列就更加方便了：</p>
+<pre><code class="python">mnist = input_data.read_data_sets(&quot;/opt/workspace/project/deep-st-nn/data/MNIST_DATA&quot;, one_hot=True)
+all_data = mnist.train.images
+all_target = mnist.train.labels
+
+with tf.Session() as sess:
+    batch_x, batch_y = tf.train.shuffle_batch([all_data, all_target], batch_size=100, capacity=300+1000,
+                                              min_after_dequeue=1000)
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord, start=True)
+    for i in range(21):
+        print(batch_x.shape, batch_y.shape)
+    coord.request_stop()
+    coord.join(threads)</code></pre>
+<p>另外再介绍一个常用的方法，再后续可能会经常用到。<code>tf.train.slice_input_producer</code>，该方法的API为：·<code>slice_input_producer(tensor_list, num_epochs=None, shuffle=True, seed=None, capacity=32, shared_name=None, name=None)</code>，接收一个tensor的list，再看他的源码：</p>
+<pre><code class="python">with ops.name_scope(name, &quot;input_producer&quot;, tensor_list):
+    tensor_list = ops.convert_n_to_tensor_or_indexed_slices(tensor_list)
+    if not tensor_list:
+      raise ValueError(
+          &quot;Expected at least one tensor in slice_input_producer().&quot;)
+    range_size = array_ops.shape(tensor_list[0])[0]
+    # TODO(josh11b): Add an assertion that the first dimension of
+    # everything in TensorList matches. Maybe just check the inferred shapes?
+    queue = range_input_producer(range_size, num_epochs=num_epochs,
+                                 shuffle=shuffle, seed=seed, capacity=capacity,
+                                 shared_name=shared_name)
+    index = queue.dequeue()
+    output = [array_ops.gather(t, index) for t in tensor_list]
+    return output</code></pre>
+<p>该方法再内部调用<code>range_input_producer</code>方法，生成一个队列，并将出队的结果进行组合，形成一个list，返回（<code>A list of tensors, one for each element of tensor_list.  If the tensor n tensor_list has shape [N, a, b, .., z], then the corresponding outputtensor will have shape [a, b, ..., z].</code>）。返回的是一个出队后的元素。</p>
+<h3 id="1-5-Refrence"><a href="#1-5-Refrence" class="headerlink" title="1. 5 Refrence"></a>1. 5 Refrence</h3><p>[1].<a href="https://blog.csdn.net/rockingdingo/article/details/55652662" target="_blank" rel="noopener">Tensorflow并行计算：多核(multicore)，多线程(multi-thread)，图分割(Graph Partition)</a></p>
+<p>[2].<a href="https://www.jianshu.com/p/c29965e6c40c" target="_blank" rel="noopener">TensorFlow中的多线程使用</a></p>
+<p>[3].<a href="http://cwiki.apachecn.org/pages/viewpage.action?pageId=10029441" target="_blank" rel="noopener">TensorFlow的线程和队列</a></p>
+<p>[4].<a href="https://blog.csdn.net/u012436149/article/details/72353313" target="_blank" rel="noopener">输入流水线</a></p>
+<p>[5].<a href="https://ischlag.github.io/2016/06/19/tensorflow-input-pipeline-example/" target="_blank" rel="noopener">TENSORFLOW INPUT PIPELINE EXAMPLE</a></p>
+<p>[6].<a href="http://www.enpeizhao.com/?p=514" target="_blank" rel="noopener">tensorflow 管道队列模式（pipeline）读取文件</a></p>
+<p>[7].<a href="http://wiki.jikexueyuan.com/project/tensorflow-zh/how_tos/reading_data.html" target="_blank" rel="noopener">数据读取</a></p>
+<p>[8].<a href="https://www.jianshu.com/p/f1aeb7ef75ca" target="_blank" rel="noopener">TensorFlow-input pipeline</a></p>
+<h2 id="2-共享变量"><a href="#2-共享变量" class="headerlink" title="2.共享变量"></a>2.共享变量</h2><p>在深度学习网络中，随模型复杂程度增加，模型的参数会不断的增加，因此训练模型过程中会涉及到<strong>变量共享</strong>。这样减小模型中参数的量，甚至在部分模型中需要共享变量，才能达到好的效果。</p>
+<h3 id="2-1-问题的提出"><a href="#2-1-问题的提出" class="headerlink" title="2.1 问题的提出"></a>2.1 问题的提出</h3><p>假设，我们创建一个图像过滤模型，设置模型中为2个卷积，现在要将同一个模型(相同参数的模型)应用到不同的图片下，实现大量图片的过滤。如果通过<code>tf.Variable()</code>实现如下：</p>
+<pre><code class="python">def my_image_filter(input_images):
+    conv1_weights = tf.Variable(tf.random_normal([5, 5, 32, 32]), name=&quot;conv1_weights&quot;)
+    conv1_biases = tf.Variable(tf.zeros([32]), name=&quot;conv1_biases&quot;)
+    conv1 = tf.nn.conv2d(input_images, conv1_weights, strides=[1, 1, 1, 1], padding=&#39;SAME&#39;)
+    relu1 = tf.nn.relu(conv1 + conv1_biases)
+
+    conv2_weights = tf.Variable(tf.random_normal([5, 5, 32, 32]), name=&quot;conv2_weights&quot;)
+    conv2_biases = tf.Variable(tf.zeros([32]), name=&quot;conv2_biases&quot;)
+    conv2 = tf.nn.conv2d(relu1, conv2_weights, strides=[1, 1, 1, 1], padding=&#39;SAME&#39;)
+    return tf.nn.relu(conv2 + conv2_biases)</code></pre>
+<p>在这个模型中，我们有四个变量：<code>conv1_weight,conv1_biases,conv2_weights,conv2_biases</code>，当我们应用在每个图片上时，如下，我们应用在2个图片上：</p>
+<pre><code class="python">result1 = my_image_filter(image1)  # First call creates one set of 4 variables.
+result2 = my_image_filter(image2)  # Another set of 4 variables is created in the second call.</code></pre>
+<p>这样调用2次，那么会创建2组变量，每组4个变量，生成8个变量。这样就出现了问题，每张图片应用的模型是不一样的。因此需要通过共享变量的模式。那么怎么来实现呢？</p>
+<h3 id="2-2-python实现共享变量"><a href="#2-2-python实现共享变量" class="headerlink" title="2.2 python实现共享变量"></a>2.2 python实现共享变量</h3><p>在python中也是可以实现的，通过字典提前将变量进行定义，如下：</p>
+<pre><code class="python">parameters_dict = {&quot;conv1_weights&quot;: tf.Variable(tf.random_normal([5, 5, 32, 32]), name=&quot;conv1_weights&quot;),
+                  &quot;conv1_biases&quot;: tf.Variable(tf.zeros([32]), name=&quot;conv1_biases&quot;),
+                  &quot;conv2_weights&quot;: tf.Variable(tf.random_normal([5, 5, 32, 32]), name=&quot;conv2_weights&quot;),
+                  &quot;conv2_biases&quot;: tf.Variable(tf.zeros([32]), name=&quot;conv2_biases&quot;)}
+
+def my_image_filter(input_images, variables_dict):
+    conv1 = tf.nn.conv2d(input_images, variables_dict[&quot;conv1_weights&quot;], strides=[1, 1, 1, 1], padding=&#39;SAME&#39;)
+    relu1 = tf.nn.relu(conv1 + variables_dict[&quot;conv1_biases&quot;])
+
+    conv2 = tf.nn.conv2d(relu1, variables_dict[&quot;conv2_weights&quot;], strides=[1, 1, 1, 1], padding=&#39;SAME&#39;)
+    return tf.nn.relu(conv2 + variables_dict[&quot;conv2_biases&quot;])
+
+# Both calls to my_image_filter() now use the same variables
+result1 = my_image_filter(image1, variables_dict)
+result2 = my_image_filter(image2, variables_dict)</code></pre>
+<p>这样是可以实现共享变量，但是对代码的<strong>封装不好</strong>，在构建模型时，<strong>需要提前创建好变量</strong>的名称，大小，类型等，当网络非常大时，需要维护一个非常长的参数列表，这样代码显得非常冗余；同时，这样代码显得比较死板，不灵活，扩展性很弱。因此TensorFlow提供了更加轻便的方式来实现共享变量。</p>
+<h3 id="2-3-在TensorFlow中实现共享变量"><a href="#2-3-在TensorFlow中实现共享变量" class="headerlink" title="2.3 在TensorFlow中实现共享变量"></a>2.3 在TensorFlow中实现共享变量</h3><p>在TensorFlow中通过<code>tf.get_variable()</code>和``tf.variable_scope()`配合使用，实现变量共享。这两个方法的作用主要如下所示，下面通过这两个方法来实现变量共享。</p>
+<pre><code class="python">tf.get_variable(&lt;name&gt;, &lt;shape&gt;, &lt;initializer&gt;)  # 创建或返回具有给定名称的变量
+tf.variable_scope(&lt;scope_name&gt;)  # 管理传递给的名称的名称空间tf.get_variable()</code></pre>
+<p>对上面的过滤模型进行修改，如下：</p>
+<pre><code class="python">def conv_relu(input_tensor, kernel_shape, bias_shape):
+    # Create variable named &quot;weights&quot;.
+    weights = tf.get_variable(&quot;weights&quot;, kernel_shape, initializer=tf.random_normal_initializer())
+    # Create variable named &quot;biases&quot;.
+    biases = tf.get_variable(&quot;biases&quot;, bias_shape, initializer=tf.constant_initializer(0.0))
+    conv = tf.nn.conv2d(input, weights, strides=[1, 1, 1, 1], padding=&#39;SAME&#39;)
+    return tf.nn.relu(conv + biases)
+
+def my_image_filter(input_images):
+    with tf.variable_scope(&quot;conv1&quot;):
+        # Variables created here will be named &quot;conv1/weights&quot;, &quot;conv1/biases&quot;.
+        relu1 = conv_relu(input_images, [5, 5, 32, 32], [32])
+    with tf.variable_scope(&quot;conv2&quot;):
+        # Variables created here will be named &quot;conv2/weights&quot;, &quot;conv2/biases&quot;.
+        return conv_relu(relu1, [5, 5, 32, 32], [32])
+
+result1 = my_image_filter(image1)
+result2 = my_image_filter(image2)</code></pre>
+<p>上面对模型应用到两个图片上面，会提示一个错误：<code>Raises ValueError(... conv1/weights already exists ...)</code>；在conv2中会引发错误，主要因为<code>tf.get_variable()</code>默认变量是不共享的，只是检查变量名，防止重复，因此在conv2中调用的时候，发现已经存在了变量。需要共享变量，必须指定某个变量域内进行共享变量：</p>
+<pre><code class="python">with tf.variable_scope(&quot;image_filters&quot;) as scope:
+    result1 = my_image_filter(image1)
+    scope.reuse_variables()
+    result2 = my_image_filter(image2)</code></pre>
+<p>经过上面的修改，变量共享就已经完成了。不需要在函数外定义变量，只需要添加变量域，tensorflow就会自动帮我管理变量。代码也非常直观。</p>
+<h3 id="2-4-共享变量的方式"><a href="#2-4-共享变量的方式" class="headerlink" title="2.4 共享变量的方式"></a>2.4 共享变量的方式</h3><p>通过<code>tf.get_variable()</code>和``tf.variable_scope()<code>有两种方式来进行共享变量。第一种就是上述所示的，通过设置域下面的共享：</code>scope.reuse_variables()`；还有一种方式，如下：</p>
+<pre><code class="python">with tf.variable_scope(&quot;image_filters&quot;, reuse=tf.AUTO_REUSE) as scope:
+    result1 = my_image_filter(image1)
+    result2 = my_image_filter(image2)</code></pre>
+<p>这种方式会自动去共享变量，当系统检测到当期变量域下之前定义了一个重名的变量，那么该变量就共享，否则就创建新的变量。这是非常智能的写法。这种方式也解决了一个问题，比如部分模型，前半部分需要共享变量，后半部分不需要共享变量，可以通过这种方式来实现。</p>
+<h3 id="2-5-变量域（variable-scope）的工作机制"><a href="#2-5-变量域（variable-scope）的工作机制" class="headerlink" title="2.5 变量域（variable_scope）的工作机制"></a>2.5 变量域（variable_scope）的工作机制</h3><h4 id="2-5-1-get-variable的理解"><a href="#2-5-1-get-variable的理解" class="headerlink" title="2.5.1 get_variable的理解"></a>2.5.1 get_variable的理解</h4><p>首先，对<code>tf.get_variable()</code>进行理解，该方法的使用主要取决于调用的域的设置：<code>tf.get_variable_scope().reuse == False or tf.get_variable_scope().reuse == True</code>。当结果值 为False时，这是<code>tf.get_variable()</code>就会初始化一个变量，并且会判断这个变量在这个域下是否存在，如果存在就会引发<code>ValueError</code>，否则就会初始化一个变量出来：</p>
+<pre><code class="python">with tf.variable_scope(&quot;foo&quot;):
+    v = tf.get_variable(&quot;v&quot;, [1])
+assert v.name == &quot;foo/v:0&quot;</code></pre>
+<p>而如果 <code>tf.get_variable_scope().reuse == True</code>，那么 TensorFlow 会执行相反的动作，就是到程序里面寻找变量名为 <code>scope name + name</code> 的变量，如果变量不存在，会抛出 <code>ValueError</code> 异常，否则，就返回找到的变量：</p>
+<pre><code class="python">with tf.variable_scope(&quot;foo&quot;):
+    v = tf.get_variable(&quot;v&quot;, [1])
+with tf.variable_scope(&quot;foo&quot;, reuse=True):
+    v1 = tf.get_variable(&quot;v&quot;, [1])
+assert v1 is v</code></pre>
+<h4 id="2-5-2-variable-scope的基本使用"><a href="#2-5-2-variable-scope的基本使用" class="headerlink" title="2.5.2 variable_scope的基本使用"></a>2.5.2 variable_scope的基本使用</h4><p>变量域时可以嵌套使用的，嵌套后，变量名会以此加上变量域作为路径。如下代码：</p>
+<pre><code class="python">with tf.variable_scope(&quot;foo&quot;):
+    with tf.variable_scope(&quot;bar&quot;):
+        v = tf.get_variable(&quot;v&quot;, [1])
+assert v.name == &quot;foo/bar/v:0&quot;</code></pre>
+<p>我们也可以通过 <code>tf.get_variable_scope()</code> 来获得当前的变量域对象，并通过 <code>reuse_variables()</code> 方法来设置是否共享变量。不过，TensorFlow 并不支持将 <code>reuse</code> 值设为 <code>False</code>，如果你要停止共享变量，可以选择离开当前所在的变量域，或者再进入一个新的变量域（比如，再进入一个 <code>with</code> 语句，然后指定新的域名）。</p>
+<p>还需注意的一点是，一旦在一个变量域内将 <code>reuse</code> 设为 <code>True</code>，那么这个变量域的子变量域也会继承这个 <code>reuse</code> 值，自动开启共享变量：</p>
+<pre><code class="python">with tf.variable_scope(&quot;root&quot;):
+    # At start, the scope is not reusing.
+    assert tf.get_variable_scope().reuse == False
+    with tf.variable_scope(&quot;foo&quot;):
+        assert tf.get_variable_scope().reuse == False
+    with tf.variable_scope(&quot;foo&quot;, reuse=True):
+        assert tf.get_variable_scope().reuse == True
+        with tf.variable_scope(&quot;bar&quot;):
+            assert tf.get_variable_scope().reuse == True
+    assert tf.get_variable_scope().reuse == False</code></pre>
+<p>变量域也可以 作为一个对象，这样方便使用变量域，跳出当前变量域等。如下面的代码所示：</p>
+<pre><code class="python">with tf.variable_scope(&quot;foo&quot;) as foo_scope:
+    assert foo_scope.name == &quot;foo&quot;
+with tf.variable_scope(&quot;bar&quot;)
+    with tf.variable_scope(&quot;baz&quot;) as other_scope:
+        assert other_scope.name == &quot;bar/baz&quot;
+        with tf.variable_scope(foo_scope) as foo_scope2:
+            assert foo_scope2.name == &quot;foo&quot;  # Not changed.</code></pre>
+<h4 id="2-5-3-在变量域内初始化变量"><a href="#2-5-3-在变量域内初始化变量" class="headerlink" title="2.5.3 在变量域内初始化变量"></a>2.5.3 在变量域内初始化变量</h4><p>每次初始化变量时都要传入一个 <code>initializer</code>，这实在是麻烦，而如果使用变量域的话，就可以批量初始化参数了，如下代码所示：</p>
+<pre><code class="python">with tf.variable_scope(&quot;foo&quot;, initializer=tf.constant_initializer(0.4)):
+    v = tf.get_variable(&quot;v&quot;, [1])
+    assert v.eval() == 0.4  # Default initializer as set above.
+    w = tf.get_variable(&quot;w&quot;, [1], initializer=tf.constant_initializer(0.3)):
+    assert w.eval() == 0.3  # Specific initializer overrides the default.
+    with tf.variable_scope(&quot;bar&quot;):
+        v = tf.get_variable(&quot;v&quot;, [1])
+        assert v.eval() == 0.4  # Inherited default initializer.
+    with tf.variable_scope(&quot;baz&quot;, initializer=tf.constant_initializer(0.2)):
+        v = tf.get_variable(&quot;v&quot;, [1])
+        assert v.eval() == 0.2  # Changed default initializer.</code></pre>
+<h2 id="3-最新的数据处理类—data-Dataset"><a href="#3-最新的数据处理类—data-Dataset" class="headerlink" title="3. 最新的数据处理类—data.Dataset"></a>3. 最新的数据处理类—data.Dataset</h2><p>这部分和1中对线程和队列的功能有些类似，但是这部分更多在数据输入部分，第一部分中的还有在其他方面使用。<code>Dataset</code>API是TensorFlow在版本1.3中引入的模块，1.4版本中已经作为一个核心的模块。主要服务于数据读取，构建数据的pipeline。前面说了可以通过队列和线程构建，但是整个过程还是比较繁琐，TensorFlow便可以通过这种方式来构建。主要支持从内存和硬盘读取数。</p>
+<h3 id="3-1-使用Dataset的步骤"><a href="#3-1-使用Dataset的步骤" class="headerlink" title="3.1 使用Dataset的步骤"></a>3.1 使用<code>Dataset</code>的步骤</h3><p>在数据输入中用<code>Dataset</code>模块，需要三个步骤：</p>
+<ol>
+<li>导入数据，从一些数据来构建dataset，创建dataset对象， 可以通过<code>from_tensors</code>，<code>from_tensors_slice</code></li>
+<li>实例化，将dataset实例化为<strong>Iterator</strong>，下图中为dataset下几个实例的关系：</li>
+</ol>
+<p><img src="http://img.blog.csdn.net/20171114112942700" srcset="/img/loading.gif" alt="Dataset API 下的类图"></p>
+<ol start="3">
+<li>消费数据，在Iterator的基础上对数据进行消费，进行下一步的计算或训练</li>
+</ol>
+<h3 id="3-2-基本使用"><a href="#3-2-基本使用" class="headerlink" title="3.2 基本使用"></a>3.2 基本使用</h3><p>在最开始使用时可以只关注Dataset和Iterator这两个类，再进行逐步的扩展到其他类的使用。Dataset可以看作是相同类型“元素”的有序列表。在实际使用时，单个“元素”可以是向量，也可以是字符串、图片，甚至是tuple或者dict。</p>
+<p>在消费数据的时候，是通过get_next方法获取数据。不论通过什么方式创建数据集，在返回数据时都是返回一行或多行数据。下面的几个dataset就可以看出返回数据的规律。</p>
+<h4 id="3-2-1-from-numpy的数据"><a href="#3-2-1-from-numpy的数据" class="headerlink" title="3.2.1 from numpy的数据"></a>3.2.1 from numpy的数据</h4><p>从numpy下的array读取数据到dataset：</p>
+<pre><code class="python">dataset = tf.data.Dataset.from_tensor_slices(np.random.uniform(size=(5, 3)))  # 1.import data
+iterator = dataset.make_one_shot_iterator()  # 2.从dataset实例化一个iterator
+one_element = iterator.get_next()  # 3.消费数据
+with tf.Session() as sess:
+    try:
+        for i in range(6):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)
+# ---------------------- output ----------------------
+# 每次返回一行数据, 共返回5次, 相当于5个样本，3个特征</code></pre>
+<h4 id="3-2-2-从字典中创建dataset"><a href="#3-2-2-从字典中创建dataset" class="headerlink" title="3.2.2 从字典中创建dataset"></a>3.2.2 从字典中创建dataset</h4><pre><code class="python">dataset = tf.data.Dataset.from_tensor_slices(
+    {
+        &quot;a&quot;: np.array([1.0, 2.0, 3.0, 4.0, 5.0]),  # &quot;可以将key-a当做label的序列&quot;
+        &quot;b&quot;: np.random.uniform(size=(5, 2))
+    }
+)
+dataset = dataset.map(lambda x: {&quot;a&quot;: x[&quot;a&quot;], &quot;b&quot;: 10 * x[&quot;b&quot;]})
+iterator = dataset.make_one_shot_iterator()  # 从dataset实例化一个iterator
+one_element = iterator.get_next()
+
+with tf.Session() as sess:
+    try:
+        for i in range(6):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)
+
+# ------------------ output -----------------------
+{&#39;a&#39;: 1.0, &#39;b&#39;: array([4.18069729, 3.36752717])}  # 每次会一个lable所对应的sample，共返回5次
+{&#39;a&#39;: 2.0, &#39;b&#39;: array([7.37556694, 1.79710602])}
+{&#39;a&#39;: 3.0, &#39;b&#39;: array([1.76684338, 0.48396737])}
+{&#39;a&#39;: 4.0, &#39;b&#39;: array([6.21267904, 5.28298128])}
+{&#39;a&#39;: 5.0, &#39;b&#39;: array([8.36019678, 2.08220728])}</code></pre>
+<h4 id="3-2-3-从tuple中创建dataset"><a href="#3-2-3-从tuple中创建dataset" class="headerlink" title="3.2.3 从tuple中创建dataset"></a>3.2.3 从tuple中创建dataset</h4><pre><code class="python">dataset = tf.data.Dataset.from_tensor_slices(
+  (np.array([1.0, 2.0, 3.0, 4.0, 5.0]), np.random.uniform(size=(5, 2)))
+)
+dataset = dataset.map(lambda x, y: (x, y*10))
+iterator = dataset.make_one_shot_iterator()  # 从dataset实例化一个iterator
+one_element = iterator.get_next()
+
+with tf.Session() as sess:
+    try:
+        for i in range(6):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)
+# ---------------------- output ------------------------
+(1.0, array([2.45236335, 9.04392201]))  # 这个返回方式和字典类似
+(2.0, array([5.16675082, 4.89549424]))
+(3.0, array([3.66104816, 3.01531896]))
+(4.0, array([8.56580726, 3.77034437]))
+(5.0, array([8.18391386, 6.2216879 ]))</code></pre>
+<h4 id="3-2-4-从生成器创建dataset"><a href="#3-2-4-从生成器创建dataset" class="headerlink" title="3.2.4 从生成器创建dataset"></a>3.2.4 从生成器创建dataset</h4><pre><code class="python">sequence = np.array([[1, 2, 2.3464],[2, 3, 45.253],[3, 4, 455.22]])
+def generator():
+    for el in sequence:
+        yield el
+dataset = tf.data.Dataset().from_generator(generator,
+                                           output_types=tf.float32)
+iterator = dataset.make_one_shot_iterator()  # 从dataset实例化一个iterator
+one_element = iterator.get_next()
+
+with tf.Session() as sess:
+    try:
+        for i in range(6):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)
+# ---------------------- output ---------------------
+[1.     2.     2.3464]  # 这个返回方式和第一种方式类似
+[ 2.     3.    45.253]
+[  3.     4.   455.22]</code></pre>
+<h3 id="3-3-在dataset中进行数据处理"><a href="#3-3-在dataset中进行数据处理" class="headerlink" title="3.3 在dataset中进行数据处理"></a>3.3 在dataset中进行数据处理</h3><p>dataset中也可以对数据进行处理，变换等。主要有的方法：map，cache，shuffle，repeat，batch，prefetch，fileter，flat_map等。这些方法在处理数据时会经常用大。</p>
+<h4 id="3-3-1-map的使用"><a href="#3-3-1-map的使用" class="headerlink" title="3.3.1 map的使用"></a>3.3.1 map的使用</h4><p>dataset中的map和python的map用法一致，接受一个处理函数。再返回处理后的数据。map主要接收两个参数，它的的api是：<code>map(map_func, num_parallel_calls=None)</code>，第一参数为map函数，用来变换数据；第二个参数为并发数，一般为cpu的线程数。如：</p>
+<pre><code class="python">dataset = tf.data.Dataset.from_tensor_slices(
+  (np.array([1.0, 2.0, 3.0, 4.0, 5.0]), np.random.uniform(size=(5, 2)))
+)
+dataset = dataset.map(lambda x, y: (x, y*10), num_parallel_calls=4)  # map的使用，线程数为4
+iterator = dataset.make_one_shot_iterator() 
+one_element = iterator.get_next()
+
+with tf.Session() as sess:
+    try:
+        for i in range(6):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)</code></pre>
+<p>需要注意的是，dataset有<strong>map和apply</strong>两个方法，它们是有一定<strong>区别</strong>的，map是将map_function应用到每一个函数。而apply是将function应用到整个dataset。map的参数是一个element ，而apply的函数参数是dataset，apply可用的方法<a href="https://www.tensorflow.org/versions/master/api_guides/python/input_dataset#Transformations_on_existing_datasets" target="_blank" rel="noopener">在这儿</a>。如下：</p>
+<pre><code class="python">dataset = tf.data.Dataset.from_tensor_slices(
+  (np.array([1.0, 2.0, 3.0, 4.0, 5.0]), np.random.uniform(size=(5, 2)))
+)
+dataset = dataset.apply(tf.contrib.data.map_and_batch(lambda x, y: (x, y * 100), 2))
+iterator = dataset.make_one_shot_iterator() 
+one_element = iterator.get_next()
+
+with tf.Session() as sess:
+    try:
+        for i in range(5):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)</code></pre>
+<h4 id="3-3-2-cache的使用"><a href="#3-3-2-cache的使用" class="headerlink" title="3.3.2 cache的使用"></a>3.3.2 cache的使用</h4><p>cache主要是将数据进行缓存，可以缓存到内存，也可以缓存到磁盘。默认为缓存到内存中。比较好理解，具体就不介绍了。</p>
+<h4 id="3-3-3-shuffle的使用"><a href="#3-3-3-shuffle的使用" class="headerlink" title="3.3.3 shuffle的使用"></a>3.3.3 shuffle的使用</h4><p>shuffle的功能为打乱dataset中的元素，它有一个参数buffersize，表示打乱时使用的buffer的大小，建议舍的不要太小，一般建议是dataset的size+1，即样本数+1。如下代码，输出的顺序被打乱了。</p>
+<pre><code class="python">dataset = tf.data.Dataset.from_tensor_slices(
+  (np.array([1.0, 2.0, 3.0, 4.0, 5.0]), np.random.uniform(size=(5, 2)))
+)
+dataset = dataset.map(lambda x, y: (x, y*10), num_parallel_calls=4).shuffle(buffer_size=6)
+iterator = dataset.make_one_shot_iterator()  # 从dataset实例化一个iterator
+one_element = iterator.get_next()
+
+with tf.Session() as sess:
+    try:
+        for i in range(5):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)
+# --------------------- output ------------------------
+(4.0, array([2.57439552, 3.38879843]))
+(2.0, array([7.25460172, 3.86126726]))
+(1.0, array([9.08901095, 1.75219504]))
+(5.0, array([5.04888193, 3.89428254]))
+(3.0, array([9.78304135, 3.44271984]))</code></pre>
+<h4 id="3-3-4-repeat的使用"><a href="#3-3-4-repeat的使用" class="headerlink" title="3.3.4 repeat的使用"></a>3.3.4 repeat的使用</h4><p>repeat的功能就是将整个序列重复多次，主要用来处理机器学习中的epoch，假设原先的数据是一个epoch，使用repeat(2)就可以将之变成2个epoch：</p>
+<pre><code class="python">dataset = tf.data.Dataset.from_tensor_slices({&quot;a&quot;: np.array([1.0, 2.0, 3.0, 4.0, 5.0]), 
+                                              &quot;b&quot;: np.random.uniform(size=(5, 2))})
+
+dataset = dataset.repeat(2) # repeat
+
+iterator = dataset.make_one_shot_iterator()
+one_element = iterator.get_next()
+with tf.Session() as sess:
+    try:
+        while True:
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end!&quot;)
+# --------------------- output --------------------
+{&#39;a&#39;: 1.0, &#39;b&#39;: array([0.13072499, 0.81223459])}
+{&#39;a&#39;: 2.0, &#39;b&#39;: array([0.67836451, 0.02996121])}
+{&#39;a&#39;: 3.0, &#39;b&#39;: array([0.17338524, 0.73540362])}
+{&#39;a&#39;: 4.0, &#39;b&#39;: array([0.57598212, 0.11428893])}
+{&#39;a&#39;: 5.0, &#39;b&#39;: array([0.55184749, 0.8721738 ])}
+{&#39;a&#39;: 1.0, &#39;b&#39;: array([0.13072499, 0.81223459])}
+{&#39;a&#39;: 2.0, &#39;b&#39;: array([0.67836451, 0.02996121])}
+{&#39;a&#39;: 3.0, &#39;b&#39;: array([0.17338524, 0.73540362])}
+{&#39;a&#39;: 4.0, &#39;b&#39;: array([0.57598212, 0.11428893])}
+{&#39;a&#39;: 5.0, &#39;b&#39;: array([0.55184749, 0.8721738 ])}</code></pre>
+<h4 id="3-3-5-batch的使用"><a href="#3-3-5-batch的使用" class="headerlink" title="3.3.5 batch的使用"></a>3.3.5 batch的使用</h4><p>batch就是将多个样本组合成batch，如API所说，按照输入元素第一个维度进行组合成一个batch：</p>
+<pre><code class="python"># batch的使用
+dataset = tf.data.Dataset.from_tensor_slices(
+  (np.array([1.0, 2.0, 3.0, 4.0, 5.0]), np.random.uniform(size=(5, 2)))
+)
+dataset = dataset.map(lambda x, y: (x, y*10), num_parallel_calls=4).shuffle(buffer_size=6).batch(3)
+iterator = dataset.make_one_shot_iterator()  # 从dataset实例化一个iterator
+one_element = iterator.get_next()
+
+with tf.Session() as sess:
+    try:
+        for i in range(5):
+            print(sess.run(one_element))
+    except tf.errors.OutOfRangeError:
+        print(&quot;end&quot;)
+# ------------------------- output ------------------------
+(array([4., 3., 5.]), 
+ array([[6.32798625, 3.34494733],
+       [8.6747479 , 6.6041502 ],
+       [2.96699653, 9.73854298]]))
+(array([1., 2.]), 
+ array([[4.75347977, 5.51553647],
+       [4.12808918, 6.81227941]]))</code></pre>
+<p>这些操作都可以组合起来使用。如上面的例子，将map，shuffle，batch进行组合使用。</p>
+<h3 id="3-4-模拟读取文件并通过dataset进行处理"><a href="#3-4-模拟读取文件并通过dataset进行处理" class="headerlink" title="3.4 模拟读取文件并通过dataset进行处理"></a>3.4 模拟读取文件并通过dataset进行处理</h3><p>可以将第一部分中读取文件数据的例子近修改，通过dataset的方式进行处理。下面再dataset中存入的是每张图片的路径，后面通过map读取数据，并后续继续使用。具体代码如下：</p>
+<pre><code class="python">def _parse_function(filename, label):
+    image_string = tf.read_file(filename)
+    image_decoded = tf.image.decode_image(image_string)
+    image_resized = tf.image.resize_images(image_decoded, [28, 28])
+    return image_resized, label
+
+filenames = tf.constant([&quot;/var/data/image1.jpg&quot;, &quot;/var/data/image2.jpg&quot;, ...])
+labels = tf.constant([0, 37, ...])
+dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
+dataset = dataset.map(_parse_function)
+dataset = dataset.shuffle(buffersize=1000).batch(32).repeat(10)</code></pre>
+<h3 id="3-5-创建dataset的其他方法"><a href="#3-5-创建dataset的其他方法" class="headerlink" title="3.5 创建dataset的其他方法"></a>3.5 创建dataset的其他方法</h3><p>除了<code>tf.data.Dataset.from_tensor_slices</code>外，目前Dataset API还提供了另外三种创建Dataset的方式：</p>
+<ul>
+<li>tf.data.TextLineDataset()：这个函数的输入是一个文件的列表，输出是一个dataset。dataset中的每一个元素就对应了文件中的一行。可以使用这个函数来读入CSV文件。</li>
+<li>tf.data.FixedLengthRecordDataset()：这个函数的输入是一个文件的列表和一个record_bytes，之后dataset的每一个元素就是文件中固定字节数record_bytes的内容。通常用来读取以二进制形式保存的文件，如CIFAR10数据集就是这种形式。</li>
+<li>tf.data.TFRecordDataset()：顾名思义，这个函数是用来读TFRecord文件的，dataset中的每一个元素就是一个TFExample。</li>
+</ul>
+<h3 id="3-6-将dataset实例化为iterator的其他方法"><a href="#3-6-将dataset实例化为iterator的其他方法" class="headerlink" title="3.6 将dataset实例化为iterator的其他方法"></a>3.6 将dataset实例化为iterator的其他方法</h3><p>除了这种one shot iterator外，还有三个更复杂的Iterator，即：<code>initializable iterator, reinitializable iterator, feedable iterator</code>.</p>
+<h4 id="3-6-1-initializable-iterator实例化"><a href="#3-6-1-initializable-iterator实例化" class="headerlink" title="3.6.1 initializable iterator实例化"></a>3.6.1 initializable iterator实例化</h4><p><code>initializable iterator</code>方法要在使用前通过<code>sess.run()</code>来初始化，使用initializable iterator，可以将placeholder代入Iterator中，实现更为灵活的数据载入，实际上占位符引入了dataset对象创建中，我们可以通过feed来控制数据集合的实际情况。示例代码如下：</p>
+<pre><code class="python">limit = tf.placeholder(dtype=tf.int32, shape=[])
+dataset = tf.data.Dataset.from_tensor_slices(tf.range(start=0, limit=limit))
+iterator = dataset.make_initializable_iterator()
+next_element = iterator.get_next()
+
+with tf.Session() as sess:
+    sess.run(iterator.initializer, feed_dict={limit: 10})
+    for i in range(10):
+      value = sess.run(next_element)
+      print(value)
+      assert i == value
+# output:0 1 2 3 4 5 6 7 8 9</code></pre>
+<p><code>initializable iterator</code>还有一个功能：读入较大的数组。在使用<code>tf.data.Dataset.from_tensor_slices(array)</code>时，实际上发生的事情是将<code>array</code>作为一个<code>tf.constants</code>保存到了计算图中。当<code>array</code>很大时，会导致计算图变得很大，给传输、保存带来不便。这时，我们可以用一个<code>placeholder</code>取代这里的<code>array</code>，并使用<code>initializable iterator</code>，只在需要时将<code>array</code>传进去，这样就可以避免把大数组保存在图里，示例代码为（来自官方例程）：</p>
+<pre><code class="python">with np.load(&quot;/var/data/training_data.npy&quot;) as data:
+    features = data[&quot;features&quot;]
+    labels = data[&quot;labels&quot;]
+
+features_placeholder = tf.placeholder(features.dtype, features.shape)
+labels_placeholder = tf.placeholder(labels.dtype, labels.shape)
+
+dataset = tf.data.Dataset.from_tensor_slices((features_placeholder, labels_placeholder))
+iterator = dataset.make_initializable_iterator()
+sess.run(iterator.initializer, feed_dict={features_placeholder: features, labels_placeholder: labels})</code></pre>
+<p>可见，在上面程序中，feed也遵循着类似字典一样的规则，创建两个占位符(keys)，给<code>data_holder</code>去feed数据文件，给<code>label_holder</code>去feed标签文件。</p>
+<h4 id="3-6-2-reinitializable-iterator实例化"><a href="#3-6-2-reinitializable-iterator实例化" class="headerlink" title="3.6.2 reinitializable iterator实例化"></a>3.6.2 reinitializable iterator实例化</h4><p><code>reinitializable iterator</code>可以从多个不同的Dataset对象处初始化。例如，你可能有一个training input pipeline（它对输入图片做随机扰动来提高泛化能力）；以及一个validation input pipeline（它会在未修改过的数据上进行预测的评估）。这些pipeline通常使用不同的Dataset对象，但它们具有相同的结构（例如：对每个component相同的types和shapes）。</p>
+<pre><code class="python"># Define training and validation datasets with the same structure.
+training_dataset = tf.data.Dataset.range(100).map(lambda x: x + tf.random_uniform([], -10, 10, tf.int64))
+validation_dataset = tf.data.Dataset.range(50)
+
+# A reinitializable iterator is defined by its structure. We could use the
+# `output_types` and `output_shapes` properties of either `training_dataset`
+# or `validation_dataset` here, because they are compatible.
+iterator = tf.data.Iterator.from_structure(training_dataset.output_types, training_dataset.output_shapes)
+next_element = iterator.get_next()
+
+training_init_op = iterator.make_initializer(training_dataset)
+validation_init_op = iterator.make_initializer(validation_dataset)
+
+# Run 20 epochs in which the training dataset is traversed, followed by the
+# validation dataset.
+for _ in range(20):
+    # Initialize an iterator over the training dataset.
+    sess.run(training_init_op)
+    for _ in range(100):
+        sess.run(next_element)
+
+        # Initialize an iterator over the validation dataset.
+        sess.run(validation_init_op)
+        for _ in range(50):
+            sess.run(next_element)</code></pre>
+<h3 id="3-7-Refrence"><a href="#3-7-Refrence" class="headerlink" title="3.7 Refrence"></a>3.7 Refrence</h3><p>[1].<a href="http://d0evi1.com/tensorflow/datasets/" target="_blank" rel="noopener">tensorflow中的dataset</a></p>
+<p>[2].<a href="https://towardsdatascience.com/how-to-use-dataset-in-tensorflow-c758ef9e4428" target="_blank" rel="noopener">How to use Dataset in TensorFlow</a></p>
+<p>[3].<a href="https://www.cnblogs.com/hellcat/p/8569651.html" target="_blank" rel="noopener">TensorFlow』数据读取类_data.Dataset</a></p>
+<h2 id="4-collection"><a href="#4-collection" class="headerlink" title="4.collection"></a>4.collection</h2><p>TensorFlow中有一个集合叫collection，collection主要是提供tensorflow全局存储的机制，不会受到变量名空间的影响，在一个地方保存，任何地方可用。</p>
+<p>TensorFlow自身会维护一些自己的collection，如<code>tf.GraphKeys.SUMMARIES</code>，<code>ops.GraphKeys.QUEUE_RUNNERS</code>(<code>from tensorflow.python.framework import ops</code>)，<code>GLOBAL_VARIABLES</code>，<code>ops.GraphKyes.LOCAL_VARIABLES</code>等等。在使用TensorFlow的过程中也可以获取这些collection。</p>
+<h3 id="4-1-向collection中存入数据"><a href="#4-1-向collection中存入数据" class="headerlink" title="4.1 向collection中存入数据"></a>4.1 向collection中存入数据</h3><p>在编程过程中可以向collection存入数据，主要通过<code>add_to_collection</code>方法将数据加入collection中。该方法是<code>tf.add_to_collection(name, value)</code>。该方法``tf.add_to_collection<code>的作用是将value以name的名称存储在收集器(</code>self._collections<code>)中。另外还可以同时将一个value增加到多个collection中，通过方法</code>tf.add_to_collections(names, value)`。</p>
+<h3 id="4-2-从collection中获取数据"><a href="#4-2-从collection中获取数据" class="headerlink" title="4.2 从collection中获取数据"></a>4.2 从collection中获取数据</h3><p>如果要从collection中获取数据，需要通过<code>tf.get_collection(name, scope=None)</code>来获取集合中的变量值。将返回一个list，list中的值都是之前存入的（如果name不存在，则返回一个空的list）。必须给定一个name参数，来指定获取collection下某个name下的值。scope参数用来过滤某个scope下的值。下面是一个完整的示例：</p>
+<pre><code class="python">import numpy as np
+import tensorflow as tf
+
+
+x = tf.constant(np.random.random(10) * 10, dtype=tf.float32, name=&quot;const&quot;)
+
+with tf.name_scope(&quot;scope_y&quot;):
+    z = tf.constant(np.random.random(5) * 100, dtype=tf.float32, name=&quot;const&quot;)
+
+x_ = x * 10
+tf.add_to_collection(&quot;x&quot;, x_)
+tf.add_to_collection(&quot;x&quot;, x)  # 向一个name增加多个值, 如果增加[x, x_], 那么输出的是[[x, x_]]
+with tf.Session() as sess:
+    print(sess.run(x_))
+    # tf.graph.add_to_collection(&quot;x&quot;, x_)
+    print(sess.run(tf.get_collection(&quot;x&quot;)))
+    print(sess.run(tf.get_collection(&quot;y&quot;)))
+    print(sess.run(tf.get_collection(&quot;x&quot;, scope=&quot;scope_y&quot;)))  # 只返回这个scope下的值</code></pre>
+<p>输出如下：</p>
+<pre><code class="python"># --------------------------- x_ --------------------------------
+[
+22.296236  89.52586   94.95532   82.79374    4.5324626 99.39854  54.841103  50.33739   95.65411  95.163025 
+]
+# ------------------------ collection ---------------------------
+[
+    array([22.296236 , 89.52586  , 94.95532  , 82.79374  ,  4.5324626,
+       99.39854  , 54.841103 , 50.33739  , 95.65411  , 95.163025 ], dtype=float32), 
+    array([2.2296236 , 8.952586  , 9.495532  , 8.279374  , 0.45324627,
+       9.939854  , 5.4841104 , 5.033739  , 9.565412  , 9.516302  ], dtype=float32),
+    array([19.762728, 97.20074 , 35.839146, 82.53057 , 63.590633], dtype=float32)
+]
+# ----------------------- name is not exists ---------------------
+[]
+# ----------------------- scope is used --------------------------
+[array([19.762728, 97.20074 , 35.839146, 82.53057 , 63.590633], dtype=float32)]</code></pre>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/tensorflow/">tensorflow</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Queue/">Queue</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Coordinator/">Coordinator</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Dataset/">Dataset</a>
+                    
+                      <a class="hover-with-bg" href="/tags/collection/">collection</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F/">共享变量</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/11/06/GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">深度学习-GAN网络详解及TensorFlow实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/07/03/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+                        <span class="hidden-mobile">深度学习-详解CNN网络和TensorFlow实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "TensorFlow中的KeyPoint&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>基于轨迹的数据挖掘相关技术总结 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 七月 20日 2019, 11:13 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      7 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>之前项目中接触到了轨迹数据挖掘领域，始终都没有时间对轨迹数据挖掘进行整体的梳理和总结，现在抽几天时间来进行总结并进行记录。</p>
+<p>目前非常多的数据都是轨迹数据，如共享单车骑行的数据，手机GPS导航的数据，定位数据，一些传感器数据等等。在未来5G的发展下，相信轨迹数据或时空类型的数据会更多，而且会更加的复杂。</p>
+<p>以前接触的数据大多没有空间的概念，都是一些普通的数据样本。这些数据可以认为是空间独立的，因此在数据分析或挖掘时，使用起来更加的方便，其技术也相对于成熟。而轨迹数据不同，它同时具有时间和空间双维度，在建模的时候很多传统算法在应用时都存在一定的问题，如轨迹的距离度量，这么一个简单问题，在轨迹里面都会变得复杂。</p>
+<p>通过本次项目的实施，也对轨迹数据涉及到的主要问题进行了梳理，一些涉及到的技术栈进行了总结，便于后面项目中遇到该类问题时进查阅，同时增加自己的理解。</p>
+<h2 id="轨迹数据涉及的技术栈"><a href="#轨迹数据涉及的技术栈" class="headerlink" title="轨迹数据涉及的技术栈"></a>轨迹数据涉及的技术栈</h2><p>轨迹数据的技术栈基本和普通的技术栈涉及到的过程一致，但是过程中某个部分具有很大的差异，下图是经过梳理得到的整个轨迹数据的涉及到的技术栈，其中每个部分都含有很多部分。具体如下图所示：</p>
+<p><img src="/uploads/%E8%BD%A8%E8%BF%B9%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E6%8A%80%E6%9C%AF%E6%A0%88.png" srcset="/img/loading.gif" alt="轨迹数据挖掘技术栈"><a id="more"></a></p>
+<h3 id="轨迹数据存储"><a href="#轨迹数据存储" class="headerlink" title="轨迹数据存储"></a>轨迹数据存储</h3><p>轨迹数据的存储和普通的数据存储不同，轨迹数据属于GIS数据，包含了位置数据，而且轨迹的表示为几何图形中的<code>Line</code>格式。因此一般采用GIS数据库进行存储，目前比较流行存储数据对比如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>数据库名</th>
+<th>分布式</th>
+<th>空间对象</th>
+<th>HDFS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://en.wikipedia.org/wiki/Environmental_Systems_Research_Institute" target="_blank" rel="noopener">ESRI</a> GIS Tools for <a href="https://en.wikipedia.org/wiki/Hadoop" target="_blank" rel="noopener">Hadoop</a></td>
+<td>yes</td>
+<td>yes (own specific API)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/GeoMesa" target="_blank" rel="noopener">GeoMesa</a></td>
+<td>yes</td>
+<td>yes (<a href="https://en.wikipedia.org/wiki/Simple_Features" target="_blank" rel="noopener">Simple Features</a>)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/H2_(DBMS)" target="_blank" rel="noopener">H2</a> (H2GIS)</td>
+<td>no</td>
+<td>yes (custom, no raster)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/Ingres_(database)" target="_blank" rel="noopener">Ingres</a></td>
+<td>yes (if extension is installed)</td>
+<td>yes (custom, no raster)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/Neo4j" target="_blank" rel="noopener">Neo4J</a>-spatial<a href="https://en.wikipedia.org/wiki/Spatial_database#cite_note-15" target="_blank" rel="noopener">[15]</a></td>
+<td>no</td>
+<td>yes (<a href="https://en.wikipedia.org/wiki/Simple_Features" target="_blank" rel="noopener">Simple Features</a>)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/PostgreSQL" target="_blank" rel="noopener">PostgreSQL</a>with <a href="https://en.wikipedia.org/wiki/PostGIS" target="_blank" rel="noopener">PostGIS</a></td>
+<td>no</td>
+<td>yes (<a href="https://en.wikipedia.org/wiki/Simple_Features" target="_blank" rel="noopener">Simple Features</a>and raster)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/Postgres-XL" target="_blank" rel="noopener">Postgres-XL</a> with <a href="https://en.wikipedia.org/wiki/PostGIS" target="_blank" rel="noopener">PostGIS</a></td>
+<td>yes</td>
+<td>yes (<a href="https://en.wikipedia.org/wiki/Simple_Features" target="_blank" rel="noopener">Simple Features</a>and raster)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/Rasdaman" target="_blank" rel="noopener">Rasdaman</a></td>
+<td>yes</td>
+<td>just raster</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/RethinkDB" target="_blank" rel="noopener">RethinkDB</a></td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+</tbody></table>
+<p>目前比较流行的为<code>PostgreSQL with PostGIS</code>，<code>GeoMesa</code>数据库，支持<code>Point, Line, Poly</code>等几何图形的存储，而且包含了很多GIS相关的功能函数使用。目前，MySQL，MongoDB, Redis等都支持GEO，但是对轨迹数据支持不完整，阿里，腾讯都有自己的时空数据的数据库。</p>
+<p>###轨迹数据的处理</p>
+<p>轨迹数据处理是非常重要的一环，数据处理包括，轨迹的压缩，噪声的过滤，轨迹分段等等。数据处理不仅会影响后面建模，对特征提取，后期应用都会有一定的影响。</p>
+<h4 id="轨迹压缩"><a href="#轨迹压缩" class="headerlink" title="轨迹压缩"></a>轨迹压缩</h4><p>轨迹数据可能存在的主要问题有：数据量大，噪声多，定位不准，位置偏移等，而数据压缩可以在一定程度上解决这些问题，比如减少数据量，在某些应用场景下，不需要非常密集(时间)的轨迹数据，那么数据压缩后可以减小数据量。数据压缩主要有离线压缩（批量）和在线压缩。</p>
+<ul>
+<li>离线压缩：Douglas-Peucker (DP)，Top-Down Time Ratio（TDTR）等算法</li>
+<li>在线压缩：Reservoir Sampling，Slicing Window，open window等算法</li>
+</ul>
+<h4 id="轨迹平滑"><a href="#轨迹平滑" class="headerlink" title="轨迹平滑"></a>轨迹平滑</h4><p>空间轨迹是一个$(x,y)$点的序列,每个点都有一个时间戳。因为轨迹通常是由传感器测量的，所以它们不可避免地会出现一些错误，需要对数据进行平滑化处理。主要方法有：</p>
+<ul>
+<li>均值滤波</li>
+<li>中值滤波</li>
+<li>卡尔曼滤波（Kalman filter）</li>
+<li>粒子滤波</li>
+</ul>
+<h4 id="轨迹分割"><a href="#轨迹分割" class="headerlink" title="轨迹分割"></a>轨迹分割</h4><p>轨迹分割主要是对一个长轨迹分割为各个短的轨迹，将轨迹进行分解为不同段的轨迹。在很多应用场景下都会使用轨迹分割技术，目前也有很多轨迹分割算法，主要有：</p>
+<ul>
+<li>通过<strong>驻留点或停留点（<code>stay point</code>）</strong>检测进行轨迹分割</li>
+<li>根据<strong>时间间隔</strong>进行轨迹分割</li>
+<li>根据<strong>轨迹点密度</strong>进行轨迹分割</li>
+<li>根据速度来进行轨迹分割</li>
+</ul>
+<p>其中轨迹密度可以有很多方法进行检测，一般都基于密度聚类算法的改进算法来进行检测，如：K-中值算法，<code>DJ-Cluster</code>算法，<code>cb_swot</code>算法，MSN(Move-Stop-Noise)算法等。</p>
+<h3 id="数据管理"><a href="#数据管理" class="headerlink" title="数据管理"></a>数据管理</h3><p>时空数据管理或轨迹数据管理，涉及到近邻查询，时间和空间维度的快速查询，空间索引等相关技术。而这一部分，一般GIS数据库都包含了相关的功能，只需要在创建表时，增加索引或使用相关功能函数即可。但是有时在工程应用时也会涉及到空间近邻匹配查询。</p>
+<h4 id="空间索引"><a href="#空间索引" class="headerlink" title="空间索引"></a>空间索引</h4><p>空间索引的方法有很多，目前经常使用的有KD树，R树，四叉树及图等相关结构。但是目前效率较高还是基于图的索引，特别是在高维空间时。这里有一个关于NN索引查询效率对比：<a href="http://ann-benchmarks.com/" target="_blank" rel="noopener">http://ann-benchmarks.com/</a></p>
+<h3 id="数据挖掘"><a href="#数据挖掘" class="headerlink" title="数据挖掘"></a>数据挖掘</h3><p>轨迹数据的挖掘包含很多方面，基本传统机器学习的包含的，轨迹数据都包含在内。但是主要的一些方向有轨迹的分类，轨迹聚类，轨迹异常检测，轨迹推荐，轨迹的可视化等待。</p>
+<h2 id="论文解读-Trajectory-Clustering-A-Partition-and-Group-Framework"><a href="#论文解读-Trajectory-Clustering-A-Partition-and-Group-Framework" class="headerlink" title="论文解读-Trajectory Clustering: A Partition-and-Group Framework"></a>论文解读-Trajectory Clustering: A Partition-and-Group Framework</h2><p>这篇论文涉及到了轨迹数据挖掘过程的很多问题，该论文有很多值得借鉴的地方，因此对改论文进行说明，并对该论文中的所有短发框架进行了实现(python)。该论文涉及到了轨迹的数据处理，轨迹分割，轨迹距离度量，轨迹聚类，主要轨迹提取等待。</p>
+<h3 id="问题的提出"><a href="#问题的提出" class="headerlink" title="问题的提出"></a>问题的提出</h3><p><a href="http://hanj.cs.illinois.edu/pdf/sigmod07_jglee.pdf" target="_blank" rel="noopener">该论文</a>主要从众多的轨迹中找出聚集在一期的分段轨迹部分，并合成新的轨迹。这样可以找出公共轨迹部分，密集轨迹部分等。如下图所示，其中方框内的部分就行需要找出的部分。</p>
+<p><img src="/uploads/1553750720955.png" srcset="/img/loading.gif" alt=""></p>
+<h3 id="算法过程"><a href="#算法过程" class="headerlink" title="算法过程"></a>算法过程</h3><h4 id="轨迹的距离度量"><a href="#轨迹的距离度量" class="headerlink" title="轨迹的距离度量"></a>轨迹的距离度量</h4><p>轨迹的距离从3个方面进行度量，两个轨迹之间<strong>最远点和最短点之间的距离</strong>，轨迹的<strong>长度</strong>，轨迹的<strong>角度</strong>。三者的度量公式如下图所示：</p>
+<p><img src="/uploads/traj_distance.png" srcset="/img/loading.gif" alt="trajectory distance"></p>
+<p>最终的总距离为：<br>$$<br>dist(L_i;L_j) = w_{\bot} d_{\bot}(Li;Lj)+w_{\parallel} d_{\parallel}(Li;Lj)+w_{\theta} d_{\theta}(Li;Lj )<br>$$<br>其中权重为默认均为1，根据不同的应用场景可以修改权重。</p>
+<h4 id="Partition处理"><a href="#Partition处理" class="headerlink" title="Partition处理"></a>Partition处理</h4><p>轨迹的分段主要是通过MDL（最小描述长度）算法。通过找到轨迹的特征点来确定partition，通过计算两个点之间存在partition特征点时的MDL开销和不存在partition特征点时的开销，进行对比，从而确定特征点，并标记出来，算法相对较简单。最终将轨迹划分为了Segment，具体算法过程如下图所示：</p>
+<p><img src="/uploads/traj_partition.png" srcset="/img/loading.gif" alt="trajectory partition"></p>
+<p>通过python实现后得到的测试结果如下图：</p>
+<p><img src="/uploads/trajectory_partition_theta_5.png" srcset="/img/loading.gif" alt="trajectory partition result"></p>
+<h4 id="聚类"><a href="#聚类" class="headerlink" title="聚类"></a>聚类</h4><p>基本思想和DBSCAN算法一致，给定所有轨迹的Segment集合，输出聚类的集合。算法主要分为3个步骤，下面对这3个步骤进行简要说明：</p>
+<ol>
+<li>对于每一条未分类的线段L，算法计算其的$\epsilon$邻域以判断该线段是否为核心线段。若L为核心线段，则程序跳转第2步。 </li>
+<li>计算核心线段的密度相连集合并把其加入该核心线段组成的簇中。如果新加入的线段未被分类，则把其加入队列Q中以做进一步扩展，因为该线段可能是核心线段；若新加入的线段不是核心线段，则不加入队列Q中。 </li>
+<li>计算每个簇的基数，若其值小于阈值，则算法将该簇淘汰，因为其不够密集。 </li>
+</ol>
+<p>可视化部分就不详细说明，可以参考论文。下面是将整个算法实现后，使用测试数据测试后的效果，算法可以设置不同的参数，得到的效果不同，如下图所示：</p>
+<p><img src="/uploads/trajectory-major.png" srcset="/img/loading.gif" alt="聚类和可视化效果"></p>
+<h3 id="代码开源"><a href="#代码开源" class="headerlink" title="代码开源"></a>代码开源</h3><p>GitHub: trajectory-cluster-<a href="https://github.com/MillerWu2014/trajectory-cluster" target="_blank" rel="noopener">https://github.com/MillerWu2014/trajectory-cluster</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/trajectory/">trajectory</a>
+                    
+                      <a class="hover-with-bg" href="/tags/cluster/">cluster</a>
+                    
+                      <a class="hover-with-bg" href="/tags/partition/">partition</a>
+                    
+                      <a class="hover-with-bg" href="/tags/spatial/">spatial</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/08/20/%E5%AD%A6%E4%BC%9A%E9%9D%99(Peace,%20%E5%AE%89%E9%9D%99,%20%E5%B9%B3%E9%9D%99)/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">学会静(Peace,安静,平静)</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2019/07/16/boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+                        <span class="hidden-mobile">boosting系列之LightGBM算法详解</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "基于轨迹的数据挖掘相关技术总结&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>spark中遇到的问题汇总 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 七月 24日 2017, 1:11 凌晨
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      6 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <ol>
+<li><strong>出现<code>“org.apache.spark.SparkException: Task not serializable”</code>这个错误</strong></li>
+</ol>
+<p>在编写<code>spark</code>程序是出现了<code>org.apache.spark.SparkException: Task not serializable</code>错误，由于在操作<code>RDD</code>算子<code>map</code>中使用到了类中定义的其他函数或者定义的其他变量，而引发的未序列化问题。在实际开发过程中难免会引用定义的其他函数或者变量进行操作。为了解决为序列化的问题需要对类进行序列化处理。下面的代码是未序列化之前：</p>
+<pre><code class="scala">case class TypeMatched(label: Boolean, features:Array[Int])
+
+class loadData {
+    /*
+    * Created by Miller on 17-7-17.
+    * Load sandbox&#39;s bson data from location and transform to rdd type
+    * Use spark analysis data and static data
+    * */
+
+    val dataPath: String = &quot;/opt/Project/spark_project/data/sbx_data/text_data_by_spark.csv&quot;
+    val sc: SparkContext = new SparkContext(new SparkConf().setMaster(&quot;local[*]&quot;).setAppName(&quot;LoadSandboxData&quot;))
+
+    // This method use to generate RDD
+    def toRDD: RDD[Array[Int]] = {
+        sc.textFile(dataPath).map(line =&gt; line.split(&quot;,&quot;).map(x =&gt; x.toInt))
+    }
+
+    private def IntToBoolean(s: Int): Boolean = if (s &gt; 0) true else false
+
+    def toTypeData(rdds: RDD[Array[Int]]) = {
+        rdds.map(array =&gt; {
+            val _label_ = IntToBoolean(array(0))
+            val _features_ = array.slice(0, array.length)
+            TypeMatched(_label_, _features_)
+        })
+    }
+}</code></pre>
+<a id="more"></a>在运行是会出现错误：
+<p><code>Exception in thread &quot;main&quot; org.apache.spark.SparkException: Task not serializable</code><br>解决的方法：<br>(1).将类进行序列化,使用<code>extends Serializable</code>即可.<br>(2).若类中有不能序列化的变量或者函数需要进行特殊处理:<code>@transent</code><br>修改后的代码如下:</p>
+<pre><code class="scala">class loadData extends Serializable {
+    /*
+    * Created by Miller on 17-7-17.
+    * Load sandbox&#39;s bson data from location and transform to rdd type
+    * Use spark analysis data and static data
+    * */
+
+    val dataPath: String = &quot;/opt/Project/spark_project/data/sbx_data/text_data_by_spark.csv&quot;
+
+    @transient
+    val sc: SparkContext = new SparkContext(new SparkConf().setMaster(&quot;local[*]&quot;).setAppName(&quot;LoadSandboxData&quot;))
+
+    // This method use to generate RDD
+    def toRDD: RDD[Array[Int]] = {
+        sc.textFile(dataPath).map(line =&gt; line.split(&quot;,&quot;).map(x =&gt; x.toInt))
+    }
+
+    private def IntToBoolean(s: Int): Boolean = if (s &gt; 0) true else false
+
+    def toTypeData(rdds: RDD[Array[Int]]) = {
+        rdds.map(array =&gt; {
+            val _label_ = IntToBoolean(array(0))
+            val _features_ = array.slice(0, array.length)
+            TypeMatched(_label_, _features_)
+        })
+    }
+}</code></pre>
+<p>由于<code>spark</code>中<code>SparkContext</code>和<code>SparkConf</code>都是不能序列化的变量，因此需要对其标注为不需要进行序列化<code>(@transient)</code>.在处理之后代码能顺利运行了。得到结论：由于<code>Spark</code>程序中的<code>map</code>、<code>filter</code>等算子内部引用了类成员函数或变量导致该类所有成员都需要支持序列化，又由于该类某些成员变量不支持序列化，最终引发<code>Task</code>无法序列化问题。相反地，对类中那些不支持序列化问题的成员变量标注后，使得整个类能够正常序列化，最终消除<code>Task</code>未序列化问题。<br>另外还有一种处理的方式就是将要引用的函数或者变量定义到一个<code>object</code>类中，就像<code>java</code>中的<code>static</code>类。这样也可以不做序列化处理。下面可以修改成这样的代码进行测试：</p>
+<pre><code class="scala">object utilTool {
+    def IntToBoolean(s: Int): Boolean = if (s &gt; 0) true else false
+}
+
+class loadData {
+    /*
+    * Created by Miller on 17-7-17.
+    * Load sandbox&#39;s bson data from location and transform to rdd type
+    * Use spark analysis data and static data
+    * */
+
+    val dataPath: String = &quot;/opt/Project/spark_project/data/sbx_data/text_data_by_spark.csv&quot;
+    val sc: SparkContext = new SparkContext(new SparkConf().setMaster(&quot;local[*]&quot;).setAppName(&quot;LoadSandboxData&quot;))
+
+    // This method use to generate RDD
+    def toRDD: RDD[Array[Int]] = {
+        sc.textFile(dataPath).map(line =&gt; line.split(&quot;,&quot;).map(x =&gt; x.toInt))
+    }
+
+    private def IntToBoolean(s: Int): Boolean = if (s &gt; 0) true else false
+
+    def toTypeData(rdds: RDD[Array[Int]]) = {
+        rdds.map(array =&gt; {
+            val _label_ = utilTool.IntToBoolean(array(0))  // utilTool.IntToBoolean
+            val _features_ = array.slice(0, array.length)
+            TypeMatched(_label_, _features_)
+        })
+    }
+}</code></pre>
+<p>解决办法和编程建议：<br>(1)在<code>map</code>或者<code>filter</code>操作中不要引用类(一般是当前类)成员。如果函数可以独立出来，可以写在<code>object</code>类中，这样不需要进行序列化处理。<br>(2)如果不能避免上面1中的情况，就必须要做序列化处理：对类进行序列化，类中不能序列化的成员需要进行特殊标记处理，使得整个类能正常的序列化。</p>
+<ol start="2">
+<li><strong><code>Spark</code>中对象的序列化</strong></li>
+</ol>
+<p>在<code>RDD</code>的<code>API</code>里所引用的所有对象，都必须是可序列化的，因为RDD分布在多台机器是，代码和所引用的对象会序列化，然后复制到多台机器，所以凡是被引用的数据，都必须是可序列化的。例如，如下代码，就会报<code>java.lang.NotSerializableException: scala.util.Random</code> 异常：</p>
+<pre><code class="scala">val rnd = new Random()
+rdd.mapPartition { x=&gt;
+  // ...
+  val i = rnd.nextInt(10)
+  // ...
+}</code></pre>
+<p>因为<code>mapPartition</code>里引用了<code>rnd</code>, 而<code>Random</code>对象没有继承自<code>Serialize</code>，是不可序列化的，所以会报异常。把<code>val rnd = new Random()</code>移动到 <code>mapPartion()</code>里面才行。<br>在一个<code>RDD</code>的<code>api</code>里，不能引用另一个<code>RDD</code>。<code>RDD</code>是不可序列化的，在一个<code>RDD</code>的<code>api</code>里，不能引用另一个<code>RDD</code>。如果你在一个<code>RDD</code>的<code>API</code>里，例如<code>map()</code>里，引用了另一个<code>RDD</code>，编译虽然会通过，但是运行会出现<code>java.lang.NullPointerException</code></p>
+<ol start="3">
+<li><strong>在IDEA中写scala时当两个类分别在两个文件中，引用时会出现错误：<code>Error:not found:type xxxxx</code></strong></li>
+</ol>
+<p>当在项目的代码<code>root</code>目录下创建两个类时，其中一个类去调用另外一个类时出现了错误：<code>error:not found type xxxxx</code>. 通过谷歌发现下很多人也遇到了同样的问题。很多处理的方式都最终放入同一个<code>scala</code>文件中。具体原因也不是清楚。通过多番测试解决方案如下:<br><img src="/uploads/tree.png" srcset="/img/loading.gif" alt="项目结构"><br>(1)新建一个包，在包中将创建两个文件。其他代码和之前的代码一致，只需要在两个文件头中加上<code>package</code> 路径<br>原因分析：当将两个<code>scala</code>文件放入到根目录下(如上图中的<code>scala</code>目录下)就会出现上述的错误。当放入一个包内就不会出现这样的错误。而在<code>eclipse</code>中，在根目录创建文件时默认是放入到了一个<code>default package</code>的包下，因此也不会报错。因此可能是因为包和根目录的区别导致这个错误。</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/spark/">spark</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/spark/">spark</a>
+                    
+                      <a class="hover-with-bg" href="/tags/RDD/">RDD</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/07/26/%E4%BF%A1%E6%81%AF%E8%AE%BA%E4%B8%ADKL%E6%95%A3%E5%BA%A6%E8%AF%A6%E8%A7%A3/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">信息论中KL散度详解</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2017/07/20/abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8/">
+                        <span class="hidden-mobile">abc中的元类和six模块配合使用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "spark中遇到的问题汇总&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>深度学习-详解RNN网络及TensorFlow实现 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 五月 1日 2018, 10:04 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    4.6k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      20 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="1-RNN是什么"><a href="#1-RNN是什么" class="headerlink" title="1.RNN是什么"></a>1.RNN是什么</h2><p>RNN在<a href="https://zh.wikipedia.org/zh-hans/%E9%80%92%E5%BD%92%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C" target="_blank" rel="noopener">维基</a>上面有两种定义，但是一般默认的为时间递归神经网络，全称为(<code>Recurrent Neural Network</code>，简称为RNN)。RNN主要解决序列数据的处理，如文本，语音，视频等。典型应用在语言模型中，比如下面的示例：</p>
+<pre><code class="tex">我昨天上学迟到了，老师批评了____。</code></pre>
+<p>让机器在空的地方填词，这儿填写的词最有可能是”我”，但对于这样的模型通过什么来实现呢？RNN就是很好的选择，它很擅长处理序列数据。</p>
+<p>传统的神经网络是层与层之间进行连接，但是每层之间的神经元是没有连接的（假设各个数据之间是相互独立的）。而RNN的结构就是当前层的数据和之前的输出也有关系，即每层之间的神经元不再是无连接，而是有连接的。基本结构可以通过下面表示：</p>
+<p><img src="%5Cuploads%5Crnn_struct.png" srcset="/img/loading.gif" alt="nn"> </p>
+<p>上面的结构中非常清晰的表示了layer的结构，主要针对序列型的数据，各个神经元之间存在关联，每个时刻的状态会输入到后续的时刻中。</p>
+<h2 id="2-RNN结构"><a href="#2-RNN结构" class="headerlink" title="2.RNN结构"></a>2.RNN结构</h2><p>RNN的大体结构如上图所示，也可以更加详细的表示，如下图中，输入，输出，状态项等。如下图中，存在一个循环结构，每个时间点的状态进行了下一时间点输入。</p>
+<p><img src="%5Cuploads%5Crnn_01.jpg" srcset="/img/loading.gif" alt="RNN01"> </p>
+<p>在上图中，输入单元（<code>input units</code>）为：$x_{t-1}, x_t, x_{t+1}$，输出单元（<code>output units</code>）为：$o_{t-1}, o_t, o_{t+1}$，隐藏单元（<code>hidden units</code>）为：$s_{t-1}, s_t, s_{t+1}$。</p>
+<p>在某个时刻的隐层单元的输出：$s_t=f(Ws_{t-1}+Ux_t)$ ，其中$f$函数为激活函数，一般为<code>sigmoid,tanh,relu</code>等函数。在计算$s_0$时需要前面的状态，但是并不存在，因此一般设置为0向量。</p>
+<p>某个时刻$t$的输出为：$o_t=softmax(Vs_t)=softmax(V(f(Ws_{t-1}+Ux_t)))$，其中$s_t$为时刻$t$的记忆单元。$s_t$包含了前面所有步的记忆，但是在实际使用过程中，$s_t$只会包含前面若干步的记忆，而不是所有步。</p>
+<p>RNN中，每输入一步，每一层都共享参数$U,V,W$，RNN中主要在于隐藏层，在隐藏层能够捕捉到序列的关键信息。</p>
+<a id="more"></a>
+<h2 id="3-RNN的泛化结构"><a href="#3-RNN的泛化结构" class="headerlink" title="3.RNN的泛化结构"></a>3.RNN的泛化结构</h2><p>RNN的变体有很多，如双向RNN，多层双向RNN，多对多的RNN，一对多的RNN等等。下面对各种结构进行展示，并对这些结构进行简要说明。</p>
+<h3 id="3-1-一对一"><a href="#3-1-一对一" class="headerlink" title="3.1 一对一"></a>3.1 一对一</h3><p>即一个输入对应一个输出的结构，如上图中的结构。</p>
+<h3 id="3-2-多对一的结构"><a href="#3-2-多对一的结构" class="headerlink" title="3.2 多对一的结构"></a>3.2 多对一的结构</h3><p><img src="%5Cuploads%5CRNN_02.png" srcset="/img/loading.gif" alt="Many to one"> </p>
+<p>多个输入对应一个输出，比如情感分析。如一段话，判断这段话的情感。其中，$x_1, x_2, …, x_{t-1}, x_t$表示句子中的$t$个词语，$o$表示最终的情感输出标签。</p>
+<h3 id="3-3-一对多的结构"><a href="#3-3-一对多的结构" class="headerlink" title="3.3 一对多的结构"></a>3.3 一对多的结构</h3><p><img src="%5Cuploads%5CRNN_03.png" srcset="/img/loading.gif" alt="One to Many"> </p>
+<p>这个结构和3.2中的多对一的结构类似。</p>
+<h3 id="3-4-多对多结构"><a href="#3-4-多对多结构" class="headerlink" title="3.4 多对多结构"></a>3.4 多对多结构</h3><p><img src="%5Cuploads%5CRNN_04.png" srcset="/img/loading.gif" alt="Many to Many"> </p>
+<h3 id="3-5-双向RNN"><a href="#3-5-双向RNN" class="headerlink" title="3.5 双向RNN"></a>3.5 双向RNN</h3><p>前面的结构均为单向的RNN，$s_t$都只是记录了之前的信息，未考虑后面的信息。基于这种情况，于是出现了双向RNN，这种结构可以用到机器翻译，需要根据上下文的情况，给出翻译结果。</p>
+<p><img src="%5Cuploads%5CRNN_05.png" srcset="/img/loading.gif" alt="RNN"> </p>
+<p>双向RNN的结构要复杂一些，如前向计算：<br>$$<br>o_t=w^{os}<em>ts_t+w^{oh}_th_t=w^{os}_t(w</em>{t-1}^{sh}s_{t-1}+w_{t-1}^{sx}x_{t})+w^{oh}<em>t(w</em>{t}^{hx}s_{t+1}+w_{t}^{hh}x_{t})<br>$$</p>
+<h3 id="3-6-多层RNN"><a href="#3-6-多层RNN" class="headerlink" title="3.6 多层RNN"></a>3.6 多层RNN</h3><p>前面的结构中多只是单层的state形式RNN，深度网络肯定是深层次结构会有更好的效果。因此可以是多层的RNN，多层次的RNN结构如下：</p>
+<p><img src="%5Cuploads%5CRNN_06.png" srcset="/img/loading.gif" alt="æ·±å±çRNN"> </p>
+<h2 id="4-Back-Propagation-Through-Time-BPTT-训练"><a href="#4-Back-Propagation-Through-Time-BPTT-训练" class="headerlink" title="4.Back Propagation Through Time(BPTT)训练"></a>4.Back Propagation Through Time(BPTT)训练</h2><h3 id="4-1-符号说明"><a href="#4-1-符号说明" class="headerlink" title="4.1 符号说明"></a>4.1 符号说明</h3><p>现在根据上面的1对1结构，如下图所示，说明反向传播过程。在整个模型过程中有部分激励函数来对节点进行计算：</p>
+<p><img src="http://lawlite.me/assets/blog_images/RNN/RNN_09.png" srcset="/img/loading.gif" alt="RNNåºæ¬ç»æ"> </p>
+<p>$\phi$ ：隐藏层的激活函数</p>
+<p>$\varphi$ ：输出层的变换函数</p>
+<p>$L_t=L_t(o_t, y_t)$：模型的损失函数</p>
+<p>其中$y_t$为一个one-hot向量。</p>
+<h3 id="4-2-反向传播过程"><a href="#4-2-反向传播过程" class="headerlink" title="4.2 反向传播过程"></a>4.2 反向传播过程</h3><p>上面的损失函数只是计算了某个时刻的损失，当接受完序列后，再统一计算损失，此时模型的总损失为（假设输入序列的长度为$n$时）：<br>$$<br>L=\sum_{t=1}^n{L_t}<br>$$<br>下面对整个结构细化后：</p>
+<p><img src="http://lawlite.me/assets/blog_images/RNN/RNN_10.png" srcset="/img/loading.gif" alt="RNN"> </p>
+<p>$o_t=\varphi(Vs_t)=\varphi(V(Ux_t+ws_{t-1}))$</p>
+<p>其中$s_0=(0, 0, 0, ……, 0)^T$</p>
+<p>令：$o_t^=Vs_t$，$s_t^=Us_t+ws_{t-1}$，即就是没有经过激励函数和变换函数前 ，则有：$o_t=\varphi(o_t^), s_t=\phi(s_t^)$</p>
+<h4 id="4-2-1-矩阵V的更新"><a href="#4-2-1-矩阵V的更新" class="headerlink" title="4.2.1 矩阵V的更新"></a>4.2.1 矩阵V的更新</h4><p>对于V的更新和传统的神经网络更新方式一致，主要通过链式法则来进行求导：<br>$$<br>\frac{\partial{L_t}}{\partial{s_t^,}}=\frac{\partial{L_t}}{\partial{Vs_t}}\times\frac{\partial{V^Ts^T}}{\partial{s_t}}\times\frac{\partial{s_t}}{\partial{s_t^,}}=V^T(\frac{\partial{L_t}}{\partial{o_t}}\varphi’(o_t^,))\<br>\frac{\partial{L_t}}{\partial{s_{k-1}^,}}=\frac{\partial{L_t}}{\partial{s_{k}^,}}\times\frac{\partial{s_k^,}}{\partial{s_{k-1}^,}}=W^T\times(\frac{\partial{L_t}}{\partial{s_{k}^,}}\varphi’(s_{k-1}^,)), k=1,2,3,4,……,t<br>$$<br>因为$L=\sum_{t=1}^n{L_t}$，所以对应矩阵V的更新导数为：<br>$$<br>\frac{\partial{L}}{\partial{V}}=\sum_{t=1}^n(\frac{\partial{L_t}}{\partial{o_t}}{\varphi}’(o_t))\times{s_t^T}<br>$$</p>
+<h4 id="4-2-2-矩阵U和W的更新"><a href="#4-2-2-矩阵U和W的更新" class="headerlink" title="4.2.2 矩阵U和W的更新"></a>4.2.2 矩阵U和W的更新</h4><p>因为RNN和BP网络不同的是各个神经元之间(state)存在通信，因此再计算梯度的时候和BP网络计算梯度有一定的差异。可以通过循环来计算各个梯度，时间t从n到1进行循环。</p>
+<p>首先计算某个时间点上的梯度：<br>$$<br>\frac{\partial{L_t}}{\partial{s_t^,}}=\frac{\partial{L_t}}{\partial{Vs_t}}\times\frac{\partial{V^Ts^T}}{\partial{s_t}}\times\frac{\partial{s_t}}{\partial{s_t^,}}=V^T(\frac{\partial{L_t}}{\partial{o_t}}\varphi’(o_t^,))\<br>\frac{\partial{L_t}}{\partial{s_{k-1}^,}}=\frac{\partial{L_t}}{\partial{s_{k}^,}}\times\frac{\partial{s_k^,}}{\partial{s_{k-1}^,}}=W^T\times(\frac{\partial{L_t}}{\partial{s_{k}^,}}varphi’(s_{k-1}^,)), k=1,2,3,4,……,t<br>$$<br>利用巨补梯度计算U和W的梯度：<br>$$<br>\frac{\partial{L_t}}{\partial{U}}+=\sum_{k=1}^t\frac{\partial{L_t}}{\partial{s_k^,}}\times\frac{\partial{s_k^,}}{\partial{U}}=\sum_{k=1}^t\frac{\partial{L_t}}{\partial{s_k^,}}\times{x_t^T}\<br>\frac{\partial{L_t}}{\partial{W}}+=\sum_{k=1}^t\frac{\partial{L_t}}{\partial{s_k^,}}\times\frac{\partial{s_k^,}}{\partial{W}}=\sum_{k=1}^t\frac{\partial{L_t}}{\partial{s_k^,}}\times{s_{t-1}^T}<br>$$</p>
+<h3 id="4-3-训练问题"><a href="#4-3-训练问题" class="headerlink" title="4.3 训练问题"></a>4.3 训练问题</h3><p>从上面的参数更新可以看出，在更新权重时都需要计算一个激活函数的倒数，如果时间长度较长时，而梯度时累积的，因此会造成度消失或梯度爆炸</p>
+<p>RNN的作用主要是存在记忆的功能，但是梯度问题又反应出了不能使用太长的时间长度，即不能记忆太久的信息，这样就存在一定矛盾，改进的思路主要有：</p>
+<ol>
+<li>使用一些trick，比如合适的励函数不使用tanh, sigmod等函数，使用relu类似的)，初始化，BN等</li>
+<li>改进RNN中tate的传递方式比如RNN的升级版本LSTM模型。</li>
+</ol>
+<h2 id="5-RNN结构详解"><a href="#5-RNN结构详解" class="headerlink" title="5. RNN结构详解"></a>5. RNN结构详解</h2><p><img src="/uploads/RNNs%E7%BB%93%E6%9E%84%E8%AF%A6%E8%A7%A3%E5%9B%BE.png" srcset="/img/loading.gif" alt="RNN结构详解"></p>
+<h2 id="6-RNN基于mnist的实现"><a href="#6-RNN基于mnist的实现" class="headerlink" title="6. RNN基于mnist的实现"></a>6. RNN基于mnist的实现</h2><p>基于mnist数据实现RNN模型，对结果的预测。mnist的图片为2828的矩阵，因此在RNN输入时：<code>time_step=28</code>，<code>depth=28</code>，目标序列的长度为10，RNN种的隐藏神经元个数在本实例中定义为128，即：<code>state_size=128</code>。</p>
+<pre><code class="python">&quot;&quot;&quot;
+Recurrent Neural Network. A Recurrent Neural Network (RNN) implementation example using TensorFlow library.
+&quot;&quot;&quot;
+from __future__ import division, print_function
+from tensorflow.examples.tutorials.mnist import input_data
+
+import tensorflow as tf
+import os
+
+
+os.environ[&#39;TF_MIN_GPU_MULTIPROCESSOR_COUNT&#39;] = &#39;2&#39;
+mnist = input_data.read_data_sets(&#39;/opt/workspace/project/deep-st-nn/data/MNIST_DATA&#39;, one_hot=True)
+
+# defined train parameters
+learning_rate = 0.02
+train_step = 10000
+batch_size = 100
+
+# defined network parameters
+time_steps = 28  # the mnist image size 28  28
+depth = 28  # singe input vector length: depth
+hidden_num = 128  # state_size
+num_classes = 10  # mnist total class
+
+# graph inputs
+with tf.name_scope(&quot;inputs&quot;):
+    X = tf.placeholder(tf.float32, shape=(None, time_steps, depth), name=&quot;X&quot;)
+    Y = tf.placeholder(tf.float32, shape=(None, num_classes), name=&quot;Y&quot;)
+
+    with tf.name_scope(&quot;variables&quot;), tf.device(&quot;/cpu:0&quot;):
+        # defined variables
+        weights = {&quot;out&quot;: tf.Variable(tf.random_normal((hidden_num, num_classes)), trainable=True,
+                                      name=&quot;out_weights&quot;)}
+        bias = {&quot;out&quot;: tf.Variable(tf.random_normal([num_classes]),
+                                   name=&quot;out_bias&quot;)}
+
+
+def rnn_model(x, weights_, bias_):
+    &quot;&quot;&quot;
+    parameters
+    ----------
+        x: tensor, model inputs, shape is [batch_size, time_steps, depth]
+        weights_: dict variable, the output transform parameter, shape is [state_size, output_length or class_num]
+        bias_: dict variable, the output transform bias, shape is [output_length or class_num]
+
+    return
+    ------
+        tensor, model output, the shape is [batch_size, class_num]
+    &quot;&quot;&quot;
+    # inputs_ = tf.unstack(x, axis=1)  # to list [batch_size, depth]
+    cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_num, forget_bias=1.0)
+    # cell = tf.nn.rnn_cell.BasicRNNCell(hidden_num)
+    outputs, states = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32,
+                                        initial_state=cell.zero_state(batch_size=batch_size, dtype=tf.float32))
+    outputs = tf.unstack(outputs, axis=1)
+    return tf.matmul(outputs[-1], weights_.get(&quot;out&quot;)) + bias_.get(&quot;out&quot;)
+
+
+def mul_rnn_model(x, weights_, bias_):
+    &quot;&quot;&quot;
+    parameters
+    ----------
+        x: tensor, model inputs, shape is [batch_size, time_steps, depth]
+        weights_: dict variable, the output transform parameter, shape is [state_size, output_length or class_num]
+        bias_: dict variable, the output transform bias, shape is [output_length or class_num]
+
+    return
+    ------
+        tensor, model output, the shape is [batch_size, class_num]
+    &quot;&quot;&quot;
+    with tf.name_scope(&quot;hidden&quot;):
+        mul_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.BasicRNNCell(hidden_num) for _ in range(3)])
+        # dropout wrapper
+        dropper_cell = tf.nn.rnn_cell.DropoutWrapper(mul_cell, output_keep_prob=1, state_keep_prob=0.7)
+        outputs, states = tf.nn.dynamic_rnn(dropper_cell, x, dtype=tf.float32)
+        outputs = tf.unstack(outputs, axis=1)
+        # tf.summary.histogram(&quot;hidden_last_ouput&quot;, outputs[-1])
+        return tf.matmul(outputs[-1], weights_.get(&quot;out&quot;)) + bias_.get(&quot;out&quot;)
+
+
+with tf.name_scope(&quot;loss&quot;):
+    with tf.device(&quot;/gpu:1&quot;):
+        logits = mul_rnn_model(X, weights, bias)  # rnn_model(X, weights, bias)
+        prediction = tf.nn.softmax(logits)
+        loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y))
+
+with tf.name_scope(&quot;train&quot;):
+    with tf.device(&quot;/gpu:0&quot;):
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+        train_op = optimizer.minimize(loss_op)
+
+correct_predict = tf.equal(tf.argmax(prediction, axis=1), tf.argmax(Y, axis=1))
+accuracy = tf.reduce_mean(tf.cast(correct_predict, tf.float32))
+
+tf.summary.scalar(&quot;loss&quot;, loss_op)
+tf.summary.scalar(&quot;acc&quot;, accuracy)
+tf.summary.histogram(&quot;weight_out&quot;, weights.get(&quot;out&quot;))
+tf.summary.histogram(&quot;bias_out&quot;, bias.get(&quot;out&quot;))
+merged = tf.summary.merge_all()
+
+init_variable = tf.global_variables_initializer()
+
+# starting train
+# config = tf.ConfigProto(allow_soft_placement=True)
+with tf.Session() as sess:
+    sess.run(init_variable)
+    writer = tf.summary.FileWriter(&quot;.&quot; + &#39;/rnn&#39;, sess.graph)
+    for step in range(1, train_step+1):
+        batch_x, batch_y = mnist.train.next_batch(batch_size)
+        batch_x = batch_x.reshape((batch_size, time_steps, depth))
+        sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
+        if step % 100 == 0:
+            loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
+            print(&quot;The step: %d; Minibatch loss: %f; Train accuracy: %f&quot; % (step, loss, acc))
+        res = sess.run(merged, feed_dict={X: batch_x, Y: batch_y})
+        writer.add_summary(res, global_step=step)
+    print(&quot;Optimization Finished!&quot;)
+
+    # test model
+    test_len = 100
+    test_datas = mnist.test.images[:test_len].reshape((-1, time_steps, depth))
+    test_lable = mnist.test.labels[:test_len]
+    print(&quot;Test accuracy: %f&quot; % (sess.run(accuracy, feed_dict={X: test_datas, Y: test_lable})))</code></pre>
+<h2 id="7-TensorFlow中RNN的实现"><a href="#7-TensorFlow中RNN的实现" class="headerlink" title="7.TensorFlow中RNN的实现"></a>7.TensorFlow中RNN的实现</h2><p>在TensorFlow中对RNN模型进行了基本实现，下面对tensorflow中的实现细节进行说明，主要包括cell`的实现环(多步执行)实现，以及多层rnn的实现。并对cell中的输入，输出进行详解。</p>
+<p>RNN模型中的基本<code>cell</code>主要通过<code>tf.nn.rnn_cell.RNNCell</code>, <code>tf.nn.rnn_cell.BasicRNNCell</code> ,<code>tf.nn.rnn_cell.BasicLSTMCell</code>三个模块实现，后面两个cell模型就是基于前面模块的实现，<code>RNNCell</code>是一个抽象类(<code>abstract class</code>)。主要需要实现<code>state_size</code>，<code>output_size</code>，<code>build</code>等方法。下面从RNN中最基本的cell开始。</p>
+<h3 id="7-1-单步RNN：RNNCell"><a href="#7-1-单步RNN：RNNCell" class="headerlink" title="7.1 单步RNN：RNNCell"></a>7.1 单步RNN：RNNCell</h3><p>RNNCell是RNN模型中的基本单元，这个cell就是上图中的一个长方形模块，也是tensorflow中实现RNN的基本单元，每个RNNCell都有一个<code>call</code>方法以及<code>__call__</code>方法，使用方式：<code>output, next_state = call(inputs, state)</code>，调用一次<code>call</code>方法就会计算当前时间步的输出和状态两个值，调用一次<code>RNNCell.call</code>方法相当于在时间轴上推进了一步。上面说了<code>BasicRNNCell</code> 和<code>BasicLSTMCell</code>是基于<code>RNNCell</code>抽象类的实现，因此一般在使用时都只是使用后面两个cell。首先用代码测试cell：</p>
+<pre><code class="python">import os
+import tensorflow as tf
+import numpy as np
+
+os.environ[&#39;TF_MIN_GPU_MULTIPROCESSOR_COUNT&#39;] = &#39;2&#39;
+
+cell = tf.nn.rnn_cell.BasicRNNCell(12, reuse=True)  # defined rnn cell, the parameter num_units(hidden_units_num or state_size)
+state_size = cell.state_size  # the state size in rnn model
+print(&quot;The rnn model state size is %d.&quot; % state_size)  # 12
+
+rnn_inputs = tf.placeholder(tf.float32, shape=(100, 10), name=&quot;rnn_inputs_x&quot;)  # 10 is vector depth
+inputs = rnn_inputs
+h0 = cell.zero_state(100, tf.float32)  # size: 100, 12
+out1, h1 = cell(inputs, h0)  # inputs size is (batch_size, depth)
+
+print(&quot;The state size:&quot;, h1.shape)
+
+# ------------------output----------------------------#
+The rnn model state size is 12.
+The state size: (100, 12) The output size: (100, 12)
+The state shape: (100, 12)</code></pre>
+<p>上面的代码中定义了一个基本的<code>RNNCell</code>，传入了一个参数<code>num_units=12</code>，这个参数是定义<code>cell</code>中的隐藏单元的数量，即上图中的<code>state_size</code>大小，而另外一个参数<code>reuse=True</code>主要是觉得cell的参数是否共享。<code>state size</code>可以通过cell的<code>state_size</code>来获取。从上面的程序中也可以看出是和输入的``num_units`值相同。</p>
+<p><code>state</code>的初始化，在前面也说过，当在第一个时刻时，状态通过0来初始化一个<code>h0(state)</code>来输入到第一个时刻，cell中也提供了初始化的方法<code>zero_state(batch_size, dtype)</code>，初始化后<code>h0</code>的<code>shape</code>是<code>(batch_size, state_size)</code>。</p>
+<p><code>RNNCell</code>的<code>call</code>方法主要接收两个参数<code>inputs and state</code>，参数<code>inputs</code>主要是某时刻的输入值，<code>shape</code>是<code>(batch_size, depth)</code>，这儿的<code>depth</code>就是上面图中的<code>k</code>值。参数<code>state</code>就是通过<code>cell</code>的方法<code>zero_state(batch_size, dtype</code>生成的<code>state</code>。调用<code>call</code>后返回<code>output, state</code>，它们的size都是<code>(batch_size, state_size)</code>.</p>
+<p>下面看下<code>RNNCell</code>的<code>call</code>方法源码：</p>
+<pre><code class="python">def call(self, inputs, state):
+    gate_inputs = math_ops.matmul(array_ops.concat([inputs, state], 1), self._kernel)
+    # _kernel shape: (depth+state_size, state_size)
+    gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)  # _bias size: state_size
+    output = self._activation(gate_inputs)  # default `tanh` function
+    return output, output</code></pre>
+<p>可以看出，在实现过程中实际上是对<code>inputs</code>和<code>state</code>进行了<code>concat</code>，形成了<code>(batch_size, depth+state_size)</code>大小的tensor。然后再和参数进行乘积运算(_kernel的size是<code>(depth+state_size, state_size)</code>)，再加上了一个bias(size是：<code>(state_size)</code>)。再通过激活函数运算，再没有给定激活函数情况下，tensorflow默认使用的是<code>tanh</code>。</p>
+<p>上面整个过程单步的RNNCell就运算结束了。下面进行多部RNNCell计算。</p>
+<h3 id="7-2-循环起来：一次执行多步RNNCell"><a href="#7-2-循环起来：一次执行多步RNNCell" class="headerlink" title="7.2 循环起来：一次执行多步RNNCell"></a>7.2 循环起来：一次执行多步RNNCell</h3><p>单步RNNCell只能计算一个步骤，如果序列长度为100，那么就需要循环调用100次的RNNCell，如x1，h0得到o1，h1；x2，h1得到o2，h2；x3，h2得到o3，h3，这样依次执行。而TensorFlow中也提供一个函数(<code>tf.nn.dynamic_rnn</code>)来实现这个过程。这个函数是直接通过（h0, x1, x2, …,x100）得到(h1, h2, h3, h4, …, h100)等。下面看<code>dynamic_rnn</code>的参数：</p>
+<pre><code class="python">def dynamic_rnn(cell, inputs, sequence_length=None, initial_state=None, dtype=None, 
+                parallel_iterations=None, swap_memory=False, time_major=False, scope=None):
+    &quot;&quot;&quot;
+    cell: An instance of RNNCell.
+    inputs: The RNN inputs.
+      If `time_major == False` (default), this must be a `Tensor` of shape:`[batch_size, max_time, ...]`, or a nested tuple of such elements.
+      If `time_major == True`, this must be a `Tensor` of shape: `[max_time, batch_size, ...]`, or a nested tuple of such elements.
+    initial_state: (optional) An initial state for the RNN.
+      If `cell.state_size` is an integer, this must be a `Tensor` of appropriate type and shape `[batch_size, cell.state_size]`.
+      If `cell.state_size` is a tuple, this should be a tuple of tensors having shapes `[batch_size, s] for s in cell.state_size`.
+    &quot;&quot;&quot;</code></pre>
+<p>参数<code>cell</code>接收RNNCell实例化对象，如<code>BasicRNNCell</code> ，<code>BasicLSTMCell</code>实例化对象，也可以接收<code>MultiRNNCell</code>实例化对象等。参数<code>inputs</code>为输入序列，<code>inputs</code>的<code>shape</code>是<code>(batch_size, time_steps, depth)</code>，其中<code>depth</code>就是上图中的<code>k</code>，这个参数的shape主要取决于另外也给参数<code>time_major</code>，默认为<code>False</code>；这儿输入后再进入到cell的<code>inputs</code>时进行了转换，可以通过<code>unstack</code>的方式转换成<code>time_steps(bathc_size, depth)</code>，cell每次接收的inputs是<code>(batch_size, depth)</code>。下面是一个完整测试：</p>
+<pre><code class="python"># defined rnn cell, the parameter num_units(hidden_units_num or state_size)
+cell = tf.nn.rnn_cell.BasicRNNCell(12, reuse=None)  
+state_size = cell.state_size  # the state size in rnn model
+print(&quot;The rnn model state size is %d.&quot; % state_size)  # 12
+
+rnn_inputs = tf.placeholder(tf.float32, shape=(100, 20, 10), name=&quot;rnn_inputs_x&quot;)  # 20 is time steps, 10 is vector depth
+inputs = tf.unstack(rnn_inputs, axis=1)
+
+h0 = cell.zero_state(100, tf.float32)  # size: 100, 12
+out1, h1 = cell(inputs[0], h0)  # inputs size is (batch_size, depth)
+print(&quot;The state size:&quot;, h1.shape, &quot;The output size:&quot;, out1.shape)
+
+# dynamic_rnn: one time execute many time steps
+output, state = tf.nn.dynamic_rnn(cell, rnn_inputs, initial_state=h0) 
+print(&quot;The state shape:&quot;, state.shape)  # (100, 12)</code></pre>
+<p>上面得到得output得shape是：<code>(batch_size, time_steps, cell.output_size)</code>，在上面得例子中，输出得shape是：<code>(100, 20, 12)</code>。</p>
+<h3 id="7-3-MultiRNNCell：多层RNNCell"><a href="#7-3-MultiRNNCell：多层RNNCell" class="headerlink" title="7.3 MultiRNNCell：多层RNNCell"></a>7.3 MultiRNNCell：多层RNNCell</h3><p>上面的过程都只是单层的RNN模型，但是在实际应用中会使用多层RNN模型，因此需要基于RNNCell来堆叠多层的RNN，第一层RNN输出的(h1, h2, h3, …)，作为下一层的输入，这样以此类推。在TensorFlow中通过<code>MultiRNNCell</code>实现该功能：</p>
+<pre><code class="python">def get_a_cell(num):
+    return tf.nn.rnn_cell.BasicRNNCell(num_units=num)
+
+# 用tf.nn.rnn_cell MultiRNNCell创建3层RNN
+cell = tf.nn.rnn_cell.MultiRNNCell([get_a_cell(i) for i in [128, 256, 128]])  # 3层RNN
+print(cell.state_size)  # (128, 256, 128)
+
+inputs = tf.placeholder(np.float32, shape=(32, 100))  # 32是batch_size, 10为depth
+h0 = cell.zero_state(32, np.float32)  # 通过zero_state得到一个全0的初始状态
+output_multi, h1 = cell.call(inputs, h0)
+print(h1)  # tuple中含有3个32x128的向量</code></pre>
+<p>上面的测试代码中，创建了3层的<code>RNN</code>模型，每层的<code>state_size</code>是<code>(128, 256, 128)</code>，<code>MultiRNNCell</code>得到的cell其实也是<code>RNNCell</code>的子类，然后调用<code>call</code>方法后输出了<code>output</code>和<code>h1</code>，输出后的<code>h1</code>是一个tuple，其中每个元素对应的是一个tensor，tensor的大小分别是<code>((32, 128), (32, 256), (32, 128))</code>。</p>
+<p><code>MultiRNNCell</code>只是创建了单步的多层RNN，但在实际应用中肯定是多步的，因此还需要进行多步执行多层RNN，每层的time_steps是相同的。在TensorFlow中还是通过<code>dynamic_rnn</code>来实现的，下面是TensorFlow的官方示例：</p>
+<pre><code class="python"># create 2 LSTMCells
+rnn_layers = [tf.nn.rnn_cell.LSTMCell(size) for size in [128, 256]]
+
+# create a RNN cell composed sequentially of a number of RNNCells
+multi_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(rnn_layers)
+
+# &#39;outputs&#39; is a tensor of shape [batch_size, max_time, 256]
+# &#39;state&#39; is a N-tuple where N is the number of LSTMCells containing a tf.contrib.rnn.LSTMStateTuple for each cell
+outputs, state = tf.nn.dynamic_rnn(cell=multi_rnn_cell, inputs=data, dtype=tf.float32)</code></pre>
+<h3 id="7-4-误区"><a href="#7-4-误区" class="headerlink" title="7.4 误区"></a>7.4 误区</h3><h4 id="7-4-1-误区一：cell中的ouput"><a href="#7-4-1-误区一：cell中的ouput" class="headerlink" title="7.4.1 误区一：cell中的ouput"></a>7.4.1 误区一：cell中的ouput</h4><p>从上面单步RNN中的源码中可以看出，output和state都是一样的，这儿cell的output并非在实际应用中的Y值。还需要经过处理、计算才能输出最终的output。在RNNCell中的output只是当前cell的output，并非最终模型输出的Y值，因此Y值得size和cell得output_size也并非相等。需要对cell得output再定义新得变换才能转换成希望得输出Y。</p>
+<h4 id="7-4-2-误区二：RNN中的dropout"><a href="#7-4-2-误区二：RNN中的dropout" class="headerlink" title="7.4.2 误区二：RNN中的dropout"></a>7.4.2 误区二：RNN中的dropout</h4><p>在RNN模型中也可以通过 dropout来有效得防止过拟合，在RNN中的dropout和其他的有一定的差异，在RNN中在时间序列方向不进行dropout，也就是在循环的部分不会进行dropout，如下图中，实线的部分不会进行dropout，在虚线的部分进行dropout。在实现时主要通过dropoutwrapper实现dropout功能。</p>
+<p><img src="%5Cuploads%5Cdropoutwrapper.png" srcset="/img/loading.gif" alt="RNN简化结构"></p>
+<h2 id="8-Refrence"><a href="#8-Refrence" class="headerlink" title="8.Refrence"></a>8.Refrence</h2><p>(1).<a href="http://www.tensorflownews.com/category/course/" target="_blank" rel="noopener">基于TensorFlow关于各种网络结构的实战案例</a></p>
+<p>(2).<a href="https://www.jianshu.com/p/39a99c88a565" target="_blank" rel="noopener">详解循环神经网络(Recurrent Neural Network)</a></p>
+<p>(3).<a href="https://zybuluo.com/hanbingtao/note/541458" target="_blank" rel="noopener">零基础入门循环神经网络</a></p>
+<p>(4).<a href="https://zhuanlan.zhihu.com/p/32755043" target="_blank" rel="noopener">循环神经网络RNN介绍1：什么是RNN、为什么需要RNN、前后向传播详解、Keras实现</a></p>
+<p>(5).<a href="https://blog.csdn.net/chenvast/article/details/79133127" target="_blank" rel="noopener">深度学习-TensorFlow实现RNN</a></p>
+<p>(6).<a href="http://lawlite.me/2017/06/14/RNN-%E5%BE%AA%E7%8E%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%92%8CLSTM-01%E5%9F%BA%E7%A1%80/" target="_blank" rel="noopener">循环神经网络RNN基础</a></p>
+<p>(7).<a href="https://blog.csdn.net/mydear_11000/article/details/52414342" target="_blank" rel="noopener">解读TensorFlow下实现的RNN</a></p>
+<p>(8).<a href="http://lawlite.me/2017/06/16/RNN-%E5%BE%AA%E7%8E%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-02Tensorflow%E4%B8%AD%E7%9A%84%E5%AE%9E%E7%8E%B0/#1-%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B" target="_blank" rel="noopener">RNN-循环神经网络-02Tensorflow中的实现 </a></p>
+<p>(9).<a href="http://lawlite.me/2017/06/21/RNN-LSTM%E5%BE%AA%E7%8E%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-03Tensorflow%E8%BF%9B%E9%98%B6%E5%AE%9E%E7%8E%B0/" target="_blank" rel="noopener">RNN-LSTM循环神经网络-03Tensorflow进阶实现</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/deep-learning/">deep learning</a>
+                    
+                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/SGD/">SGD</a>
+                    
+                      <a class="hover-with-bg" href="/tags/RNN/">RNN</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">深度学习-详解LSTM网络和TensorFlow实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/04/26/TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
+                        <span class="hidden-mobile">TensorBoard的使用教程</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "深度学习-详解RNN网络及TensorFlow实现&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

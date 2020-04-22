@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>spark中创建RDD的几种方式 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 七月 9日 2017, 10:47 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    896 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      4 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>创建<code>RDD</code>主要有三种方式：从外部数据创建<code>RDD</code>，从另外一个<code>RDD</code>创建，对现有的数据列表或者数据集合进行创建。三种方式均能够创建<code>RDD</code>对象。<code>RDD</code>可以包含<code>Scala</code>，<code>Python</code>，<code>Java</code>的任意类型的对象，因此任何数据均可以创建<code>RDD</code>。<code>spark</code>创建<code>RDD</code>时首先需要通过<code>SpakContext</code>作为对象，创建一个<code>sc</code>对象，再通过<code>sc</code>来创建<code>RDD</code>。<code>sc</code>对象之前可以通过<code>sparkconf</code>对象对<code>SpakContex</code>t进行设置。如集群的<code>URL</code>和应用名等等。下面是对<code>SpakContext</code>对象设置。如下：</p>
+<pre><code class="python">from pyspark import SparkContext, SparkConf
+
+conf = SparkConf().setAppName(&quot;test&quot;).setMaster(&quot;local&quot;).setSparkHome(&quot;/opt/spark1.6.0/&quot;)
+sc = SparkContext(conf=conf)</code></pre>
+<p>上面通过<code>SparkConf</code>对象设置了<code>conf</code>. 再创建<code>sc</code>对象，并将设置传给<code>sc</code>对象。<code>SparkConf</code>对象的方法有：<code>set(key,value),setIfMissing(key,value),setMaster(value),setAppName(value)，setSparkHome(value)，setExecutorEnv(key=None, value=None, pairs=None)，setAll(pairs)</code>并对应了<code>get</code>方法。</p>
+<a id="more"></a>
+<ul>
+<li><strong>外部数据创建RDD</strong></li>
+</ul>
+<p><code>spark</code>提供很多外部数据创建的接口，如下面所示的<code>textFile</code>.还有<code>hadoopFile</code>,<code>pickleFile</code>以及<code>sqlContext.jsonFile</code>，还提供<code>sql</code>以及<code>hadoop</code>的接口。基本包含了主要的数据格式的读入接口。下面是通过<code>textFile</code>对文本数据进行创建<code>RDD</code>。</p>
+<pre><code class="python">from pyspark import SparkContext
+from pyspark.mllib import classification
+from pyspark.mllib.regression import LabeledPoint
+from pyspark.mllib.evaluation import BinaryClassificationMetrics
+
+logFile = &quot;/opt/spark1.6.0/data/mllib/sample_svm_data.txt&quot;
+sc = SparkContext(&quot;local&quot;, &quot;Simple App&quot;)
+logData = sc.textFile(logFile)
+sc.stop()</code></pre>
+<ul>
+<li><strong>从集合数据中创建RDD</strong></li>
+</ul>
+<p>比如从<code>Python</code>的<code>array</code>中创建<code>RDD</code>。这种创建方式为最简单的一种方式。直接通过<code>SpakContext</code>的<code>paralleliza()</code>方法即可。这种方法可以快速的创建<code>RDD</code>对象，再对<code>RDD</code>对象进行转化操作及行动操作等等。下面例子中就是通过<code>paralleliza</code>方法创建<code>RDD</code>。</p>
+<pre><code class="python">#!/usr/bin/env python
+# _*_ coding:utf8 _*_
+from sklearn.datasets import load_iris
+from pyspark import SparkContext, SparkConf
+
+conf = SparkConf().setAppName(&quot;test&quot;).setMaster(&quot;local&quot;).setSparkHome(&quot;/opt/spark1.6.0/&quot;)
+sc = SparkContext(conf=conf)
+data_set = load_iris()
+data = data_set[&quot;data&quot;]
+spark_data = sc.parallelize(data)
+print spark_data.collect()
+sc.stop()</code></pre>
+<ul>
+<li><strong>从其他RDD创建</strong></li>
+</ul>
+<p>这种创建方式也相对简单，便捷。比如<code>RDD</code>的转化操作便是这样的操作。下面就不再对该中方式进行举例说明。<br>在<code>spark</code>中也提供了<code>dataframe</code>类型的接口。可以创建<code>dataframe</code>,和<code>pandas</code>下的<code>dataframe</code>非常相似，并且有很多相同的操作。创建的方式有很多，可以从数据库中创建，如<code>mysql，hive，hdfs，json</code>等等。下面是各个接口创建<code>dataframe</code>的例子。</p>
+<pre><code class="python"># 从Hive中的users表构造DataFrame
+users = sqlContext.table(&quot;users&quot;)
+# 加载S3上的JSON文件
+logs = sqlContext.load(&quot;s3n://path/to/data.json&quot;, &quot;json&quot;)
+# 加载HDFS上的Parquet文件
+clicks = sqlContext.load(&quot;hdfs://path/to/data.parquet&quot;, &quot;parquet&quot;)
+# 通过JDBC访问MySQL
+comments = sqlContext.jdbc(&quot;jdbc:mysql://localhost/comments&quot;, &quot;user&quot;)
+# 将普通RDD转变为DataFrame
+rdd = sparkContext.textFile(&quot;article.txt&quot;) \
+                  .flatMap(lambda line: line.split()) \
+                  .map(lambda word: (word, 1)) \
+                  .reduceByKey(lambda a, b: a + b) \
+wordCounts = sqlContext.createDataFrame(rdd, [&quot;word&quot;, &quot;count&quot;])
+
+# 将本地数据容器转变为DataFrame
+data = [(&quot;Alice&quot;, 21), (&quot;Bob&quot;, 24)]
+people = sqlContext.createDataFrame(data, [&quot;name&quot;, &quot;age&quot;])
+# 将Pandas DataFrame转变为Spark DataFrame（Python API特有功能）
+sparkDF = sqlContext.createDataFrame(pandasDF)
+
+# 完整的例子
+#!/usr/bin/env python
+# _*_ coding:utf-8 _*_
+from sklearn.datasets import load_iris
+from pyspark import SparkContext, SparkConf, SQLContext
+import pandas as pd
+
+conf = SparkConf().setAppName(&quot;test&quot;).setMaster(&quot;local&quot;).setSparkHome(&quot;/opt/spark-1.6.0/&quot;)
+sc = SparkContext(conf=conf)
+data_set = load_iris()
+data = data_set[&quot;data&quot;]
+df = pd.DataFrame(data=data)
+s_data = SQLContext(sc).createDataFrame(df)
+print s_data.count()
+print s_data.schema, s_data.columns
+sc.stop()</code></pre>
+<p>若要收集<code>RDD</code>中的信息可以使用<code>token</code>方法，对<code>RDD</code>的对象进行收集，入下：</p>
+<pre><code class="python">for line in s_data.take(10):
+    print line</code></pre>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/spark/">spark</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/spark/">spark</a>
+                    
+                      <a class="hover-with-bg" href="/tags/RDD/">RDD</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/07/09/jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">jupyter-notebook远程登陆配置以及spark多语言环境配置</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2017/07/09/docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+                        <span class="hidden-mobile">docker部署anaconda开发环境</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "spark中创建RDD的几种方式&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

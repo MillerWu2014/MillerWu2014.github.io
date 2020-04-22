@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>深度学习-详解CNN网络和TensorFlow实现 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 七月 3日 2018, 11:15 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    7.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      27 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="1-卷积神经网络概述"><a href="#1-卷积神经网络概述" class="headerlink" title="1. 卷积神经网络概述"></a>1. 卷积神经网络概述</h2><p>卷积神经网络（Convolutional Neural Network, CNN） 也是神经网络中的一种结构，主要针对图像，音频，视频等方面应用。卷积神经网络较早的架构是<code>LeNet</code>，被认为是CNN的开端，当时主要将<code>LeNet</code>应用于字符识别任务，如手写数字的识别等。下面是一个<code>LeNet</code>的网络结构：</p>
+<p><img src="%5Cuploads%5CLeNet-2.jpg" srcset="/img/loading.gif" alt="LeNet网络结构"></p>
+<h3 id="1-1-CNN的一般结构"><a href="#1-1-CNN的一般结构" class="headerlink" title="1.1 CNN的一般结构"></a>1.1 CNN的一般结构</h3><p>从上面<code>LeNet</code>的结构中基本可以看出，CNN的大体结构：<strong>卷积层</strong>(一个或多个，<strong>包括<code>ReLU</code></strong>操作等)，<strong>池化或者亚采样</strong>，<strong>分类</strong>(全连接层)几个部分组成。每个部分当然有很多细节的地方。比如卷积是如何计算，卷积核的定义等；池化操作的方式，计算方式等。但CNN模型一般都会存在这几个组件。下面对一些名词进行解释，便于后面的理解：</p>
+<blockquote>
+<p><strong>通道：</strong>常用于表示图像的某种组成。一个标准数字相机拍摄的图像会有三通道 - 红、绿和蓝；你可以把它们看作是互相堆叠在一起的二维矩阵（每一个通道代表一个颜色），每个通道的像素值在 0 到 255 的范围内。</p>
+<p><a href="https://en.wikipedia.org/wiki/Grayscale" target="_blank" rel="noopener">灰度</a>图像，仅仅只有一个通道。在本篇文章中，我们仅考虑灰度图像，这样我们就只有一个二维的矩阵来表示图像。矩阵中各个像素的值在 0 到 255 的范围内——零表示黑色，255 表示白色。 </p>
+</blockquote>
+<h2 id="2-卷积层"><a href="#2-卷积层" class="headerlink" title="2.卷积层"></a>2.卷积层</h2><h3 id="2-1-卷积的数学定义"><a href="#2-1-卷积的数学定义" class="headerlink" title="2.1 卷积的数学定义"></a>2.1 卷积的数学定义</h3><p>卷积神经网络中很重要的就是卷积的概念，<a href="https://zh.wikipedia.org/zh/%E5%8D%B7%E7%A7%AF" target="_blank" rel="noopener">卷积</a>本身是在泛函分析中的定义：<strong>卷积、旋积或摺积(Convolution)是通过两个函数f 和g 生成第三个函数的一种数学算子，表征函数f 与g经过翻转和平移的重叠部分的面积</strong>。 </p>
+<p>从定义可以看出，卷积是一种运算，因为从定义上得出的面积，基本可以看出可以通过积分来定义，这个积分就定义 了一个新的函数,如下，就不用数学公式来详细展开了，具体可以参考<a href="https://zh.wikipedia.org/zh/%E5%8D%B7%E7%A7%AF" target="_blank" rel="noopener">维基百科</a>上的定义（如：连续定义(积分)和离散定义(求和)）。<br>$$<br>h(x)=f(x)<em>g(x)=(f</em>g)(x)<br>$$</p>
+<h3 id="2-2-卷积的物理意义"><a href="#2-2-卷积的物理意义" class="headerlink" title="2.2 卷积的物理意义"></a>2.2 卷积的物理意义</h3><p>从卷积的定义上可以看出，卷积主要是进行反转，平移，加权求和(积分)；从定义上比较抽象，不易理解，从物理意义上进行解释便于理解，那么卷积计算的意义是什么呢？</p>
+<ol>
+<li>平滑：卷积运算是一种线性运算，比如在图像中，将某个像素点用周围所有点进行加权求和值代替。</li>
+<li>消除”噪声”：在1中的平滑和噪声消除相似，因为卷积本身就是进行加权求和，因此卷积后的值会过滤部分”噪声”。</li>
+<li>空间显著性：卷积是对某一部分值进行操作，体现了空间的特性，能对空间中的特征进行增强。</li>
+<li>空间变换：卷积在空间上有显著性，但是卷积本身是反转平移等操作，相当于进行了空间变换；比如某个物体，无论在空间的某个位置，卷积操作都可以将其特征抽取出来。</li>
+</ol>
+<p>卷积在其他领域也有很多应用，比如频谱分析，信号处理等；也有很多其他物理意义，在这儿只是列举了部分具有代表性的物理意义。<a id="more"></a></p>
+<h3 id="2-3-卷积的实现"><a href="#2-3-卷积的实现" class="headerlink" title="2.3 卷积的实现"></a>2.3 卷积的实现</h3><p>首先看下卷积的计算过程，根据上面卷积的定义，来展示下卷积的计算过程是怎么样的，假设现在有一个$3 <em>4$的矩阵$f$和$3</em>3$的矩$g$，卷积核一般为奇数：<br>$$<br>f=\left[\begin{array}{ccc}<br>0 &amp; 1 &amp; 2 &amp; 3 \<br>2 &amp; 3 &amp; 4 &amp; 5\<br>4 &amp; 3 &amp; 2 &amp; 1<br>\end{array}\right], g=\left[\begin{array}{ccc}<br>-1 &amp; 0 &amp; 1 \<br>0 &amp; 1 &amp; 0 \<br>-1 &amp; 0 &amp; 1<br>\end{array}\right]<br>$$<br>第一步是将$g$进行翻转180度，得到：<br>$$<br>g=\left[\begin{array}{ccc}<br>1 &amp; 0  &amp; -1 \<br>0 &amp; 1 &amp; 0 \<br>1 &amp; 0 &amp; -1<br>\end{array}\right]<br>$$<br>再使用$g$的中心和f的每个元素对齐，并对应元素相乘，在边缘外的元素用0来填充（在实际使用中不一定用0填充，也可以用边缘拷贝的方式）：</p>
+<p><img src="%5Cuploads%5Cconv_dym.png" srcset="/img/loading.gif" alt="卷积计算过程"></p>
+<p>最后得到了一个卷积后的矩阵：<br>$$<br>h=\left[\begin{array}{ccc}<br>-3 &amp;- 1 &amp; 0 &amp; 7 \<br>-1 &amp; 3 &amp; 4 &amp; 9\<br>1 &amp; 5 &amp; 1 &amp; 5<br>\end{array}\right]<br>$$<br>整个计算过程如上所示。上面的计算过程为一般的计算过程，对于细节还有其他方式，比如存在边际效应，完全重叠计算等等，在<code>python</code>的<code>numpy</code>和<code>sicpy</code>中就实现了卷积运算，可以直接进行使用：</p>
+<pre><code class="python">import numpy as np
+from scipy.signal import convolve2d
+
+x = np.random.randint(0, 10, (4, 4))
+g = np.array([[1, 0, -1], [0, 1, 0], [1, 0, -1]])
+
+h1 = np.convolve(x.ravel(), g.ravel(), mode=&#39;full&#39;)
+print(h1)
+h_same = convolve2d(x, g, mode=&#39;same&#39;)
+print(h_same)</code></pre>
+<p><code>numpy</code>中的<code>convolve</code>只是支持<code>1-dim</code>的数据。但<code>scipy</code>中实现了<code>2-dim</code>的卷积运算。在这两个模块中卷积运算都有三种模式，即<code>mode</code> 选项：<code>{&#39;full&#39;, &#39;valid&#39;, &#39;same&#39;}</code>，不同的模式得到卷积预算的结果不同，主要是对边缘的处理方式不同。</p>
+<h3 id="2-4-CNN中的卷积"><a href="#2-4-CNN中的卷积" class="headerlink" title="2.4 CNN中的卷积"></a>2.4 CNN中的卷积</h3><p>在上面我们使用的卷积运算中使用的卷积核($g$)，经过了翻转再进行计算。在CNN网络中的卷积和上面的卷积基本相似，但是使用的算子(<strong>相关核</strong>-<code>Kernel</code>，也称为<strong>相关算子</strong>)不会进行翻转（当然也可以翻转，翻转的算子叫<strong>卷积核</strong>或<strong>卷积算子</strong>），当然也可以使用卷积核。下面是其他文献中的说法：</p>
+<blockquote>
+<p>对图像大矩阵和滤波小矩阵对应位置元素相乘再求和的操作叫<strong>卷积</strong>(<code>Convolution</code>)或<strong>协相关</strong>(<code>Correlation</code>).协相关(<code>Correlation</code>)和卷积(<code>Convolution</code>)很类似, 两者唯一的差别就是卷积在计算前需要翻转<strong>卷积核</strong>, 而<strong>协相关</strong>则不需要翻转.</p>
+</blockquote>
+<p>相关核或卷积核一般都为一个方正，如3*3的矩阵，5*5的矩阵，方正中每个元素都可以看成一个权重系数；使用卷积进行计算时，需要将卷积核的中心放置在要计算的像素上，一次计算核中每个元素和其覆盖的图像像素值的乘积并求和，得到的结构就是该位置的新像素值。下面主要演示了相关核（相关算子）的卷积计算过程：</p>
+<p><img src="%5Cuploads%5Cconv_dym.gif" srcset="/img/loading.gif" alt=""></p>
+<p>步骤：</p>
+<p>(1).滑动核，使得核中心位置位于要计算的像素点上</p>
+<p>(2).重叠的位置进行对于元素乘积并求和，得到该像素点新的像素值</p>
+<p>(3).重复上面的过程，输出整个图的所有新的像素值</p>
+<p><img src="%5Cuploads%5Ccenter.png" srcset="/img/loading.gif" alt=""></p>
+<p>上面的步骤也可类似看作：隐藏层中的<strong>神经元</strong> 具有一个<strong>固定大小</strong>的<strong>感受视野</strong>去感受上一层的<strong>部分特征</strong>。在全连接神经网络中，隐藏层中的神经元的感受视野足够大乃至可以看到上一层的所有特征。 而在CNN（卷积神经网络）中，隐藏层中的神经元的感受视野比较小，只能看到<strong>上一次的部分特征</strong>，上一层的其他特征可以通过平移<strong>感受视野</strong>来得到同一层的其他神经元，由同一层其他神经元来看。</p>
+<h3 id="2-5-常用的卷积核"><a href="#2-5-常用的卷积核" class="headerlink" title="2.5 常用的卷积核"></a>2.5 常用的卷积核</h3><ol>
+<li>低通滤波器（常用于计算模糊后的效果）</li>
+</ol>
+<p>$$<br>\begin{bmatrix}<br>     1/9 &amp; 1/9  &amp; 1/9  \<br>     1/9  &amp; 1/9  &amp; 1/9   \<br>     1/9  &amp; 1/9  &amp; 1/9<br>\end{bmatrix},\begin{bmatrix}<br>     1/10 &amp; 1/10  &amp; 1/10 \<br>     1/10  &amp; 2/10  &amp; 1/10   \<br>     1/10  &amp; 1/10  &amp; 1/10<br>\end{bmatrix},\begin{bmatrix}<br>     1/16 &amp; 2/16  &amp; 1/16 \<br>     2/16  &amp; 4/16  &amp; 2/16   \<br>     1/16  &amp; 2/16  &amp; 1/16<br>\end{bmatrix}<br>$$</p>
+<ol start="2">
+<li><p>高斯滤波器（常用于计算高斯模糊后的效果）        高斯模糊的卷积核也是一个正方形的滤波核，其中每个元素通过以下公式计算得出：<br>$$<br>G(x,y)=\frac{1}{2πσ^{2}}·e^{\frac{x^{2}+y^{2}}{2σ^{2}}}<br>$$<br>该公式中$\sigma$是标准方差（一般取值为1），$x$和$y$分别对应了当前位置到卷积核中心的整数距离。通过这个公式，就可以计算出高斯核中每个位置对应的值。为了保证滤波后的图像不会变暗，需要对高斯核中的权重进行归一化。 </p>
+</li>
+<li><p>边缘检测（常用于计算图像边缘或者说梯度值） ：</p>
+</li>
+</ol>
+<p>$$<br>\begin{bmatrix}<br>     -1 &amp; 0  &amp; -1 \<br>     0  &amp; 4  &amp; 0   \<br>     -1  &amp; 0  &amp; -1<br>\end{bmatrix}<br>$$</p>
+<h3 id="2-6-TensorFlow中卷积的实现"><a href="#2-6-TensorFlow中卷积的实现" class="headerlink" title="2.6 TensorFlow中卷积的实现"></a>2.6 <code>TensorFlow</code>中卷积的实现</h3><p>在<code>TensorFlow</code>中实现了卷积运算，本文中主要针对2维卷积运算说明，<code>conv2d</code>和<code>depthwise_conv2d</code>这两个实现，首先对conv2d进行说明。</p>
+<h4 id="2-6-1-conv2d"><a href="#2-6-1-conv2d" class="headerlink" title="2.6.1 conv2d"></a>2.6.1 conv2d</h4><p><code>tf.nn.conv2d(input, filter, strides, padding, use_cudnn_on_gpu=None, name=None)</code>，下面对<strong>参数</strong>进行说明：</p>
+<p><code>input</code>：需要卷积运算的<code>tensor</code>，输入的<code>shape</code>为[<code>batch_size, height, width, n_channels</code>]，即矩阵意义[批次的样本数，行，列，通道数]，一般都是用于图片。这是一个4维的<code>Tensor</code>，要求的类型为<code>float32</code>或<code>float64</code>。</p>
+<p><code>filter</code>：相当于CNN中的卷积核，它要求是一个<code>Tensor</code>，具有<code>[filter_height, filter_width, in_channels, out_channels</code>这样的<code>shape</code>，具体含义是[卷积核的高度，卷积核的宽度，图像通道数，卷积核个数]，要求类型与参数<code>input</code>相同，有一个地方需要注意，第三维<code>in_channel</code>s，就是参数<code>input</code>的第四维 </p>
+<p><code>strides</code>：卷积时在图像每一维的步长，这是一个一维的向量，长度4 </p>
+<p><code>padding</code>：<code>string</code>类型的量，只能是<code>SAME</code>, <code>VALID</code>其中之一，这个值决定了不同的卷积方式，这个和<code>scipy</code>和<code>numpy</code>中的<code>mode</code>类似。</p>
+<p><code>use_cudnn_on_gpu</code>：是否使用cudnn加速，默认为<code>true</code>。</p>
+<p>卷积运算后会输出一个Tensor，也就CNN中的<code>feature map</code>。</p>
+<p>下面是在<code>tensorflow</code>中卷积运算的示例：</p>
+<pre><code class="python">import tensorflow as tf
+import numpy as np
+
+x = tf.Variable(initial_value=tf.random_normal(shape=[100, 28, 28, 3]), dtype=tf.float32)
+filter_kernel = tf.constant(np.random.randint(0, 2, [3, 3, 3, 5]), dtype=tf.float32)
+conv_tensor_same = tf.nn.conv2d(x, filter_kernel, [1, 1, 1, 1], padding=&#39;SAME&#39;)
+conv_tensor_valid = tf.nn.conv2d(x, filter_kernel, [1, 1, 1, 1], padding=&#39;VALID&#39;)
+print(conv_tensor_same)  # 输出和输入的矩阵大小一致,通道数为卷积核的输出通道数,batch_size不变
+print(conv_tensor_valid)  # 输出和输入的矩阵大小不一致,通道数为卷积核的输出通道数,batch_size不变
+
+# ----------------- output -------------------
+Tensor(&quot;Conv2D:0&quot;, shape=(100, 28, 28, 5), dtype=float32)
+Tensor(&quot;Conv2D_1:0&quot;, shape=(100, 26, 26, 5), dtype=float32)</code></pre>
+<p>上面的例子中输入为3通道的28<em>28的100张图片，经过卷积核（3\</em>3的卷积核，输出5通道）后，得到了每张图（100张）都有5张28*28或26*26的<code>feature map</code>。当<code>pading</code>参数不同时返回<code>feature map</code>的大小不同，下面动态展示：</p>
+<ul>
+<li><p><code>padding=’SAME’</code>时，<code>TensorFlow</code>会自动对原图像进行补零,从而使输入输出的图像的<a href="https://www.tensorflow.org/api_guides/python/nn#convolution" target="_blank" rel="noopener">高度和宽度计算</a>如下：</p>
+<p><img src="%5Cuploads%5Cconv_same.gif" srcset="/img/loading.gif" alt="SAME"></p>
+</li>
+</ul>
+<pre><code class="python">out_height = ceil(float(in_height) / float(strides[1]))
+out_width  = ceil(float(in_width) / float(strides[2]))</code></pre>
+<ul>
+<li><code>padding=&#39;VAILD&#39;</code>时，则会缩小原图像的大小 ，缩小后的图像即为<code>feature map</code>，其<code>size</code>为<code>(W – F + 1) / S</code> ，<strong>结果向上取整</strong>，其中<code>W</code>为输入矩阵的<code>width</code>，<code>F</code>为卷积核的大小，<code>S</code>为步长，按输出图像的长度和宽度分阶后：</li>
+</ul>
+<pre><code class="python">out_height = ceil(float(in_height - filter_height + 1) / float(strides[1]))
+out_width  = ceil(float(in_width - filter_width + 1) / float(strides[2]))</code></pre>
+<p>  <img src="%5Cuploads%5Cconv_vaild.gif" srcset="/img/loading.gif" alt="VAILD"></p>
+<p>上面的两个公式也可以通过一个公式代替：<br>$$<br>W_1 = (W - F + 2P)/S + 1<br>$$<br>其中$W$为输入图像的宽度，$F$为卷积核的宽度，$P$为<code>padding size</code>，<code>padding size</code>的计算方式$P=\frac {F-1} 2$，当padding为<code>vaild</code>时$P=0$，$S$为在当前维度下移动的步长。</p>
+<h4 id="2-6-2-depthwise-conv2d"><a href="#2-6-2-depthwise-conv2d" class="headerlink" title="2.6.2 depthwise_conv2d"></a>2.6.2 depthwise_conv2d</h4><p><code>depthwise_conv2d(input,  filter, strides, padding, rate=None, name=None, data_format=None)</code>，参数说明如下：</p>
+<ol>
+<li>input 的数据维度 <code>[batch ,in_height,in_wight,in_channels]</code></li>
+<li>卷积核的维度是<code>[filter_height,filter_heught,in_channel,channel_multiplierl]</code></li>
+<li>卷积核<code>filter</code>和独立的应用在<code>in_channels</code>的每一个通道上(从通道 1 到通道<code>channel_multiplier</code>)</li>
+<li>然后将所有结果进行汇总,输出通道的总数是，<code>in_channel * channel_multiplier</code></li>
+</ol>
+<pre><code class="python">input_data = tf.Variable(np.random.rand(10, 9, 9, 3), dtype=np.float32)
+filter_data = tf.Variable(np.random.rand(2, 2, 3, 2), dtype=np.float32)
+
+y = tf.nn.depthwise_conv2d(input_data, filter_data, strides=[1, 1, 1, 1], padding=&#39;SAME&#39;)
+print(&#39;tf.nn.depthwise_conv2d : &#39;, y)
+# -------------- output --------------
+# tf.nn.depthwise_conv2d :  Tensor(&quot;depthwise:0&quot;, shape=(10, 9, 9, 6), dtype=float32)</code></pre>
+<p>其效果类似于多个卷积核运算都是张量的一个维度增加，不同之处在于通道数的增加是卷积核在不同通道上运算的结果，而多个卷积核运算（<code>conv2d</code>运算操作）相当于是<code>batch</code>的数量增加 。</p>
+<h3 id="2-7-CNN中的Feature-Map"><a href="#2-7-CNN中的Feature-Map" class="headerlink" title="2.7 CNN中的Feature Map"></a>2.7 CNN中的<code>Feature Map</code></h3><p>卷积的主要作用就是生成<code>feature map</code>，从图像中提取特征图，特征图主要是根据卷积核来生成，不同的卷积核生成不同的特征图。</p>
+<p>前面说了卷积的物理意义，卷积在空间上对特征进行了提取，同时也是对局<strong>部视野的感受</strong>，卷积的大小相当于感受野的大小，这个是其他网络无法达到的。因此<code>feature map</code>是CNN中非常重要的一环。</p>
+<h4 id="2-7-1-feature-map的大小"><a href="#2-7-1-feature-map的大小" class="headerlink" title="2.7.1 feature map的大小"></a>2.7.1 <code>feature map</code>的大小</h4><p>因为<code>feature map</code>是由卷积生成的，一个卷积核生成一个<code>feature map</code>,因此卷积层输出的大小就是<code>feature map</code>的大小，具体大小的计算方式主要是基于上层输入的大小，<code>feature map</code>大小和步长有关系。具体大小的计算公式在2.6中已经进行了说明。</p>
+<h4 id="2-7-2-feature-map的数量"><a href="#2-7-2-feature-map的数量" class="headerlink" title="2.7.2 feature map的数量"></a>2.7.2 <code>feature map</code>的数量</h4><p><code>feature map</code>的数量和卷积核的数量相关，在<code>tensorflow</code>中的卷积运算时，比如输入的input为1*32*32*3（3为通道数，也可以理解为feature map数），卷积核为5*5*3*5的大小，其中最后一个5就是卷积核数量，即输出的通道数，生成的feature map数量。下面通过一个动态图来展示整个过程：</p>
+<hr>
+<p><a href="http://cs231n.github.io/\uploads\conv-demo/index.html" target="_blank" rel="noopener">conv feature map demo</a></p>
+<hr>
+<h4 id="2-7-3-feature-map的计算"><a href="#2-7-3-feature-map的计算" class="headerlink" title="2.7.3 feature map的计算"></a>2.7.3 <code>feature map</code>的计算</h4><p>其实<code>Feature Map</code>的计算过程就是卷积计算的过程，下图中是对其进行了可视化，输入的为1*32*32*3的图像，卷积核为3*3*3*5的大小，对输入的<strong>局部（一个局部）</strong>进行计算，如下的右图所示。其中<strong>$w_i$</strong>就是其中一个卷积核的的某个值，这个值会通过模型训练进行<strong>训练</strong>。</p>
+<p><img src="\uploads\neuron_model0.jpeg" srcset="/img/loading.gif" style="zoom:60%" align = center />              |               <img src="\uploads\neuron_model.jpeg" srcset="/img/loading.gif" style="zoom:60%" align=center /> </p>
+<h3 id="2-8-卷积的训练参数"><a href="#2-8-卷积的训练参数" class="headerlink" title="2.8 卷积的训练参数"></a>2.8 卷积的训练参数</h3><p> 在卷积层的训练主要是对卷积核的训练，上面我们已经明确了在卷积运算时是怎样计算的，下面就看在训练过程中的参数问题，首先就必须了解参数的大小。</p>
+<p>如果是使用全连接网络，再输入一个100<em>100的图像，假设有1000个隐藏神经元，那么就会有100\</em>100*1000个连接，$10^7$个参数需要进行训练，如果我们使用卷积的方式，采用10*10的卷积，那么参数就是100*100*10*10，数量级减少了一个，但是这个数量级的参数还是很多。有什么其他办法么？那就是权值共享。</p>
+<h4 id="2-8-1-权值共享"><a href="#2-8-1-权值共享" class="headerlink" title="2.8.1 权值共享"></a>2.8.1 权值共享</h4><p>我们从卷积计算过程就知道，每次会从图像的区域取和卷积核同样大小的区域来进行运算。也就是每个<strong>神经元（feature map中的元素）</strong>会连接一个10*10的区域，这样就会有100个参数，如果每个神经元都使用同一组参数，那么参数还是100个。因此这样就是权值共享。</p>
+<p>在进行通俗的理解：在一张图片上，通过一个卷积核进行扫描所有点时，使用的相同的卷积核，卷积核的值就是权重。这样权重就是共享的。扫描整个图片的参数也就只是卷积核的大小。</p>
+<h4 id="2-8-2-多通道多卷积核"><a href="#2-8-2-多通道多卷积核" class="headerlink" title="2.8.2 多通道多卷积核"></a>2.8.2 多通道多卷积核</h4><p>当为多通道进行多个卷积计算时，每个通道上面对应一个卷积核。假设有一个四通道的图片，利用两个卷积核进行运算，最后生成两通道，即得到两个<code>feature map</code>。如下所示：</p>
+<p><img src="%5Cuploads%5Cmul-input-mul-k.png" srcset="/img/loading.gif" alt=""></p>
+<p>四个通道上每个通道对应一个卷积核，先将$w_2$忽略，只看$w_1$，那么在$w_1​$的某位置（<code>i,j</code>）处的值，是由四个通道上（<code>i,j</code>）处的卷积结果相加然后再取激活函数值得到的。  所以最后得到两个<code>feature map</code>， 即输出层的卷积核核个数为 <code>feature map</code> 的个数。其计算公式：<br>$$<br>h_{ij}^k = f((w^k * x)_{ij} + b^k)<br>$$<br>上面的参数个数就变为：$2 * 2 * 4 * 2 ​$，前面的两个2指卷积核大小，4为输入的通道数，最后的2为输出的通道数。因此多通道多核的运算核单通道多核运算不同，参数个数量级差别也很大。下面这个可视化也展示了多通道多核的计算过程：</p>
+<p><img src="%5Cuploads%5Cmul-input-mul-conv.gif" srcset="/img/loading.gif" alt=""></p>
+<h2 id="3-非线性操作（ReLU）"><a href="#3-非线性操作（ReLU）" class="headerlink" title="3.非线性操作（ReLU）"></a>3.非线性操作（<code>ReLU</code>）</h2><p>一般再卷积后都会有一个非线性的操作，我们前面也提到过卷积其实是线性的操作，而对于一般的分类来说，线程分类不能满足，因此需要再卷积中加入非线性。这样才会进行更好的分类。因此这一步也是非常关键的。</p>
+<p>在使用非线性操作函数时，<code>ReLU</code>，<code>sigmoid</code>，<code>tanh</code>等都是可以的，但是根据历史经验，大部分情况下使用<code>ReLU</code>的效果会更好。</p>
+<h2 id="4-池化层（Pooling-Layer）"><a href="#4-池化层（Pooling-Layer）" class="headerlink" title="4.池化层（Pooling Layer）"></a>4.池化层（Pooling Layer）</h2><p>Pooling也称为下采样或亚采样，主要对上面过程输出的特征图进行采样，降低特征图的维度，但是可以保持部分重要的信息；池化<strong>规模</strong>一般为<strong>2×2</strong> （也可以使用其他的大小），在feature map上<strong>不重合的平移*2×2</strong>大小区域，并进行采用；空间池化的主要方式有以下几种。</p>
+<p>&lt;img src=”\uploads\pooling.jpg” style=”zoom:40%” &gt;</p>
+<h4 id="4-1-1-池化方法"><a href="#4-1-1-池化方法" class="headerlink" title="4.1.1 池化方法"></a>4.1.1 池化方法</h4><ol>
+<li>最大化（<code>max pooling</code>）：取4个点的最大值 </li>
+<li>平均化（<code>average pooling</code>）：取4个点的平均值</li>
+<li>高斯池化（<code>gauss pooling</code>）：类似高斯模糊，这个不太常用</li>
+<li>训练池化（<code>train pooling</code>）：也可以根据四个值训练一个函数$f$得到一个值，不常用</li>
+</ol>
+<p>由于特征图不一定是2的倍数，因此池化操作在边缘处理上也有两种方式：</p>
+<ul>
+<li>忽略边缘：多出来的边缘直接去掉</li>
+<li>保留边缘：即将特征图的变长用0填充为2的倍数，然后再池化。 </li>
+</ul>
+<h4 id="4-1-1-池化的作用"><a href="#4-1-1-池化的作用" class="headerlink" title="4.1.1 池化的作用"></a>4.1.1 池化的作用</h4><p>池化在CNN中也是一个不可缺少的部分，那池化操作的意义是什么呢？下面对池化的主要作用或意义进行一一说明，加深对池化的理解：</p>
+<ol>
+<li>对特征的概要统计，对特征图<code>(feature map)</code>进行简要的统计，对特征的进一步抽象。</li>
+<li><a href="https://www.zhihu.com/question/36686900" target="_blank" rel="noopener">不变性</a>：这个是非常重要的作用，这种不变性包括了平移，旋转，尺度等；因为池化过程丢掉了局部信息（允许局部有一些形变），并统计了局部的信息（不论局部在什么位置，只要存在这个统计信息），因此对于平移或位移都能识别。</li>
+<li>输出控制，比如控制输出的长度，大小；文本分类中的长度是不同的，可以通过池化来获得特定的长度。</li>
+<li>降维，通过池化后会进一步降低维度（相比不进行池化操作）</li>
+<li>防止过拟合，因为池化过程中抛弃了部分的特征，而且对特征进行了概要统计，因此对模型结果会进行改善，防止了过拟合的情况。</li>
+</ol>
+<h2 id="5-FC层（Full-Connect-Layer）"><a href="#5-FC层（Full-Connect-Layer）" class="headerlink" title="5.FC层（Full Connect Layer）"></a>5.FC层（Full Connect Layer）</h2><p>全连接层是CNN中最后一个步骤（当然这个步骤也不是必须的），在这层主要是解决分类任务，将输出的<code>feature map</code>进行向量化，形成一个列向量，并乘以每个值得权重。比如输出了一个3通道得<code>10*10</code>的<code>feature map</code>那么就输出一个300长度的列向量。对这个列向量进行线性组合，输出到分类器其中进行分类，如<code>softmax</code>分类。</p>
+<p>这一层的主要作用还是将<code>feature map</code>的特征进行线性组合，对目标进行分类；因为只是用部分的特征，可能对分类效果不太好，因此需要将所有的特征组合在一起来进行目标分类。</p>
+<h2 id="6-CNN中的其他功能层"><a href="#6-CNN中的其他功能层" class="headerlink" title="6.CNN中的其他功能层"></a>6.CNN中的其他功能层</h2><p>一般的CNN网络基本都会存在上面的卷积层，激励层(非线性操作)，池化层，全连接层；但是也可以在其他加入一些其他层，如归一化层等。下面对一些其他层进行简要说明。</p>
+<h3 id="6-1-归一化层"><a href="#6-1-归一化层" class="headerlink" title="6.1 归一化层"></a>6.1 归一化层</h3><h4 id="6-1-1-批量归一化（Batch-Normalization）"><a href="#6-1-1-批量归一化（Batch-Normalization）" class="headerlink" title="6.1.1 批量归一化（Batch Normalization）"></a>6.1.1 批量归一化（<code>Batch Normalization</code>）</h4><p>在卷积层输出后，每个<code>feature map</code>的特征<code>scale</code>可能不一致。经过归一化（<code>Batch Normalization</code>，<code>BN</code>）后可以加速训练，提高精度。BN算法的过程：</p>
+<p><strong>输入</strong>：$x$的mini-batch：$B=(x_1, x_2, x_3, ……, x_m)$</p>
+<p><strong>计算</strong>：</p>
+<ol>
+<li>计算mini-batch的均值：$\mu_b = \frac {1} {m} \sum_{i=1}^m x_i $</li>
+<li>计算mini-batch的方差：$\sigma ^ 2_b = \frac {1} {m} \sum_{i=1}^m (x_i - \mu _b)^2$</li>
+<li>归一化：$\bar{x_i} = \frac {x_i - \mu_b}{\sqrt{\sigma ^ 2_b + \epsilon }}$，获得0-1分布，其中$\epsilon$是为了避免除数为0时所使用的微小正数。 </li>
+<li>尺度变化及偏移：$y_i = \gamma \bar{x_i} + \beta$，这两个参数需要通过学习得到，这儿个$\gamma$为尺度因子，$\beta$为平移因子</li>
+</ol>
+<p><strong>输出</strong>：规范化后的$y_i$</p>
+<h4 id="6-1-2-CNN中的批归一化（BN）"><a href="#6-1-2-CNN中的批归一化（BN）" class="headerlink" title="6.1.2 CNN中的批归一化（BN）"></a>6.1.2 CNN中的批归一化（BN）</h4><p>根据前面对CNN的了解，CNN中卷积输出的是很多特征图，比如卷积层输出的是<code>100*28*28*5</code>的大小，其中100为<code>batch size</code>，5为特征图的个数，那么如果将特征图中的每个神经元进行BN，那么就会有<code>2*28*28*5</code>个$\gamma,\beta$参数，这样计算参数就太多了。因此在卷积后进行BN使用类似权值共享的策略，即把一整张<code>feature map</code>当作一个神经元进行处理，相当于将<code>100*28*28</code>作为BN的输入，即一个<code>feature map</code>中的神经元都使用同一组$\gamma,\beta$参数，这样计算，$\gamma,\beta$参数就减小到：<code>5*2</code>，比之前小了很多的数量级。</p>
+<ul>
+<li><strong>BN的训练和测试（预测）</strong></li>
+</ul>
+<p>在训练阶段，BN的输入为<code>batch_size</code>的大小，因此可以算出所有计算均值和方差时；但是在测试或预测阶段可能输入的一个样本，那么均值和方差均为0，因此需要在训练<code>batch_num</code>次的过程中将均值和方差给记录下来，在预测或测试时使用训练过程中的均值平均值和方差平均值来进行BN。</p>
+<ul>
+<li><strong>BN在CNN中的位置</strong></li>
+</ul>
+<p>一般BN层放入到卷积层后，未进行非线性操作（激励函数）之前。输出后作为非线性操作层的输入。</p>
+<h4 id="6-1-3-BN解决的问题"><a href="#6-1-3-BN解决的问题" class="headerlink" title="6.1.3 BN解决的问题"></a>6.1.3 BN解决的问题</h4><p><img src="%5Cuploads%5Cnormazier.png" srcset="/img/loading.gif" alt=""></p>
+<p><img src="%5Cuploads%5Cbatch_normal.png" srcset="/img/loading.gif" alt=""></p>
+<blockquote>
+<p>a中左图是没有经过任何处理的输入数据，曲线是sigmoid函数，如果数据在梯度很小的区域，那么学习率就会很慢甚至陷入长时间的停滞。减均值除方差后，数据就被移到中心区域如右图所示，对于大多数激活函数而言，这个区域的梯度都是最大的或者是有梯度的（比如ReLU），这可以看做是一种对抗梯度消失的有效手段。对于一层如此，如果对于每一层数据都那么做的话，数据的分布总是在随着变化敏感的区域，相当于不用考虑数据分布变化了，这样训练起来更有效率。</p>
+</blockquote>
+<blockquote>
+<p>那么为什么要有第4步，不是仅使用减均值除方差操作就能获得目的效果吗？我们思考一个问题，减均值除方差得到的分布是正态分布，我们能否认为正态分布就是最好或最能体现我们训练样本的特征分布呢？不能，比如数据本身就很不对称，或者激活函数未必是对方差为1的数据最好的效果，比如Sigmoid激活函数，在-1~1之间的梯度变化不大，那么非线性变换的作用就不能很好的体现，换言之就是，减均值除方差操作后可能会削弱网络的性能！针对该情况，在前面三步之后加入第4步完成真正的batch normalization。</p>
+</blockquote>
+<blockquote>
+<p>BN的本质就是利用优化变一下方差大小和均值位置，使得新的分布更切合数据的真实分布，保证模型的非线性表达能力。BN的极端的情况就是这两个参数等于mini-batch的均值和方差，那么经过batch normalization之后的数据和输入完全一样，当然一般的情况是不同的。</p>
+</blockquote>
+<h3 id="6-2-切分层"><a href="#6-2-切分层" class="headerlink" title="6.2 切分层"></a>6.2 切分层</h3><p>在一些应用中,需要对图片进行切割，独立地对某一部分区域进行单独学习。这样可以对特定部分进行通过调整 <strong>感受视野</strong>进行力度更大的学习。 </p>
+<h3 id="6-3-融合层"><a href="#6-3-融合层" class="headerlink" title="6.3 融合层"></a>6.3 融合层</h3><p>对独立进行特征学习的分支进行融合，来构建高效而精简的特征组合。 融合层可以对切分层进行融合，也可以对不同大小的卷积核学习到的特征进行融合。 </p>
+<p><img src="%5Cuploads%5C3.jpg" srcset="/img/loading.gif" alt=""></p>
+<p>可以用 <strong>级连(concatenation)</strong> 的方法，其实也就是不同输入网络特征的简单叠加，比如说首尾相接。 也可以是合并，或者说运算的融合，对形状一致的特征，通过 <code>+, -, x, max, conv</code> 等运算，形成形状相同的输出 。</p>
+<h2 id="7-在TensorFlow中实现CNN（MNIST-DataSets）"><a href="#7-在TensorFlow中实现CNN（MNIST-DataSets）" class="headerlink" title="7.在TensorFlow中实现CNN（MNIST DataSets）"></a>7.在TensorFlow中实现CNN（MNIST DataSets）</h2><pre><code class="python">import tensorflow as tf
+import tensorflow.examples.tutorials.mnist.input_data as input_data
+
+mnist = input_data.read_data_sets(&quot;/opt/workspace/project/deep-st-nn/data/MNIST_DATA&quot;, one_hot=True)  # 下载并加载mnist数据
+x = tf.placeholder(tf.float32, [None, 784])  # 输入的数据占位符
+y_actual = tf.placeholder(tf.float32, shape=[None, 10])  # 输入的标签占位符
+
+
+def weight_variable(shape):
+    &quot;&quot;&quot;
+    parameter
+    ---------
+        shape: list, create variable tensor for shape.
+    return
+    ------
+        tensor, the variable tensor of weight.
+    &quot;&quot;&quot;
+    initial = tf.truncated_normal(shape, stddev=0.1)
+    return tf.Variable(initial)
+
+
+def bias_variable(shape):
+    initial = tf.constant(0.1, shape=shape)
+    return tf.Variable(initial)
+
+
+def conv2d(x, W):
+    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding=&#39;SAME&#39;)
+
+
+def max_pool(x):
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding=&#39;SAME&#39;)
+
+
+# 构建网络
+x_image = tf.reshape(x, [-1, 28, 28, 1])  # 转换输入数据shape,以便于用于网络中
+W_conv1 = weight_variable([5, 5, 1, 32])
+b_conv1 = bias_variable([32])
+h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)  # 第一个卷积层
+h_pool1 = max_pool(h_conv1)  # 第一个池化层
+
+W_conv2 = weight_variable([5, 5, 32, 64])
+b_conv2 = bias_variable([64])
+h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)  # 第二个卷积层
+h_pool2 = max_pool(h_conv2)  # 第二个池化层
+
+W_fc1 = weight_variable([7 * 7 * 64, 1024])
+b_fc1 = bias_variable([1024])
+h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])  # reshape成向量
+h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)  # 第一个全连接层
+
+keep_prob = tf.placeholder(&quot;float&quot;)
+h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)  # dropout层
+
+W_fc2 = weight_variable([1024, 10])
+b_fc2 = bias_variable([10])
+y_predict = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)  # softmax层
+
+cross_entropy = -tf.reduce_sum(y_actual * tf.log(y_predict))  # 交叉熵
+train_step = tf.train.GradientDescentOptimizer(1e-3).minimize(cross_entropy)  # 梯度下降法
+correct_prediction = tf.equal(tf.argmax(y_predict, 1), tf.argmax(y_actual, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, &quot;float&quot;))  # 精确度计算
+sess = tf.InteractiveSession()
+sess.run(tf.initialize_all_variables())
+for i in range(20000):
+    batch = mnist.train.next_batch(50)
+    if i % 100 == 0:  # 训练100次，验证一次
+        train_acc = accuracy.eval(feed_dict={x: batch[0], y_actual: batch[1], keep_prob: 1.0})
+        print(&#39;step&#39;, i, &#39;training accuracy&#39;, train_acc)
+    train_step.run(feed_dict={x: batch[0], y_actual: batch[1], keep_prob: 0.5})
+
+test_acc = accuracy.eval(feed_dict={x: mnist.test.images, y_actual: mnist.test.labels, keep_prob: 1.0})
+print(&quot;test accuracy&quot;, test_acc)</code></pre>
+<h2 id="8-Reference"><a href="#8-Reference" class="headerlink" title="8.Reference"></a>8.Reference</h2>
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/deep-learning/">deep learning</a>
+                    
+                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/CNN/">CNN</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ReLU/">ReLU</a>
+                    
+                      <a class="hover-with-bg" href="/tags/convolution/">convolution</a>
+                    
+                      <a class="hover-with-bg" href="/tags/pooling/">pooling</a>
+                    
+                      <a class="hover-with-bg" href="/tags/BN/">BN</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/10/26/TensorFlow%E4%B8%AD%E7%9A%84KeyPoint/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">TensorFlow中的KeyPoint</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
+                        <span class="hidden-mobile">深度学习-详解LSTM网络和TensorFlow实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "深度学习-详解CNN网络和TensorFlow实现&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

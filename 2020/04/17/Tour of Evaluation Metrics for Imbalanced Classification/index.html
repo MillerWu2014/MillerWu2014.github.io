@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>机器学习中样本失衡下的分类评估指标选取指南 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 四月 17日 2020, 9:09 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.6k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      22 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>From:<a href="https://machinelearningmastery.com/tour-of-evaluation-metrics-for-imbalanced-classification/" target="_blank" rel="noopener">https://machinelearningmastery.com/tour-of-evaluation-metrics-for-imbalanced-classification/</a></p>
+<p>A classifier is only as good as the metric used to evaluate it.</p>
+<p>If you choose the wrong metric to evaluate your models, you are likely to choose a poor model, or in the worst case, be misled about the expected performance of your model.</p>
+<p>Choosing an appropriate metric is challenging generally in applied machine learning, but is particularly difficult for imbalanced classification problems. Firstly, because most of the standard metrics that are widely used assume a balanced class distribution, and because typically not all classes, and therefore, not all prediction errors, are equal for imbalanced classification.</p>
+<p>In this tutorial, you will discover metrics that you can use for imbalanced classification.</p>
+<p>After completing this tutorial, you will know:</p>
+<ul>
+<li>About the challenge of choosing metrics for classification, and how it is particularly difficult when there is a skewed class distribution.</li>
+<li>How there are three main types of metrics for evaluating classifier models, referred to as rank, threshold, and probability.</li>
+<li>How to choose a metric for imbalanced classification if you don’t know where to start.</li>
+</ul>
+<p>Discover SMOTE, one-class classification, cost-sensitive learning, threshold moving, and much more <a href="https://machinelearningmastery.com/imbalanced-classification-with-python/" target="_blank" rel="noopener">in my new book</a>, with 30 step-by-step tutorials and full Python source code.</p>
+<p>Let’s get started.</p>
+<a id="more"></a>
+
+<h2 id="Tutorial-Overview"><a href="#Tutorial-Overview" class="headerlink" title="Tutorial Overview"></a><strong>Tutorial Overview</strong></h2><p>This tutorial is divided into three parts; they are:</p>
+<ol>
+<li>Challenge of Evaluation Metrics</li>
+<li>Taxonomy of Classifier Evaluation Metrics</li>
+<li>How to Choose an Evaluation Metric</li>
+</ol>
+<h2 id="Challenge-of-Evaluation-Metrics"><a href="#Challenge-of-Evaluation-Metrics" class="headerlink" title="Challenge of Evaluation Metrics"></a><strong>Challenge of Evaluation Metrics</strong></h2><p>An evaluation metric quantifies the performance of a predictive model.</p>
+<p>This typically involves training a model on a dataset, using the model to make predictions on a holdout dataset not used during training, then comparing the predictions to the expected values in the holdout dataset.</p>
+<p>For classification problems, metrics involve comparing the expected class label to the predicted class label or interpreting the predicted probabilities for the class labels for the problem.</p>
+<p>Selecting a model, and even the data preparation methods together are a search problem that is guided by the evaluation metric. Experiments are performed with different models and the outcome of each experiment is quantified with a metric.</p>
+<blockquote>
+<p><em>Evaluation measures play a crucial role in both assessing the classification performance and guiding the classifier modeling.</em></p>
+</blockquote>
+<p>— <a href="https://www.worldscientific.com/doi/abs/10.1142/S0218001409007326" target="_blank" rel="noopener">Classification Of Imbalanced Data: A Review</a>, 2009.</p>
+<p>There are standard metrics that are widely used for evaluating classification predictive models, such as classification accuracy or classification error.</p>
+<p>There are standard metrics that are widely used for evaluating classification predictive models, such as classification accuracy or classification error.</p>
+<p>Standard metrics work well on most problems, which is why they are widely adopted. But all metrics make assumptions about the problem or about what is important in the problem. Therefore an evaluation metric must be chosen that best captures what you or your project stakeholders believe is important about the model or predictions, which makes choosing model evaluation metrics challenging.</p>
+<p>This challenge is made even more difficult when there is a skew in the class distribution. The reason for this is that many of the standard metrics become unreliable or even misleading when classes are imbalanced, or severely imbalanced, such as 1:100 or 1:1000 ratio between a minority and majority class.</p>
+<blockquote>
+<p><em>In the case of class imbalances, the problem is even more acute because the default, relatively robust procedures used for unskewed data can break down miserably when the data is skewed.</em></p>
+</blockquote>
+<p>— Page 187, <a href="https://amzn.to/32K9K6d" target="_blank" rel="noopener">Imbalanced Learning: Foundations, Algorithms, and Applications</a>, 2013.</p>
+<p>For example, reporting classification accuracy for a severely imbalanced classification problem could be dangerously misleading. This is the case if project stakeholders use the results to draw conclusions or plan new projects.</p>
+<blockquote>
+<p><em>In fact, the use of common metrics in imbalanced domains can lead to sub-optimal classification models and might produce misleading conclusions since these measures are insensitive to skewed domains.</em></p>
+</blockquote>
+<p>— <a href="https://arxiv.org/abs/1505.01658" target="_blank" rel="noopener">A Survey of Predictive Modelling under Imbalanced Distributions</a>, 2015.</p>
+<p>Importantly, different evaluation metrics are often required when working with imbalanced classification.</p>
+<p>Unlike standard evaluation metrics that treat all classes as equally important, imbalanced classification problems typically rate classification errors with the minority class as more important than those with the majority class. As such performance metrics may be needed that focus on the minority class, which is made challenging because it is the minority class where we lack observations required to train an effective model.</p>
+<blockquote>
+<p><em>The main problem of imbalanced data sets lies on the fact that they are often associated with a user preference bias towards the performance on cases that are poorly represented in the available data sample.</em></p>
+</blockquote>
+<p>— <a href="https://arxiv.org/abs/1505.01658" target="_blank" rel="noopener">A Survey of Predictive Modelling under Imbalanced Distributions</a>, 2015.</p>
+<p>Now that we are familiar with the challenge of choosing a model evaluation metric, let’s look at some examples of different metrics from which we might choose.</p>
+<h2 id="Taxonomy-of-Classifier-Evaluation-Metrics"><a href="#Taxonomy-of-Classifier-Evaluation-Metrics" class="headerlink" title="Taxonomy of Classifier Evaluation Metrics"></a><strong>Taxonomy of Classifier Evaluation Metrics</strong></h2><p>There are tens of metrics to choose from when evaluating classifier models, and perhaps hundreds, if you consider all of the pet versions of metrics proposed by academics.</p>
+<p>In order to get a handle on the metrics that you could choose from, we will use a taxonomy proposed by <a href="http://personales.upv.es/ceferra/" target="_blank" rel="noopener">Cesar Ferri</a>, et al. in their 2008 paper titled “<a href="https://www.sciencedirect.com/science/article/abs/pii/S0167865508002687" target="_blank" rel="noopener">An Experimental Comparison Of Performance Measures For Classification</a>.” It was also adopted in the 2013 book titled “<a href="https://amzn.to/32K9K6d" target="_blank" rel="noopener">Imbalanced Learning</a>” and I think proves useful.</p>
+<p>We can divide evaluation metrics into three useful groups; they are:</p>
+<ol>
+<li>Threshold Metrics</li>
+<li>Ranking Metrics</li>
+<li>Probability Metrics.</li>
+</ol>
+<p>This division is useful because the top metrics used by practitioners for classifiers generally, and specifically imbalanced classification, fit into the taxonomy neatly.</p>
+<blockquote>
+<p><em>Several machine learning researchers have identified three families of evaluation metrics used in the context of classification. These are the threshold metrics (e.g., accuracy and F-measure), the ranking methods and metrics (e.g., receiver operating characteristics (ROC) analysis and AUC), and the probabilistic metrics (e.g., root-mean-squared error).</em></p>
+</blockquote>
+<p>— Page 189, <a href="https://amzn.to/32K9K6d" target="_blank" rel="noopener">Imbalanced Learning: Foundations, Algorithms, and Applications</a>, 2013.</p>
+<p>Let’s take a closer look at each group in turn.</p>
+<h3 id="Threshold-Metrics-for-Imbalanced-Classification"><a href="#Threshold-Metrics-for-Imbalanced-Classification" class="headerlink" title="Threshold Metrics for Imbalanced Classification"></a><strong>Threshold Metrics for Imbalanced Classification</strong></h3><p>Threshold metrics are those that quantify the classification prediction errors.</p>
+<p>That is, they are designed to summarize the fraction, ratio, or rate of when a predicted class does not match the expected class in a holdout dataset.</p>
+<blockquote>
+<p><em>Metrics based on a threshold and a qualitative understanding of error […] These measures are used when we want a model to minimise the number of errors.</em></p>
+</blockquote>
+<p>— <a href="https://www.sciencedirect.com/science/article/abs/pii/S0167865508002687" target="_blank" rel="noopener">An Experimental Comparison Of Performance Measures For Classification</a>, 2008.</p>
+<p>Perhaps the most widely used threshold metric is classification accuracy.</p>
+<ul>
+<li><strong>Accuracy</strong> = Correct Predictions / Total Predictions</li>
+</ul>
+<p>And the complement of classification accuracy called classification error.</p>
+<ul>
+<li><strong>Error</strong> = Incorrect Predictions / Total Predictions</li>
+</ul>
+<p>Although widely used, classification accuracy is almost universally inappropriate for imbalanced classification. The reason is, a high accuracy (or low error) is achievable by a no skill model that only predicts the majority class.</p>
+<p>For more on the failure of classification accuracy, see the tutorial:</p>
+<ul>
+<li><a href="https://machinelearningmastery.com/failure-of-accuracy-for-imbalanced-class-distributions/" target="_blank" rel="noopener">Failure of Classification Accuracy for Imbalanced Class Distributions</a></li>
+</ul>
+<p>For imbalanced classification problems, the majority class is typically referred to as the negative outcome (e.g. such as “<em>no change</em>” or “<em>negative test result</em>“), and the minority class is typically referred to as the positive outcome (e.g. “<em>change</em>” or “<em>positive test result</em>“).</p>
+<ul>
+<li><strong>Majority Class</strong>: Negative outcome, class 0.</li>
+<li><strong>Minority Class</strong>: Positive outcome, class 1.</li>
+</ul>
+<p>Most threshold metrics can be best understood by the terms used in a confusion matrix for a binary (two-class) classification problem. This does not mean that the metrics are limited for use on binary classification; it is just an easy way to quickly understand what is being measured.</p>
+<p>The confusion matrix provides more insight into not only the performance of a predictive model but also which classes are being predicted correctly, which incorrectly, and what type of errors are being made. In this type of confusion matrix, each cell in the table has a specific and well-understood name, summarized as follows:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Positive Prediction</th>
+<th>Negative Prediction</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Positive Class</td>
+<td>True Positive (TP)</td>
+<td>False Negative (FN)</td>
+</tr>
+<tr>
+<td>Negative Class</td>
+<td>False Positive (FP)</td>
+<td>True Negative (TN)</td>
+</tr>
+</tbody></table>
+<p>There are two groups of metrics that may be useful for imbalanced classification because they focus on one class; they are sensitivity-specificity and precision-recall.</p>
+<h4 id="Sensitivity-Specificity-Metrics"><a href="#Sensitivity-Specificity-Metrics" class="headerlink" title="Sensitivity-Specificity Metrics"></a><strong>Sensitivity-Specificity Metrics</strong></h4><p>Sensitivity refers to the true positive rate and summarizes how well the positive class was predicted.</p>
+<ul>
+<li><strong>Sensitivity</strong> = TruePositive / (TruePositive + FalseNegative)</li>
+</ul>
+<p>Specificity is the complement to sensitivity, or the true negative rate, and summarises how well the negative class was predicted.</p>
+<ul>
+<li><strong>Specificity</strong> = TrueNegative / (FalsePositive + TrueNegative)</li>
+</ul>
+<p>For imbalanced classification, the sensitivity might be more interesting than the specificity.</p>
+<p>Sensitivity and Specificity can be combined into a single score that balances both concerns, called the <a href="https://machinelearningmastery.com/arithmetic-geometric-and-harmonic-means-for-machine-learning/" target="_blank" rel="noopener">geometric mean</a> or G-Mean.</p>
+<ul>
+<li><strong>G-Mean</strong> = sqrt(Sensitivity * Specificity)</li>
+</ul>
+<h4 id="Precision-Recall-Metrics"><a href="#Precision-Recall-Metrics" class="headerlink" title="Precision-Recall Metrics"></a><strong>Precision-Recall Metrics</strong></h4><p>Precision summarizes the fraction of examples assigned the positive class that belong to the positive class.</p>
+<ul>
+<li><strong>Precision</strong> = TruePositive / (TruePositive + FalsePositive)</li>
+</ul>
+<p>Recall summarizes how well the positive class was predicted and is the same calculation as sensitivity.</p>
+<ul>
+<li><strong>Recall</strong> = TruePositive / (TruePositive + FalseNegative)</li>
+</ul>
+<p>Precision and recall can be combined into a single score that seeks to balance both concerns, called the F-score or the F-measure.</p>
+<ul>
+<li><strong>F-Measure</strong> = (2 * Precision * Recall) / (Precision + Recall)</li>
+</ul>
+<p>The F-Measure is a popular metric for imbalanced classification.</p>
+<p>The Fbeta-measure measure is an abstraction of the F-measure where the balance of precision and recall in the calculation of the <a href="https://machinelearningmastery.com/arithmetic-geometric-and-harmonic-means-for-machine-learning/" target="_blank" rel="noopener">harmonic mean</a> is controlled by a coefficient called <em>beta</em>.</p>
+<ul>
+<li><strong>Fbeta-Measure</strong> = ((1 + beta^2) * Precision * Recall) / (beta^2 * Precision + Recall)</li>
+</ul>
+<p>For more on precision, recall and F-measure for imbalanced classification, see the tutorial:</p>
+<ul>
+<li><a href="https://machinelearningmastery.com/precision-recall-and-f-measure-for-imbalanced-classification/" target="_blank" rel="noopener">How to Calculate Precision, Recall, and F-Measure for Imbalanced Classification</a></li>
+</ul>
+<h4 id="Additional-Threshold-Metrics"><a href="#Additional-Threshold-Metrics" class="headerlink" title="Additional Threshold Metrics"></a><strong>Additional Threshold Metrics</strong></h4><p>These are probably the most popular metrics to consider, although many others do exist. To give you a taste, these include Kappa, Macro-Average Accuracy, Mean-Class-Weighted Accuracy, Optimized Precision, Adjusted Geometric Mean, Balanced Accuracy, and more.</p>
+<p>Threshold metrics are easy to calculate and easy to understand.</p>
+<p>One limitation of these metrics is that they assume that the class distribution observed in the training dataset will match the distribution in the test set and in real data when the model is used to make predictions. This is often the case, but when it is not the case, the performance can be quite misleading.</p>
+<blockquote>
+<p><em>An important disadvantage of all the threshold metrics discussed in the previous section is that they assume full knowledge of the conditions under which the classifier will be deployed. In particular, they assume that the class imbalance present in the training set is the one that will be encountered throughout the operating life of the classifier</em></p>
+</blockquote>
+<p>— Page 196, <a href="https://amzn.to/32K9K6d" target="_blank" rel="noopener">Imbalanced Learning: Foundations, Algorithms, and Applications</a>, 2013.</p>
+<p>Ranking metrics don’t make any assumptions about class distributions.</p>
+<h3 id="Ranking-Metrics-for-Imbalanced-Classification"><a href="#Ranking-Metrics-for-Imbalanced-Classification" class="headerlink" title="Ranking Metrics for Imbalanced Classification"></a><strong>Ranking Metrics for Imbalanced Classification</strong></h3><p>Rank metrics are more concerned with evaluating classifiers based on how effective they are at separating classes.</p>
+<blockquote>
+<p><em>Metrics based on how well the model ranks the examples […] These are important for many applications […] where classifiers are used to select the best n instances of a set of data or when good class separation is crucial.</em></p>
+</blockquote>
+<p>— <a href="https://www.sciencedirect.com/science/article/abs/pii/S0167865508002687" target="_blank" rel="noopener">An Experimental Comparison Of Performance Measures For Classification</a>, 2008.</p>
+<p>These metrics require that a classifier predicts a score or a probability of class membership.</p>
+<p>From this score, different thresholds can be applied to test the effectiveness of classifiers. Those models that maintain a good score across a range of thresholds will have good class separation and will be ranked higher.</p>
+<blockquote>
+<p><em>… consider a classifier that gives a numeric score for an instance to be classified in the positive class. Therefore, instead of a simple positive or negative prediction, the score introduces a level of granularity</em></p>
+</blockquote>
+<p>– Page 53, <a href="https://amzn.to/307Xlva" target="_blank" rel="noopener">Learning from Imbalanced Data Sets</a>, 2018.</p>
+<p>The most commonly used ranking metric is the ROC Curve or ROC Analysis.</p>
+<p>ROC is an acronym that means Receiver Operating Characteristic and summarizes a field of study for analyzing binary classifiers based on their ability to discriminate classes.</p>
+<p>A ROC curve is a diagnostic plot for summarizing the behavior of a model by calculating the false positive rate and true positive rate for a set of predictions by the model under different thresholds.</p>
+<p>The true positive rate is the recall or sensitivity.</p>
+<ul>
+<li><strong>TruePositiveRate</strong> = TruePositive / (TruePositive + FalseNegative)</li>
+</ul>
+<p>The false positive rate is calculated as:</p>
+<ul>
+<li><strong>FalsePositiveRate</strong> = FalsePositive / (FalsePositive + TrueNegative)</li>
+</ul>
+<p>Each threshold is a point on the plot and the points are connected to form a curve. A classifier that has no skill (e.g. predicts the majority class under all thresholds) will be represented by a diagonal line from the bottom left to the top right.</p>
+<p>Any points below this line have worse than no skill. A perfect model will be a point in the top right of the plot.</p>
+<p><img src="./uploads/figure_roc_cure" srcset="/img/loading.gif" alt="Depiction of a ROC Curve"></p>
+<p>The ROC Curve is a helpful diagnostic for one model.</p>
+<p>The area under the ROC curve can be calculated and provides a single score to summarize the plot that can be used to compare models.</p>
+<p>A no skill classifier will have a score of 0.5, whereas a perfect classifier will have a score of 1.0.</p>
+<ul>
+<li><strong>ROC AUC</strong> = ROC Area Under Curve</li>
+</ul>
+<p>Although generally effective, the ROC Curve and ROC AUC can be optimistic under a severe class imbalance, especially when the number of examples in the minority class is small.</p>
+<p>An alternative to the ROC Curve is the precision-recall curve that can be used in a similar way, although focuses on the performance of the classifier on the minority class.</p>
+<p>Again, different thresholds are used on a set of predictions by a model, and in this case, the precision and recall are calculated. The points form a curve and classifiers that perform better under a range of different thresholds will be ranked higher.</p>
+<p>A no-skill classifier will be a horizontal line on the plot with a precision that is proportional to the number of positive examples in the dataset. For a balanced dataset this will be 0.5. A perfect classifier is represented by a point in the top right.</p>
+<p><img src="./uploads/precision_recall_curve" srcset="/img/loading.gif" alt="Depiction of a Precision-Recall Curve"></p>
+<p>Like the ROC Curve, the Precision-Recall Curve is a helpful diagnostic tool for evaluating a single classifier but challenging for comparing classifiers.</p>
+<p>And like the ROC AUC, we can calculate the area under the curve as a score and use that score to compare classifiers. In this case, the focus on the minority class makes the Precision-Recall AUC more useful for imbalanced classification problems.</p>
+<ul>
+<li><strong>PR AUC</strong> = Precision-Recall Area Under Curve</li>
+</ul>
+<p>There are other ranking metrics that are less widely used, such as modification to the ROC Curve for imbalanced classification and cost curves.</p>
+<p>For more on ROC curves and precision-recall curves for imbalanced classification, see the tutorial:</p>
+<ul>
+<li><a href="https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-imbalanced-classification/" target="_blank" rel="noopener">ROC Curves and Precision-Recall Curves for Imbalanced Classification</a></li>
+</ul>
+<h3 id="Probabilistic-Metrics-for-Imbalanced-Classification"><a href="#Probabilistic-Metrics-for-Imbalanced-Classification" class="headerlink" title="Probabilistic Metrics for Imbalanced Classification"></a><strong>Probabilistic Metrics for Imbalanced Classification</strong></h3><p>Probabilistic metrics are designed specifically to quantify the uncertainty in a classifier’s predictions.</p>
+<p>These are useful for problems where we are less interested in incorrect vs. correct class predictions and more interested in the uncertainty the model has in predictions and penalizing those predictions that are wrong but highly confident.</p>
+<blockquote>
+<p><em>Metrics based on a probabilistic understanding of error, i.e. measuring the deviation from the true probability […] These measures are especially useful when we want an assessment of the reliability of the classifiers, not only measuring when they fail but whether they have selected the wrong class with a high or low probability.</em></p>
+</blockquote>
+<p>— <a href="https://www.sciencedirect.com/science/article/abs/pii/S0167865508002687" target="_blank" rel="noopener">An Experimental Comparison Of Performance Measures For Classification</a>, 2008.</p>
+<p>Evaluating a model based on the predicted probabilities requires that the probabilities are calibrated.</p>
+<p>Some classifiers are trained using a probabilistic framework, such as maximum likelihood estimation, meaning that their probabilities are already calibrated. An example would be logistic regression.</p>
+<p>Many nonlinear classifiers are not trained under a probabilistic framework and therefore require their probabilities to be calibrated against a dataset prior to being evaluated via a probabilistic metric. Examples might include support vector machines and k-nearest neighbors.</p>
+<p>Perhaps the most common metric for evaluating predicted probabilities is log loss for binary classification (or the negative log likelihood), or known more generally as <a href="https://machinelearningmastery.com/cross-entropy-for-machine-learning/" target="_blank" rel="noopener">cross-entropy</a>.</p>
+<p>For a binary classification dataset where the expected values are y and the predicted values are yhat, this can be calculated as follows:</p>
+<ul>
+<li><strong>LogLoss</strong> = -((1 – y) * log(1 – yhat) + y * log(yhat))</li>
+</ul>
+<p>The score can be generalized to multiple classes by simply adding the terms; for example:</p>
+<ul>
+<li><strong>LogLoss</strong> = -( sum c in C y_c * log(yhat_c))</li>
+</ul>
+<p>The score summarizes the average difference between two probability distributions. A perfect classifier has a log loss of 0.0, with worse values being positive up to infinity.</p>
+<p>Another popular score for predicted probabilities is the Brier score.</p>
+<p>The benefit of the Brier score is that it is focused on the positive class, which for imbalanced classification is the minority class. This makes it more preferable than log loss, which is focused on the entire probability distribution.</p>
+<p>The Brier score is calculated as the mean squared error between the expected probabilities for the positive class (e.g. 1.0) and the predicted probabilities. Recall that the mean squared error is the average of the squared differences between the values.</p>
+<ul>
+<li><strong>BrierScore</strong> = 1/N * Sum i to N (yhat_i – y_i)^2</li>
+</ul>
+<p>A perfect classifier has a Brier score of 0.0. Although typically described in terms of binary classification tasks, the Brier score can also be calculated for multiclass classification problems.</p>
+<p>The differences in Brier score for different classifiers can be very small. In order to address this problem, the score can be scaled against a reference score, such as the score from a no skill classifier (e.g. predicting the probability distribution of the positive class in the training dataset).</p>
+<p>Using the reference score, a Brier Skill Score, or BSS, can be calculated where 0.0 represents no skill, worse than no skill results are negative, and the perfect skill is represented by a value of 1.0.</p>
+<ul>
+<li><strong>BrierSkillScore</strong> = 1 – (BrierScore / BrierScore_ref)</li>
+</ul>
+<p>Although popular for balanced classification problems, probability scoring methods are less widely used for classification problems with a skewed class distribution.</p>
+<p>For more on probabilistic metrics for imbalanced classification, see the tutorial:</p>
+<ul>
+<li><a href="https://machinelearningmastery.com/probability-metrics-for-imbalanced-classification/" target="_blank" rel="noopener">A Gentle Introduction to Probability Metrics for Imbalanced Classification</a></li>
+</ul>
+<h2 id="How-to-Choose-an-Evaluation-Metric"><a href="#How-to-Choose-an-Evaluation-Metric" class="headerlink" title="How to Choose an Evaluation Metric"></a><strong>How to Choose an Evaluation Metric</strong></h2><p>There is an enormous number of model evaluation metrics to choose from.</p>
+<p>Given that choosing an evaluation metric is so important and there are tens or perhaps hundreds of metrics to choose from, what are you supposed to do?</p>
+<blockquote>
+<p><em>The correct evaluation of learned models is one of the most important issues in pattern recognition.</em></p>
+</blockquote>
+<p>— <a href="https://www.sciencedirect.com/science/article/abs/pii/S0167865508002687" target="_blank" rel="noopener">An Experimental Comparison Of Performance Measures For Classification</a>, 2008.</p>
+<p>Perhaps the best approach is to talk to project stakeholders and figure out what is important about a model or set of predictions. Then select a few metrics that seem to capture what is important, then test the metric with different scenarios.</p>
+<p>A scenario might be a mock set of predictions for a test dataset with a skewed class distribution that matches your problem domain. You can test what happens to the metric if a model predicts all the majority class, all the minority class, does well, does poorly, and so on. A few small tests can rapidly help you get a feeling for how the metric might perform.</p>
+<p>Another approach might be to perform a literature review and discover what metrics are most commonly used by other practitioners or academics working on the same general type of problem. This can often be insightful, but be warned that some fields of study may fall into groupthink and adopt a metric that might be excellent for comparing large numbers of models at scale, but terrible for model selection in practice.</p>
+<p>Still have no idea?</p>
+<p>Here are some first-order suggestions:</p>
+<ul>
+<li><strong>Are you predicting probabilities?</strong></li>
+<li><ul>
+<li><strong>Do you need class labels?</strong></li>
+<li><ul>
+<li><strong>Is the positive class more important?</strong></li>
+<li><ul>
+<li>Use Precision-Recall AUC</li>
+</ul>
+</li>
+<li><strong>Are both classes important?</strong></li>
+<li><ul>
+<li>Use ROC AUC</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Do you need probabilities?</strong></li>
+<li><ul>
+<li>Use Brier Score and Brier Skill Score</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Are you predicting class labels?</strong></li>
+<li><ul>
+<li><strong>Is the positive class more important?</strong></li>
+<li><ul>
+<li><strong>Are False Negatives and False Positives Equally Important?</strong></li>
+<li><ul>
+<li>Use F1-Measure</li>
+</ul>
+</li>
+<li><strong>Are False Negatives More Important?</strong></li>
+<li><ul>
+<li>Use F2-Measure</li>
+</ul>
+</li>
+<li><strong>Are False Positives More Important?</strong></li>
+<li><ul>
+<li>Use F0.5-Measure</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Are both classes important?</strong></li>
+<li><ul>
+<li><strong>Do you have &lt; 80%-90% Examples for the Majority Class?</strong> </li>
+<li><ul>
+<li>Use Accuracy</li>
+</ul>
+</li>
+<li><strong>Do you have &gt; 80%-90% Examples for the Majority Class?</strong> </li>
+<li><ul>
+<li>Use G-Mean</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>These suggestions take the important case into account where we might use models that predict probabilities, but require crisp class labels. This is an important class of problems that allow the operator or implementor to choose the threshold to trade-off misclassification errors. In this scenario, error metrics are required that consider all reasonable thresholds, hence the use of the area under curve metrics.</p>
+<p>We can transform these suggestions into a helpful template.</p>
+<p><img src="./uploads/how_to_choose_imbalanced" srcset="/img/loading.gif" alt="How to Choose a Metric for Imbalanced Classification"></p>
+<h2 id="Further-Reading"><a href="#Further-Reading" class="headerlink" title="Further Reading"></a><strong>Further Reading</strong></h2><p>This section provides more resources on the topic if you are looking to go deeper.</p>
+<h3 id="Papers"><a href="#Papers" class="headerlink" title="Papers"></a><strong>Papers</strong></h3><ul>
+<li><a href="https://www.sciencedirect.com/science/article/abs/pii/S0167865508002687" target="_blank" rel="noopener">An Experimental Comparison Of Performance Measures For Classification</a>, 2008.</li>
+<li><a href="https://www.worldscientific.com/doi/abs/10.1142/S0218001409007326" target="_blank" rel="noopener">Classification Of Imbalanced Data: A Review</a>, 2009.</li>
+<li><a href="https://arxiv.org/abs/1505.01658" target="_blank" rel="noopener">A Survey of Predictive Modelling under Imbalanced Distributions</a>, 2015.</li>
+</ul>
+<h3 id="Books"><a href="#Books" class="headerlink" title="Books"></a><strong>Books</strong></h3><ul>
+<li>Chapter 8 Assessment Metrics For Imbalanced Learning, <a href="https://amzn.to/32K9K6d" target="_blank" rel="noopener">Imbalanced Learning: Foundations, Algorithms, and Applications</a>, 2013.</li>
+<li><a href="https://amzn.to/307Xlva" target="_blank" rel="noopener">Chapter 3 Performance Measures, Learning from Imbalanced Data Sets</a>, 2018.</li>
+</ul>
+<h3 id="Articles"><a href="#Articles" class="headerlink" title="Articles"></a><strong>Articles</strong></h3><ul>
+<li><a href="https://en.wikipedia.org/wiki/Precision_and_recall" target="_blank" rel="noopener">Precision and recall, Wikipedia</a>.</li>
+<li><a href="https://en.wikipedia.org/wiki/Sensitivity_and_specificity" target="_blank" rel="noopener">Sensitivity and specificity, Wikipedia</a>.</li>
+<li><a href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">Receiver operating characteristic, Wikipedia</a>.</li>
+<li><a href="https://en.wikipedia.org/wiki/Cross_entropy" target="_blank" rel="noopener">Cross entropy, Wikipedia</a>.</li>
+<li><a href="https://en.wikipedia.org/wiki/Brier_score" target="_blank" rel="noopener">Brier score, Wikipedia</a>.</li>
+</ul>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a><strong>Summary</strong></h2><p>In this tutorial, you discovered metrics that you can use for imbalanced classification.</p>
+<p>Specifically, you learned:</p>
+<ul>
+<li>About the challenge of choosing metrics for classification, and how it is particularly difficult when there is a skewed class distribution.</li>
+<li>How there are three main types of metrics for evaluating classifier models, referred to as rank, threshold, and probability.</li>
+<li>How to choose a metric for imbalanced classification if you don’t know where to start.</li>
+</ul>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/imbalance/">imbalance</a>
+                    
+                      <a class="hover-with-bg" href="/tags/metrics/">metrics</a>
+                    
+                      <a class="hover-with-bg" href="/tags/evaluation/">evaluation</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/01/20/%E6%94%B9%E5%96%84(%E4%BB%8A%E4%BA%95%E6%AD%A3%E6%98%8E)%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">
+                        <span class="hidden-mobile">改善(今井正明)读书笔记</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "机器学习中样本失衡下的分类评估指标选取指南&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

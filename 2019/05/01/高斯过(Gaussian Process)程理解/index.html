@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>高斯过程（Gaussian Process）理解 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 五月 1日 2019, 3:52 下午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.8k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>对于高斯过程（Gaussian Process）已经心仪已久，但是之前大概看了一些文章，没有完全理解，本身这个模型是比较理解的，因此现在抽出时间来研究一番，本文中不会进行复杂的公式推导，主要对高斯过程进行理解。</p>
+<p>高斯过程是机器学习中 一种或者说一类的建模方法。这种建模方法得出的模型统称为非参数模型，比如：高斯过程，贝叶斯，KNN等（参数模型：回归，深度学习，逻辑回归）。高斯过程是从概率统计学的角度来解决问题，更确切的说应该是随机过程（Stochastic Process）种一个特殊的例子，下面是WIKI上的定义：</p>
+<blockquote>
+<p><strong>高斯过程</strong>（<strong>Gaussian process</strong>）是<a href="https://zh.wikipedia.org/wiki/随机变量" target="_blank" rel="noopener">观测值</a>出现在一个连续域（例如时间或空间）的统计模型。在高斯过程中，连续输入空间中每个点都是与一个<a href="https://zh.wikipedia.org/wiki/正态分布" target="_blank" rel="noopener">正态分布</a>的<a href="https://zh.wikipedia.org/wiki/随机变量" target="_blank" rel="noopener">随机变量</a>相关联。此外，这些随机变量的每个有限集合都有一个<a href="https://zh.wikipedia.org/wiki/多元正态分布" target="_blank" rel="noopener">多元正态分布</a>。高斯过程的分布是所有那些（无限多个）随机变量的联合分布，正因如此，它是连续域（例如时间或空间）的分布。</p>
+<p>高斯过程被认为是一种<a href="https://zh.wikipedia.org/wiki/机器学习" target="_blank" rel="noopener">机器学习</a>算法，是以<a href="https://zh.wikipedia.org/w/index.php?title=惰性學習&action=edit&redlink=1" target="_blank" rel="noopener">惰性学习</a>方式，利用点与点之间同质性的度量作为<a href="https://zh.wikipedia.org/w/index.php?title=核函數&action=edit&redlink=1" target="_blank" rel="noopener">核函数</a>，以从输入的训练数据预测未知点的值。其预测结果不仅包含该点的值，而同时包含不确定性的资料－它的一维高斯分布（即该点的<a href="https://zh.wikipedia.org/wiki/边际分布" target="_blank" rel="noopener">边际分布</a>）。</p>
+</blockquote>
+<p>下面主要对高斯过程从几个方面进行详细的讲解，首先我们对高斯过程有一个大概的认知，通过一种通俗易懂的方式来进行说明，再从理论的角度来对高斯过程进行详细的理论讲解，最后会对高斯过程种使用的协方差函数（核函数）进行列举说明。另外会对使用高斯过程应该考虑的问题进行说明。</p>
+<h2 id="1-高斯过程的通俗理解（总体认知）"><a href="#1-高斯过程的通俗理解（总体认知）" class="headerlink" title="1. 高斯过程的通俗理解（总体认知）"></a>1. 高斯过程的通俗理解（总体认知）</h2><p>在本文中通过<strong>高斯过程回归</strong>（GPR）来帮助高斯过程的理解。下面我们从回归的角度，从解决问题的角度看GPR是怎么一步一步解决我们的问题。</p>
+<p>对于回归我们是给出$X和Y$，再给出测试的$X_{test}$，要求预测得到$Y_{test}$。高斯过程的出发点就是：<strong>如果两个$x$比较接近，那么它们对应的$y$一定比较接近</strong>。对于给定的新$X_{test}$与之前给出的$X$有多近，从而就知道了要预测$Y$的$Y_{test}$有多近，来预测$Y_{test}$。那么如何度量Y之间有多近呢？高斯过程是通过协方差矩阵（相关系数矩阵），而这个协方差矩阵怎么计算呢？这儿将多维高斯分布作为先验，认为所有的y，服从一个多维的联合高斯分布，只需要根据$X和Y$来将协方差矩阵计算好，最后按照公式计算$Y_{test}$的边缘分布就可以了。</p>
+<p>上面解决了$Y$之间“近”的度量，那么$X$之间近怎么度量呢？那么核（kernel）就应该出现了，核不仅能刻画线性，而且能刻画非线性。目前整个问题就解决了：<strong>用$X$之间加kernel，来填充$Y$之间的协方差矩阵，然后计算$Y_{test}$的边缘分布。通过$X$和$Y$，给定$X_{test}$计算$Y_{test}$</strong>。</p>
+<p>上面我们对高斯过程有了一个总体认识后，下面我们就结合理论来进行理解，知道理论种每一步的具体作用，帮助我们理解高斯过程。</p>
+<h2 id="2-多元高斯分布"><a href="#2-多元高斯分布" class="headerlink" title="2. 多元高斯分布"></a>2. 多元高斯分布</h2><p>在理解高斯过程之前需要对多元高斯分布有初步的认识，高斯分布是高斯过程的基础部件，而多元高斯分布是高斯分布的基础。多元高斯分布定义：</p>
+<blockquote>
+<p>多变量正态分布亦称为多元高斯分布。它是单维高斯分布向多维的推广。它同<a href="https://zh.wikipedia.org/wiki/矩阵正态分布" target="_blank" rel="noopener">矩阵正态分布</a>有紧密的联系。 一般形式：<br>$$<br>X = N(\mu, \Sigma) \tag{1}<br>$$<br>其中，$\mu$为向量，$\Sigma$为协方差矩阵，该分布为向量$\mu$为中心，协方差矩阵$\Sigma$决定其形状。N维随机向量 $X=[X_{1},\dots ,X_{N}]^{T}$如果服从多变量正态分布，必须满足下面的三个等价条件： </p>
+<ol>
+<li>任何线性组合$Y=a_{1}X_{1}+\cdots +a_{N}X_{N}$服从正态分布。 </li>
+<li>存在随机向量 $Z=[Z_{1},\dots ,Z_{M}]^{T}$( 它的每个元素服从独立标准正态分布），向量 $\mu =[\mu _{1},\dots ,\mu _{N}]^{T}$及$N\times M$矩阵$A$满足$X=AZ+\mu $. </li>
+<li>存在$\mu$ 和一个对称正定阵 $\Sigma$，满足$X$的特征函数$\phi <em>{X}\left(u;\mu ,\Sigma \right)=\exp \left(i\mu ^{T}u-{\frac  {1}{2}}u^{T}\Sigma u\right)$，如果$\Sigma$是非奇异的，那么该分布可以由以下的PDF来描述：$f</em>{\mathbf {x} }(x_{1},\ldots ,x_{k})={\frac {1}{\sqrt {(2\pi )^{k}|{\boldsymbol {\Sigma }}|}}}\exp \left(-{\frac {1}{2}}({\mathbf {x} }-{\boldsymbol {\mu }})^{\mathrm {T} }{\boldsymbol {\Sigma }}^{-1}({\mathbf {x} }-{\boldsymbol {\mu }})\right)$，注意这里的$|\Sigma |$是协方差矩阵的行列式。<a id="more"></a></li>
+</ol>
+</blockquote>
+<p>下面是一个二维高斯分布的图像，可以看出是以（0， 0）为中心，1为峰值，图形的宽度，是通过$|\Sigma |$矩阵来定义的。具体如下图所示：</p>
+<p><img src="/uploads/20180516094227255.jpg" srcset="/img/loading.gif" alt="gaussian curve with a 2-dimensional domain"></p>
+<h2 id="3-高斯过程（Gaussian-Process）"><a href="#3-高斯过程（Gaussian-Process）" class="headerlink" title="3. 高斯过程（Gaussian Process）"></a>3. 高斯过程（Gaussian Process）</h2><p><code>Gaussian Process</code>即高斯和过程，高斯一般指高斯分布，多元高斯分布；过程，这里主要是指随机过程（wiki上的随机过程<strong>定义</strong>：在概率论概念中，<strong>随机过程</strong>是<strong>随机</strong>变量的集合。 若一<strong>随机</strong>系统的样本点是<strong>随机</strong>函数，则称此函数为样本函数，这一<strong>随机</strong>系统全部样本函数的集合是一个<strong>随机过程</strong>）。</p>
+<p>本文还是基于回归的示例来理解高斯过程，假设：有$N$对样本$(x_i, y_i)<em>1^n$，一般是样本来拟合$x和y$之间的关系，并根据新的自变量$x$来预测$y$。但是高斯过程并非如此，而是利用先验知识，来拟合函数$f$的概率分布：<br>$$<br>f: R \rightarrow R = p(f | x, X, y) \tag{2}<br>$$<br>首先进行假设，假设给定一些$X$的值，我们对$Y$建模，并假设对应的这些$Y$值 服从联合高斯分布。一个高斯过程是由均值函数$m(x)$和协方差函数$k(x, x^”)$（<strong>正因为有均值函数核协方差函数确定，所以高斯过程为非参数模型</strong>）确定的。它可理解成联合高斯分布的一个生成过程，那么联合高斯分布可以通过如下表示：<br>$$<br>\left[\begin{array}{ccc}<br>Y</em>{1} \<br>\vdots \<br>Y_{n}<br>\end{array}\right] = N(\left[\begin{array}{ccc}<br>0 \<br>\vdots \<br>0<br>\end{array}\right], \left[\begin{array}{ccc}<br>K_{11} &amp; \cdots &amp; K_{1n} \<br>\vdots &amp; \ddots &amp; \vdots \<br>K_{n1} &amp; \cdots &amp; K_{nn}<br>\end{array}\right]) \tag{3}<br>$$<br>上面的形式就是多元高斯分布形式：$X = N(\mu, \Sigma)$，其中均值$\mu$不用担心，可以先假设为0（即使 $\mu≠0$，我们也可以在预测结束后把$\mu$加回到结果函数值中。所以配置$ \mu $非常简单），如上面的(3)所示。那么协方差矩阵怎么得到呢？</p>
+<p>在上面通俗理解的段落中提到了，$X$比较相似，那么对应的$y$值的相关性也就较高。换言之，协方差矩阵是<strong>$X$的函数</strong>。（而不是$y$的函数）。也就是说，可以假设协方差矩阵的每个元素为对应的两个$x$值的一个相似性度量，相似性度量函数是<strong>核函数(Kernel Functions</strong>，高斯过程回归中常用的Kernel是<code>squared exponential kernel</code>，在<code>scikit-learn</code>中GP接口中默认使用的<code>kernel</code>就是该核函数)。</p>
+<p>协方差矩阵不仅仅描述了这个分布的形状，也最终决定了我们想要预测的函数所具有的特性。我们通过求核函数$K$的值来生成协方差矩阵，这个核函数通常也被称为协方差函数，作用在<strong>两两成对的所有测试点</strong>上。核函数接收到的<strong>输入是两个点</strong>，，返回的是一个<strong>标量</strong>，表达了这<strong>两个点之间的相似度</strong>：<br>$$<br>K = \mathbb{R} \times \mathbb{R} \rightarrow \mathbb{R}, \Sigma = Cov(X, X^”)=k(x, x^”) \tag{4}<br>$$<br>协方差矩阵$\Sigma_{ij}$ 描述的是第 $i$个点和第$j$个点之间的相互影响，这和多元高斯分布的定义一致。在多元高斯分布的定义中，$\Sigma_{ij}$ 定义了第$i$个随机变量和第$j$个随机变量之间的相关性。由于核函数描述的输入值之间的相似度，它便控制了这个拟合函数可能拥有的形状。</p>
+<h3 id="3-1-高斯过程回归（GPR）"><a href="#3-1-高斯过程回归（GPR）" class="headerlink" title="3.1 高斯过程回归（GPR）"></a>3.1 高斯过程回归（GPR）</h3><p>假设对输入的$x^”$对应的$y^”$进行预测，那么可以简述如下：</p>
+<h4 id="3-1-1-先验分布（Prior-Distribution）"><a href="#3-1-1-先验分布（Prior-Distribution）" class="headerlink" title="3.1.1 先验分布（Prior Distribution）"></a>3.1.1 先验分布（Prior Distribution）</h4><p>训练样本：$x=[x_1, x_2, x_3, …, x_n], y=[y_1, y_2, y_3, …, y_n]$，测试样本：$x^”$,$y^”$。先验就是所有的随机变量遵循一个均值的多元高斯分布（假设随机变量已经零均值化，均值为0）：<br>$$<br>\left[\begin{array}{ccc}<br>y \<br>y^{“}<br>\end{array}\right] \sim N(0, \left[\begin{array}{ccc}<br>K &amp; K_{“}^T \<br>K_{“} &amp; K^{“”}<br>\end{array}\right] ) \tag{5}<br>$$<br>其中，GP定义了核函数$k$，就可以知道：<br>$$<br>K=\left[\begin{array}{ccc}<br>k(x_1, x_1) &amp; k(x_1, x_2) &amp; \cdots &amp; k(x_1, x_n)\<br>k(x_2, x_1) &amp; k(x_2, x_2) &amp; \cdots &amp; k(x_2, x_n)\<br>\vdots &amp; \vdots &amp; \ddots &amp; \vdots\<br>k(x_n, x_1) &amp; k(x_n, x_2) &amp; \cdots &amp; k(x_n, x_n)\<br>\end{array}\right]  \tag{6}<br>$$</p>
+<p>$$<br>K_{“} = [k(x^”, x_1), k(x^”, x_2), \cdots, k(x^”, x_n)]\<br>k^{“”} = k(x^”, x^”) \tag{7}<br>$$</p>
+<p>通过训练样本就确定了先验分布。如果将$x^”$,$y^”$拓展到$n^”$维，我们希望得到 一个 $n^”$ 维的预测向量 $f^”$:<br>$$<br>\left[\begin{array}{ccc}<br>y \<br>y^{“}<br>\end{array}\right] \sim N(\left(\begin{array}{ccc}<br>\mu\<br>\mu^{“}\end{array}\right), \left[\begin{array}{ccc}<br>K &amp; K_{“}^T \<br>K_{“} &amp; K^{“”}<br>\end{array}\right] ) \tag{8}<br>$$<br>其中，$K_{n \times n}=K(x, x)$，$K_{“ n^” \times n}$， $K^{“”}_{n^” \times n^”}$。</p>
+<h4 id="3-1-2-后验分布（Posterior-Distribution-）"><a href="#3-1-2-后验分布（Posterior-Distribution-）" class="headerlink" title="3.1.2 后验分布（Posterior Distribution ）"></a>3.1.2 后验分布（Posterior Distribution ）</h4><p>后验分布利用了训练样本的集中信息，因为训练样本和测试样本都使用的同一高斯过程，所以训练样本$x$和测试样本的$x^”$比较接近，那么对应的$y$也是比较接近，根据多元高斯分布式的条件分布，就可以得到：<br>$$<br>y^”|y = N(K_”K^{-1}y, K^{“”}-K_”K^{-1}K_”^T) \tag{9}<br>$$<br>根据上述公式可知，测试集后验分布的期望值就是训练样本$y$的线性组合，而方差和训练样本的$y$无关，只与$x$有关。如果在拓展到多维时且均值不为0(基于3.1.1中的公式（8）的情况)，则根据贝叶斯回归得到：<br>$$<br>\begin{align<em>}<br>&amp;y^”|x^”, x, y = N(\mu ^ {“}, z^”)\<br>&amp;\mu ^ {“} = \mu(x^”) + K_”K^{-1}(y-u(x))\<br>&amp;z^” = K^{“”}-K_”K^{-1}K_”^T<br>\end{align</em>}<br>$$</p>
+<h4 id="3-1-3-GPR训练"><a href="#3-1-3-GPR训练" class="headerlink" title="3.1.3 GPR训练"></a>3.1.3 GPR训练</h4><p>在GPR中训练集给定了，核函数(也叫协方差函数)给定了，基本都给定了，那结果也应该定了？虽然都给定了，但是<code>kernel</code>中的<strong>超参数</strong>并没有给定。所谓的训练就是训练得到这个超参数。只有当超参数确定后我们才确定了高斯过程得到的分布。因此，GPR的训练核心是学习<code>kernel</code>的超参数。</p>
+<h3 id="3-2-小结"><a href="#3-2-小结" class="headerlink" title="3.2 小结"></a>3.2 小结</h3><ul>
+<li>高斯过程可以看做是多维高斯分布向无限维的扩展，我们可以将$y=y_1,y_2,…,y_n$看作是从$n$维高斯分布中随机抽取的一个点</li>
+<li>对高斯过程的刻画，如同高斯分布一样，也是用均值和方差来刻画。通常在应用高斯过程 $f∼GP(\mu,K)$的方法中，都是假设均值$m\mu为零，而协方差函数$$K$则是根据具体应用而定。</li>
+<li>高斯回归的本质其实就是通过一个映射把自变量从低维空间映射到高维空间（类似于支持向量机中的核函数将低维线性不可分映射为高维线性可分），只需找到合适的核函数，就可以知道 $p(f|x,X,y)$的分布，最常用的就是高斯核函数</li>
+</ul>
+<h2 id="4-机器学习中的高斯过程"><a href="#4-机器学习中的高斯过程" class="headerlink" title="4. 机器学习中的高斯过程"></a>4. 机器学习中的高斯过程</h2><p><strong>针对机器学习的高斯过程(Gaussian Processes for Machine Learning,即 GPML)</strong> 是一个通用的监督学习方法，主要被设计用来解决<em>回归</em>问题。 它也可以扩展为<em>概率分类(probabilistic classification)</em>，但是在当前的实现中，这只是<em>回归</em>学习的一个后续处理。</p>
+<p>GPML的优势如下:</p>
+<blockquote>
+<ul>
+<li>预测是对观察值的插值（至少在普通相关模型上是的）.</li>
+<li>预测是带有概率的(Gaussian)。所以可以用来计算经验置信区间和超越概率 以便对感兴趣的区域重新拟合（在线拟合，自适应拟合）预测。</li>
+<li>多样性: 可以指定不同的线性回归模型 <a href="http://sklearn.lzjqsdd.com/modules/linear_model.html#linear-model" target="_blank" rel="noopener">linear regression models</a> 和相关模型 <a href="http://sklearn.lzjqsdd.com/modules/gaussian_process.html#correlation-models" target="_blank" rel="noopener">correlation models</a> 。 它提供了普通模型，但也能指定其它静态的自定义模型</li>
+</ul>
+</blockquote>
+<p>GPML的缺点如下:</p>
+<blockquote>
+<ul>
+<li>不是稀疏的，它使用全部的样本/特征信息来做预测。</li>
+<li>多维空间下会变得低效 – 即当特征的数量超过几十个,它可能确实会表现很差，而且计算效率下降。</li>
+<li>分类只是一个后处理过程, 意味着要建模，首先需要提供试验的完整浮点精度标量输出 <img src="http://sklearn.lzjqsdd.com/_images/math/276f7e256cbddeb81eee42e1efc348f3cb4ab5f8.png" srcset="/img/loading.gif" alt="y"> 来解决回归问题。</li>
+</ul>
+</blockquote>
+<h2 id="5-GP建模时的问题"><a href="#5-GP建模时的问题" class="headerlink" title="5. GP建模时的问题"></a>5. GP建模时的问题</h2><p>用GP对数据建模，首先得考虑下面几个问题：<br>（1）如何选择<strong>核函数</strong>？<br>        选什么核函数（这点非常重要）？选最常用的SE还是SMP还是混合（基于对数据的理解）？<br>（2）超参数<strong>物理含义</strong>是什么？<br>       训练完模型后，大部分情况下测试效果不会很好，再回头看看学到的超参数变化如何？那么问题来了，这些超参数又代表什么物理含义呢（基于对核函数的理解）？<br>（3）<strong>非高斯似然</strong>函数<br>       对常见的分类任务来说，似然非高斯分布，此时共轭优势不复存在，如何找到最有效逼近后验的方法（EP？VI？）<br>（4）<strong>异方差</strong><br>       事实上，很多标签都不是简单的高斯分布，甚至标签噪声都是异方差分布（比如标签值跨度超多几个数量级），又该如何解决（可参考warped GPs）？</p>
+<ol>
+<li><a href="https://blog.csdn.net/paulfeng20171114/article/details/80276061" target="_blank" rel="noopener">透彻理解高斯过程Gaussian Process (GP)</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1353538" target="_blank" rel="noopener">[重点]机器学习-高斯过程和随机过程回归</a></li>
+<li><a href="https://blog.csdn.net/lj6052317/article/details/78772494" target="_blank" rel="noopener">机器学习中的高斯过程</a></li>
+<li><a href="https://www.bilibili.com/video/av35626047/" target="_blank" rel="noopener">高斯过程视频讲解</a></li>
+<li><a href="https://www.youtube.com/watch?v=vU6AiEYED9E&list=PLD0F06AA0D2E8FFBA&index=151&t=0s" target="_blank" rel="noopener">[视频]Gaussian processes - definition and first examples</a></li>
+<li><a href="https://www.youtube.com/watch?v=4vGiHC35j9s" target="_blank" rel="noopener">[视频]Machine learning - Introduction to Gaussian processes</a></li>
+<li><a href="https://www.zhihu.com/question/46631426" target="_blank" rel="noopener">如何通俗易懂的理解高斯过程</a></li>
+<li><a href="[https://zh.wikipedia.org/zh/%E9%AB%98%E6%96%AF%E8%BF%87%E7%A8%8B](https://zh.wikipedia.org/zh/高斯过程)">高斯过程-维基百科</a></li>
+<li><a href="https://www.jgoertler.com/visual-exploration-gaussian-processes/" target="_blank" rel="noopener">可视化理解高斯过程</a></li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/kernel/">kernel</a>
+                    
+                      <a class="hover-with-bg" href="/tags/bayes/">bayes</a>
+                    
+                      <a class="hover-with-bg" href="/tags/gaussian/">gaussian</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%9B%9E%E5%BD%92/">回归</a>
+                    
+                      <a class="hover-with-bg" href="/tags/regression/">regression</a>
+                    
+                      <a class="hover-with-bg" href="/tags/GPR/">GPR</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/06/25/Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B(%E7%9C%9F%E6%AD%A3%E7%9A%84)%E7%9A%84%E6%8E%A2%E7%B4%A2/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">Python中实现多线程(真正的)的探索</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2019/04/18/%E5%9C%A8python%E4%B8%8B%E7%9A%84c%E6%88%96c++%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3/">
+                        <span class="hidden-mobile">python下的c/c++扩展方式详解</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "高斯过程（Gaussian Process）理解&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

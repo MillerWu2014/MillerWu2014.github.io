@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>利用scikit-learn来分析模型欠拟合和过拟合问题 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 八月 15日 2017, 11:33 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>当你运行一个学习算法时，如果这个算法的表现不理想，那么多半是出现两种情况：要么是偏差比较大、要么是方差比较大。换句话说，出现的情况要么是欠拟合、要么是过拟合问题。在建模的过程中经常会遇到模型拟合度不够或者过拟合，但是怎么去分析模型是否存在欠拟合和过拟合呢？一般通过模型的学习曲线和评估曲线来分析欠拟合和过拟合。并在实际应用中针对性的提出解决方案。下图为理论上识别欠拟合和过拟合的方法，如下：<br><img src="/uploads/poly_nihe.png" srcset="/img/loading.gif" alt="polynline.png"></p>
+<h3 id="1-使用学习曲线判别偏差和方差问题"><a href="#1-使用学习曲线判别偏差和方差问题" class="headerlink" title="1. 使用学习曲线判别偏差和方差问题"></a>1. 使用学习曲线判别偏差和方差问题</h3><p>如果一个模型过于复杂，则参数太多，可能导致模型过拟合。解决过拟合问题，可以通过增加训练数据集，降低模型复杂度，交叉检验等。根据上图中，我们可以逐渐增加模型训练集，观察模型的偏差和方差变化，确定这种方式是否有效。<br><img src="/uploads/bias_variance.png" srcset="/img/loading.gif" alt="biasvariance.png"><br>上图中左上角的情况，模型偏差较大，训练和测试效果曲线都很差，精度太低，可能是欠拟合，解决欠拟合问题：一般通过增加模型参数，增加特征或者减小正则项等。</p>
+<p>下面通过<code>python</code>中<code>scikit-learn</code>的学习曲线来对欠拟合和过拟合进行说明，主要通过不同的数据量来逐步分析模型效果，看欠拟合和过拟合的情况。</p>
+<a id="more"></a>
+
+<pre><code class="python">import numpy as np
+import random
+
+from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import learning_curve, validation_curve
+from matplotlib import pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import f1_score, make_scorer
+
+load_data = load_iris()
+X, Y = load_data.data, load_data.target
+
+index = range(150)
+random.shuffle(index)
+
+random_x = X[index, :]
+random_y = Y[index]
+
+estimator = LogisticRegression(penalty=&#39;l2&#39;, C=1.0, fit_intercept=True)
+
+f1 = make_scorer(f1_score)
+train_size, train_scores, test_scores = learning_curve(estimator, X=random_x, y=random_y,
+                                                       train_sizes=np.linspace(0.1, 1.0, 10), cv=10, 
+                                                       scoring=&#39;accuracy&#39;)
+
+train_mean = np.mean(train_scores, axis=1)
+train_std = np.std(train_scores, axis=1)
+
+test_mean = np.mean(test_scores, axis=1)
+test_std = np.std(test_scores, axis=1)
+
+fig = plt.figure(figsize=(9, 6))
+ax = fig.add_subplot(111)
+
+ax.plot(train_size, train_mean, linestyle=&#39;--&#39;, color=&quot;green&quot;, marker=&#39;o&#39;, markersize=5,label=&quot;train line&quot;)
+ax.fill_between(train_size, train_mean+train_std, train_mean-train_std, alpha=0.3, color=&quot;green&quot;)
+
+ax.plot(train_size, test_mean, linestyle=&#39;-&#39;, marker=&#39;s&#39;, markersize=5, color=&quot;blue&quot;, label=&quot;test line&quot;)
+ax.fill_between(train_size, test_mean+test_std, test_mean-test_std, alpha=0.3, color=&quot;blue&quot;)
+
+plt.legend(loc=&quot;lower right&quot;)
+plt.show()</code></pre>
+<p><img src="/uploads/output_5_0.png" srcset="/img/loading.gif" alt="png"></p>
+<p><code>learning_curve</code>中的<code>train_sizes</code>参数控制产生学习曲线的训练样本的绝对/相对数量，此处，我们设置的<code>train_sizes=np.linspace(0.1, 1.0, 10)</code>，将训练集大小划分为10个相等的区间。<code>learning_curve</code>默认使用分层k折交叉验证计算交叉验证的准确率，我们通过cv设置k。从上图中可以看出模型的效果非常好，在数据量达到80以上时，训练和测试的准确率基本重合。因此基本是没有过拟合情况，而模型的整个准确率在95%以上，因此模型也不存在欠拟合的情况。</p>
+<h3 id="2-用验证曲线解决过拟合和欠拟合"><a href="#2-用验证曲线解决过拟合和欠拟合" class="headerlink" title="2. 用验证曲线解决过拟合和欠拟合"></a>2. 用验证曲线解决过拟合和欠拟合</h3><p>验证曲线可以调整模型的参数，从而解决过拟合或者欠拟合问题，验证曲线和学习曲线近似，但是意义不一样，可以通过<code>validation_curve</code>来实现。还能对模型进行优化，加强模型的精度以及泛化能力。下图(借用网上一张图表示)中则为模型的随着参数的不同，模型效果变化。</p>
+<ol>
+<li>当<code>cross validation error (Jcv)</code> 跟<code>training error(Jtrain)</code>差不多，且<code>Jtrain</code>较大时，当前模型更可能存在欠拟合。</li>
+<li>当<code>Jcv &gt;&gt; Jtrain</code>且<code>Jtrain</code>较小时，当前模型更可能存在过拟合<br><img src="/uploads/param_bias_variance.png" srcset="/img/loading.gif" alt="parambiasvariance.png"></li>
+</ol>
+<pre><code class="python">param_c = [0.001, 0.01, 0.1, 0.5, 0.8, 1, 2, 3, 10]
+train_scores, test_scores = validation_curve(estimator, X=random_x, y=random_y, param_name=&#39;C&#39;, param_range=param_c, cv=10, 
+                 scoring=&#39;accuracy&#39;)
+train_mean = train_scores.mean(axis=1)
+train_std = train_scores.std(axis=1)
+test_mean = test_scores.mean(axis=1)
+test_std = test_scores.std(axis=1)
+
+fig = plt.figure(figsize=(9, 6))
+ax = fig.add_subplot(111)
+
+ax.plot(param_c, train_mean, marker=&#39;o&#39;, markersize=5, color=&#39;blue&#39;, label=&quot;train_acc&quot;)
+ax.fill_between(param_c, train_mean+train_std, train_mean-train_std, color=&#39;blue&#39;, alpha=0.3)
+
+ax.plot(param_c, test_mean, marker=&#39;*&#39;, markersize=5, color=&#39;green&#39;, label=&quot;test_acc&quot;)
+ax.fill_between(param_c, test_mean+test_std, test_mean-test_std, color=&#39;green&#39;, alpha=0.3)
+plt.bar(left=param_c, height=10*(train_mean-test_mean), width=0.2, 
+        color=&#39;0.2&#39;, yerr=test_std, align=&#39;center&#39;)
+
+plt.xticks(map(lambda x: round(x, 1), param_c))
+plt.grid()
+plt.legend(loc=&quot;center right&quot;)
+plt.show()</code></pre>
+<p><img src="/uploads/output_8_0.png" srcset="/img/loading.gif" alt="png"></p>
+<h3 id="3-参考文档"><a href="#3-参考文档" class="headerlink" title="3. 参考文档"></a>3. 参考文档</h3><p><a href="http://studyai.site/2016/10/24/%E6%96%AF%E5%9D%A6%E7%A6%8F%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E8%AF%BE%E7%A8%8B%20%E7%AC%AC%E5%85%AD%E5%91%A8%20%282%29%E5%81%8F%E5%B7%AEVS%E6%96%B9%E5%B7%AE/" target="_blank" rel="noopener">斯坦福机器学习课程 第六周 (2)偏差VS方差</a><br><a href="http://studyai.site/2016/09/04/%E6%96%AF%E5%9D%A6%E7%A6%8F%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E8%AF%BE%E7%A8%8B%20%E7%AC%AC%E4%B8%89%E5%91%A8%20%284%29%E6%AD%A3%E5%88%99%E5%8C%96%EF%BC%9A%E8%A7%A3%E5%86%B3%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/" target="_blank" rel="noopener">斯坦福机器学习课程 第三周 (4)正则化：解决过拟合问题</a><br><a href="http://www.cnblogs.com/instant7/p/4135416.html" target="_blank" rel="noopener">欠拟合还是过拟合的判断</a><br><a href="https://ljalphabeta.gitbooks.io/python-/content/debugging.html" target="_blank" rel="noopener">使用学习曲线和验证曲线 调试算法</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/scikit-learn/">scikit-learn</a>
+                    
+                      <a class="hover-with-bg" href="/tags/overfit/">overfit</a>
+                    
+                      <a class="hover-with-bg" href="/tags/underfit/">underfit</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/08/30/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob-stage-task%E8%A7%A3%E6%9E%90/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">spark中job运行过程详解和job,stage,task解析</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2017/08/13/%E5%AF%B9%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%80%83/">
+                        <span class="hidden-mobile">对梯度下降算法的思考</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "利用scikit-learn来分析模型欠拟合和过拟合问题&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

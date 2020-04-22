@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 100vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+          </div>
+
+          
+            <div class="scroll-down-bar">
+              <i class="fas fa-angle-down scroll-down-arrow"></i>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-md">
+        <div class="py-5 z-depth-3" id="board"
+          style=margin-top:0>
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
+        <p class="h4 index-header">AWS上EC2主机(ubuntu)下对某个端口的开放</p>
+      </a>
+
+      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">首先用telnet来看下本地的端口是否开启：telnet ip 7711，如果是正常的那么需要对该端口进行开放。首先需要对本地的防火墙端口进行开放。其他需要对AWS上的安全组进行设置，设置为对应的端口或所有端口开放权限。本文中不对AWS安全组的设置说明，自行google即可。
+iptables-save &gt; /${DIR_PATH)}/iptables.rules...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-04-18&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/linux/">linux</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/ubuntu/">ubuntu</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/04/14/python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F/">
+        <p class="h4 index-header">python科学计算加速</p>
+      </a>
+
+      <a href="/2018/04/14/python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">1.使用GPU使用GPU有两种方式：numba和pycuda，可以通过这两个package和python实现CUDA程序。
+1.1 numbaCUDA官方加速是通过numba来使用GPU或CPU加速，在很早以前是通过numbapro实现的，属于收费版本，后面全部整合成了numba和accelerate，而且免费开放，在Anaconda环境下已经安装了numba，只需要使用即可。使用numba的GPU加速需要进行配置。具体配置方式可查看官方文档。
+Refrence
+[1].numba官方地址：http://numba.pydata.org/
+[2].numba官方文档：http://numba.pydata.org/doc.html
+[3].numba配置CUDA的GPU：http://blog.csdn.net/u013975830/article/details/78822919...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-04-14&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/numba/">numba</a>&nbsp;
+          
+            <a href="/tags/cython/">cython</a>&nbsp;
+          
+            <a href="/tags/cuda/">cuda</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/01/22/Youth%E9%9D%92%E6%98%A5-%E5%A1%9E%E7%BC%AA%E5%B0%94%C2%B7%E5%8E%84%E5%B0%94%E6%9B%BC/">
+        <p class="h4 index-header">Youth青春-塞缪尔·厄尔曼</p>
+      </a>
+
+      <a href="/2018/01/22/Youth%E9%9D%92%E6%98%A5-%E5%A1%9E%E7%BC%AA%E5%B0%94%C2%B7%E5%8E%84%E5%B0%94%E6%9B%BC/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">
+青春不是年华，而是心境；青春不是桃面、红唇、柔膝，而是坚强的意志、恢宏的想象、炽热的感情；青春是生命深泉的自在涌流。
+青春气贯长虹，勇锐盖过怯弱，进取压倒苟安。如此锐气，二十后生有之，六旬男子则更多见。年岁有加，并非垂老；理想丢弃，方堕暮年。
+岁月悠悠，衰微只及肌肤；热忱抛却，颓废必致灵魂。忧烦、惶恐、丧失自信，定使心灵扭曲，意气如灰。
+无论年届花甲，抑或二八芳龄，心中皆有生命之欢乐，好奇之冲动，孩童般天真久盛不衰。
+你我心中都有一台天线，只要你从天上、人间接受美好、希望、欢乐、勇气和力量的信号，你就会青春永驻，风华常存。
+ 一旦天线坠下，锐气便被冰雪覆盖，玩世不恭、自暴自弃油然而生，即使年方二十，实则垂垂老矣；然而只要竖起天线，捕捉乐观信号，即使八十高龄，行将告别尘寰，你也会觉得年轻依旧，希望永存。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-01-22&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E8%AF%97%E6%AD%8C/">诗歌</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/%E8%AF%97%E6%AD%8C/">诗歌</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/10/13/%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C/">
+        <p class="h4 index-header">使用python连接hive数据库并进行数据操作</p>
+      </a>
+
+      <a href="/2017/10/13/%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">在数据抽取或者数据存取过程中难免会遇到用其他语言对hive数据库进行操作。如python远程对hive数据库进行操作，需要通过thrift服务进行操作。本文的环境是python==3.6.1， hive==1.1.0，thfit==0.10.0
+ThriftServer介绍客户端对hive数据库进行操作可以通过Cli进行，在本地这种方式较好，但是在远程操作时会很麻烦，因此提供了hiveserver和hiveserver2，在不启动cli的情况下对hive进行操作，可以在远程通过其他语言(java, python, php等)向hive请求并返回结果。也就是利用thrift进行整个过程操作。
+hiveserver2主要是向远程调用提供了接口，通过thrift rpc实现，进行远程的操作。可以实现远程并行操作hive数据库。启动hiveserver2如下：
+nohup hive --service hiveserver2 &amp;
+在启动后hiveserver2默认监听的端口为10000，可以在hive的配置文件(hive-site.xml)中查看或者修改该端口。可以通过命令查看该端口是否被监听：netstat -antp | grep 10000...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-10-13&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/python/">python</a>&nbsp;
+          
+            <a href="/tags/hive/">hive</a>&nbsp;
+          
+            <a href="/tags/thrift/">thrift</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/10/10/%E5%AF%B9pyc%E5%92%8Cpyo%E6%96%87%E4%BB%B6%E7%9A%84%E7%90%86%E8%A7%A3/">
+        <p class="h4 index-header">对pyc和pyo文件的理解</p>
+      </a>
+
+      <a href="/2017/10/10/%E5%AF%B9pyc%E5%92%8Cpyo%E6%96%87%E4%BB%B6%E7%9A%84%E7%90%86%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">1. python的基本运行机制作为Python爱好者，需要了解.py脚本的基本运行机制及特性：在很多工作上Python的运行流程基本上取决于用户，因此源码不需要编译成二进制代码(否则无法实现大部分贴近用户的特性)，而直接从源码运行程序。当我们运行python文件程序的时候，Python解释器将源码转换为字节码，然后再由解释器来执行这些字节码。因此总的来说，它具有以下三条特性：
+
+源码距离底层更远(根据官方文档的解释。不说，也感觉得到)
+运行时都需要生成字节码，交由虚拟机执行。(虚拟机在哪儿！你们也不看看各自都是用什么软件执行的！没错，就是解释器，别和我说是IDLE啊。虚拟机具体实现了由switch-case语句构成的框架函数PyEval_EvalFrameEx，刚刚说的字节码就是这货执行的)
+每次执行脚本，虚拟机总要多出加载和链接的流程。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-10-10&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/python/">python</a>&nbsp;
+          
+            <a href="/tags/compile/">compile</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/09/05/%E5%9F%BA%E4%BA%8EMLE%E7%9A%84logistic%E6%A8%A1%E5%9E%8B/">
+        <p class="h4 index-header">基于MLE的logistic模型</p>
+      </a>
+
+      <a href="/2017/09/05/%E5%9F%BA%E4%BA%8EMLE%E7%9A%84logistic%E6%A8%A1%E5%9E%8B/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">主要介绍逻辑回归（Logistic Regression）和最大似然估计。逻辑回归是机器学习算法中最常用的算法，用于分类，属于有监督学习。在有监督学习中，如果因变量为有限个离散值，则预测问题就转变成分类问题，从这个角度也可以说分类问题是预测问题的一个特例。此时，通过样本集训练获得的有监督学习模型，即逻辑回归模型就称为分类模型或分类决策函数，也称为分类器（Classifier）。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-09-05&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/MLE/">MLE</a>&nbsp;
+          
+            <a href="/tags/logistic/">logistic</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/08/30/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob-stage-task%E8%A7%A3%E6%9E%90/">
+        <p class="h4 index-header">spark中job运行过程详解和job,stage,task解析</p>
+      </a>
+
+      <a href="/2017/08/30/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob-stage-task%E8%A7%A3%E6%9E%90/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">了解了spark的基础后一直想清楚在spark整个执行过程。在spark客户端提交任务后，从job，stage，task，在到worker上执行，整过流程必须清楚，对后续的调优，spark中job运行原理都有很大的帮助。下面对spark中job运行过程进行详细解析，整个过程如下图所示。
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-08-30&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/spark/">spark</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+            <a href="/tags/stage/">stage</a>&nbsp;
+          
+            <a href="/tags/job/">job</a>&nbsp;
+          
+            <a href="/tags/task/">task</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/08/15/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/">
+        <p class="h4 index-header">利用scikit-learn来分析模型欠拟合和过拟合问题</p>
+      </a>
+
+      <a href="/2017/08/15/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">当你运行一个学习算法时，如果这个算法的表现不理想，那么多半是出现两种情况：要么是偏差比较大、要么是方差比较大。换句话说，出现的情况要么是欠拟合、要么是过拟合问题。在建模的过程中经常会遇到模型拟合度不够或者过拟合，但是怎么去分析模型是否存在欠拟合和过拟合呢？一般通过模型的学习曲线和评估曲线来分析欠拟合和过拟合。并在实际应用中针对性的提出解决方案。下图为理论上识别欠拟合和过拟合的方法，如下：
+1. 使用学习曲线判别偏差和方差问题如果一个模型过于复杂，则参数太多，可能导致模型过拟合。解决过拟合问题，可以通过增加训练数据集，降低模型复杂度，交叉检验等。根据上图中，我们可以逐渐增加模型训练集，观察模型的偏差和方差变化，确定这种方式是否有效。上图中左上角的情况，模型偏差较大，训练和测试效果曲线都很差，精度太低，可能是欠拟合，解决欠拟合问题：一般通过增加模型参数，增加特征或者减小正则项等。
+下面通过python中scikit-learn的学习曲线来对欠拟合和过拟合进行说明，主要通过不同的数据量来逐步分析模型效果，看欠拟合和过拟合的情况。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-08-15&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/scikit-learn/">scikit-learn</a>&nbsp;
+          
+            <a href="/tags/overfit/">overfit</a>&nbsp;
+          
+            <a href="/tags/underfit/">underfit</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/08/13/%E5%AF%B9%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%80%83/">
+        <p class="h4 index-header">对梯度下降算法的思考</p>
+      </a>
+
+      <a href="/2017/08/13/%E5%AF%B9%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%80%83/">
+        
+        
+          
+        
+        <div class="index-excerpt" >
+          <div class="index-text mb-1">梯度下降算法是最优化理论中的最常用方法，目前在深度学习以及机器学习算法中广泛应用，主要为了求目标函数极值的最优解。其中原理很简单沿着目标函数梯度下降的方向搜索极小值。参数按照梯度更新的公式如下：$$\theta := \theta - {\alpha} \cdot {\nabla}_{\theta} {J(\theta)}$$其中$\alpha$为学习率或者衰减因子，每次在更新时都会用$\alpha$为步长来更新参数。因此$\alpha$的取值比较讲究。
+
+学习率较小时，收敛到极值的速度较慢。
+学习率较大时，容易在搜索过程中发生震荡。如下图所示：上图中，当lr过大时就会出现来回震荡，主要是因为</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-08-13&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/SGD/">SGD</a>&nbsp;
+          
+            <a href="/tags/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D/">梯度下降</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/26/%E4%BF%A1%E6%81%AF%E8%AE%BA%E4%B8%ADKL%E6%95%A3%E5%BA%A6%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">信息论中KL散度详解</p>
+      </a>
+
+      <a href="/2017/07/26/%E4%BF%A1%E6%81%AF%E8%AE%BA%E4%B8%ADKL%E6%95%A3%E5%BA%A6%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">在信息论中，对信息的度量主要是通过香农熵，自信息等。而本文中的KL散度(Kullback-Leible散度)则是对信息之间的度量或者两个分布之间的距离的度量，又称为交叉熵，相对熵。
+1. KL散度的定义设$p(x)$和$q(x)$是$x$取值的两个概率分布，一般$p(x)$和$q(x)$为密度函数则$p$对$q$的相对熵为：$$DL(p||q)=\sum{_{i=1}^{n}} p(x) \log{\frac{p(x)}{q(x)}}$$在一定程度上，KL散度可以度量两个随机变量的距离。KL散度是两个概率分布P和Q差别的非对称性的度量。KL散度是用来度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-26&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/KL%E6%95%A3%E5%BA%A6/">KL散度</a>&nbsp;
+          
+            <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          
+            <a href="/tags/%E8%B7%9D%E7%A6%BB/">距离</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+
+
+  <nav aria-label="index posts navigation">
+    <span class="pagination pg-blue justify-content-center mt-5" id="pagination">
+      <a class="extend prev" rel="prev" href="/page/2/"><i class="fas fa-angle-double-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/4/"><i class="fas fa-angle-double-right"></i></a>
+    </span>
+  </nav>
+  
+  <script>
+    for (ele of document.getElementById("pagination").getElementsByTagName("a")) {
+      ele.href += '#board';
+    }
+  </script>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "记录个人知识,分享知识和经验;多记录,多思考&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

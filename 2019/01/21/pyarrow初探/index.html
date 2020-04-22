@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>arrow的性能分析及在python中的使用 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期一, 一月 21日 2019, 10:34 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    976 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>Apache Arrow 是 Apache 基金会全新孵化的一个顶级项目。它设计的目的在于作为一个跨平台的数据层，来加快大数据分析项目的运行速度。</p>
+<p>现在大数据处理模型很多，用户在应用大数据分析时，除了将 Hadoop 等大数据平台作为一个存储和批处理平台之外，同样也得关注系统的扩展性和性能。过去开源社区已经发布了很多工具来完善大数据分析的生态系统，这些工具包含了数据分析的各个层面，例如列式存储格式（Parquet，ORC），内存计算模型（Drill，Spark，Impala 和 Storm）以及其强大的 API 接口。而 Arrow 则是最新加入的一员，它提供了一种跨平台应用的内存数据交换格式。<br><img src="/uploads/arrow_f.png" srcset="/img/loading.gif" alt="使用arrow之前"><br><img src="/uploads/arrow_b.png" srcset="/img/loading.gif" alt="使用arrow之后"><a id="more"></a></p>
+<h2 id="arrow的python版本安装"><a href="#arrow的python版本安装" class="headerlink" title="arrow的python版本安装"></a>arrow的python版本安装</h2><p>arrow是apache下的一个顶级项目，它是一个跨平台的内存数据交换格式。通过conda来进行安装：<code>conda install -c conda-forge pyarrow</code>，官方的安装推荐使用conda，具体可以见<a href="https://arrow.apache.org/docs/python/install.html" target="_blank" rel="noopener">apache arrow documentation</a>.</p>
+<pre><code class="python">import pyarrow as pa
+
+data = b&#39;ddgkdfkgfdlgl8439495435043050883483495&#39;
+buf = pa.py_buffer(data)
+buf</code></pre>
+<pre><code>&lt;pyarrow.lib.Buffer at 0x7f46706d0ab0&gt;</code></pre><pre><code class="python">buf.size  # 38</code></pre>
+<h3 id="结合numpy使用"><a href="#结合numpy使用" class="headerlink" title="结合numpy使用"></a>结合numpy使用</h3><pre><code class="python">import numpy as np
+
+data = np.random.random((100, 10)).reshape(-1)
+pa_array = pa.array(data)
+pa_array</code></pre>
+<pre><code>&lt;pyarrow.lib.DoubleArray object at 0x7f467b68aea8&gt;
+[
+  0.688175,
+  0.979032,
+  0.91343,
+  0.725985,
+  0.469235,
+  0.373089,
+  0.792048,
+  0.472252,
+  0.615361,
+  0.693604,
+  ...
+  0.240511,
+  0.162609,
+  0.518071,
+  0.816558,
+  0.736163,
+  0.509702,
+  0.914533,
+  0.879404,
+  0.979877,
+  0.883003
+]</code></pre><pre><code class="python">np_array = pa_array.to_numpy().reshape((100, 10))
+np_array</code></pre>
+<h3 id="结合pandas使用"><a href="#结合pandas使用" class="headerlink" title="结合pandas使用"></a>结合pandas使用</h3><pre><code class="python">import pandas as pd
+
+df = pd.DataFrame(data=np.random.randint(1, 10, (10, 4)), columns=[&quot;column_a&quot;, &quot;column_b&quot;, &quot;column_c&quot;, &quot;column_d&quot;])
+pa_df = pa.Table.from_pandas(df)
+[m for m in dir(pa_df) if not m.startswith(&#39;__&#39;)]</code></pre>
+<pre><code>[&#39;_column&#39;,
+ &#39;_validate&#39;,
+ &#39;add_column&#39;,
+ &#39;append_column&#39;,
+ &#39;cast&#39;,
+ &#39;column&#39;,
+ &#39;columns&#39;,
+ &#39;drop&#39;,
+ &#39;equals&#39;,
+ &#39;flatten&#39;,
+ &#39;from_arrays&#39;,
+ &#39;from_batches&#39;,
+ &#39;from_pandas&#39;,
+ &#39;itercolumns&#39;,
+ &#39;num_columns&#39;,
+ &#39;num_rows&#39;,
+ &#39;remove_column&#39;,
+ &#39;replace_schema_metadata&#39;,
+ &#39;schema&#39;,
+ &#39;set_column&#39;,
+ &#39;shape&#39;,
+ &#39;to_batches&#39;,
+ &#39;to_pandas&#39;,
+ &#39;to_pydict&#39;]</code></pre><pre><code class="python">pa_df.to_pandas()</code></pre>
+<h3 id="导入csv格式的数据"><a href="#导入csv格式的数据" class="headerlink" title="导入csv格式的数据"></a>导入csv格式的数据</h3><pre><code class="python">from pyarrow import csv
+
+csv_file_path = &#39;/opt/workspace/project/ModisResistModule/data/FirmsPoint/fire_nrt_V1_21640.csv&#39;
+
+def to_df_arrow(file_path):
+    table = csv.read_csv(file_path)
+
+%timeit df_pa = to_df_arrow(csv_file_path)</code></pre>
+<pre><code>26 ms ± 97.9 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre><pre><code class="python">%timeit df = pd.read_csv(csv_file_path)</code></pre>
+<pre><code>164 ms ± 1.18 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre><h2 id="arrow的IO操作"><a href="#arrow的IO操作" class="headerlink" title="arrow的IO操作"></a>arrow的IO操作</h2><pre><code class="python">def py_write(string):
+    with open(&quot;./test_py_string.dat&quot;, &quot;wb&quot;) as writer:
+        writer.write(string)
+
+def pa_write(string):
+    with pa.OSFile(&quot;./test_pa_string.dat&quot;, &quot;wb&quot;) as writer:
+        writer.write(string)
+
+s = b&quot;abvndjfklfljklluuillllldjdsfhdsfjhdskf2r73564385435934953475742742&quot;        
+%timeit py_write(s)
+%timeit pa_write(s)</code></pre>
+<pre><code>934 µs ± 23.3 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+969 µs ± 88 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)</code></pre><pre><code class="python">def py_reader():
+    with open(&quot;./test_py_string.dat&quot;, &quot;rb&quot;) as reader:
+        reader.read()
+
+def pa_reader1():
+    with pa.OSFile(&quot;./test_pa_string.dat&quot;, &quot;rb&quot;) as writer:
+        writer.read()
+
+def pa_reader2():
+    with pa.memory_map(&quot;./test_pa_string.dat&quot;, &quot;rb&quot;) as writer:
+        buf = writer.read_buffer()  # writer.read()
+        buf.to_pybytes()
+
+%timeit py_reader()
+%timeit pa_reader1()
+%timeit pa_reader2()</code></pre>
+<pre><code>8.76 µs ± 24.3 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+5.73 µs ± 9.02 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+8.26 µs ± 28.8 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)</code></pre><h2 id="pickle和arrow的对比"><a href="#pickle和arrow的对比" class="headerlink" title="pickle和arrow的对比"></a>pickle和arrow的对比</h2><p>这儿有pickle，msgpack和pyarrow的对比测试：<a href="http://satoru.rocks/2018/08/fastest-way-to-serialize-array/" target="_blank" rel="noopener">http://satoru.rocks/2018/08/fastest-way-to-serialize-array/</a></p>
+<pre><code class="python">import pickle
+
+data = {
+    i: np.random.randn(500, 500) for i in range(100)
+}
+
+buf = pa.serialize(data).to_buffer()
+%timeit restored_data = pa.deserialize(buf)</code></pre>
+<pre><code>207 µs ± 1.78 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)</code></pre><pre><code class="python">pickled = pickle.dumps(data)
+%timeit unpickled_data = pickle.loads(pickled)</code></pre>
+<pre><code class="python">56.6 ms ± 165 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre>
+<pre><code class="python">from pyarrow.feather import write_feather, read_feather
+import pandas as pd
+import numpy as np
+
+df = pd.DataFrame(data=np.random.randint(1, 100, (1000000, 4)), columns=list(&#39;abcd&#39;))</code></pre>
+<pre><code class="python">save_file = &quot;./tmp_frame.feather&quot;
+%timeit write_feather(df, save_file)
+%timeit df.to_pickle(&quot;./tmp_frame.pickle&quot;)</code></pre>
+<pre><code>200 ms ± 5.59 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+206 ms ± 7.8 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre><pre><code class="python">%timeit read_feather(save_file)
+%timeit pd.read_pickle(&quot;./tmp_frame.pickle&quot;)</code></pre>
+<pre><code>4.72 ms ± 18.9 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+12.4 ms ± 42.2 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)</code></pre>
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Python/">Python</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/arrow/">arrow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ray/">ray</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/04/09/python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">python中的元类编程详解</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/11/24/KL%E6%95%A3%E5%BA%A6,JS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB/">
+                        <span class="hidden-mobile">KL散度,JS散度和wasserstein距离</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "arrow的性能分析及在python中的使用&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>python中的元类编程详解 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 四月 9日 2019, 8:51 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      9 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="类是动态创建的"><a href="#类是动态创建的" class="headerlink" title="类是动态创建的"></a>类是动态创建的</h2><p>我们知道Python 里一切都是对象，那么是对象就有对应的“类(Class)”，或称“类型(type)”。 Python 中可以用 type(obj) 来得到对象的“类”。既然一切都是对象，一个“类(class)”也可以认为是一个对象，那么类的“类型(type)”是什么呢？“类(class)”的类型(type) 都是 type。那 type 的类型又是什么呢？抱歉，type 的类型还是 type，是一个递归的类型。“普通类(class)”可以用来生成实例(instance)，同样的，元类 (meta-class)也可以生成实例，生成的实例就是“普通类”了。类(class)可以有多个实例(instance)。而创建实例的方法就是调用类的构造函数(constructor)：</p>
+<pre><code class="python">class Spam(object):
+    def __init__(self, name):
+        self.name = name
+        spam = Spam(&#39;name&#39;)</code></pre>
+<p>上例我们定义了一个类，并调用类的构造函数创建了该类的一个实例。我们知道类也可以看作类 type 的一个实例，那么如何用 type 的构造函数来动态创建一个类呢？我们先看看type的构造函数：<code>class type(name, bases, dict)</code></p>
+<ul>
+<li><code>name</code>: 字符串类型，存放新类的名字</li>
+<li><code>bases</code>: 元组(tuple)类型，指定类的基类/父类</li>
+<li><code>dict</code>: 字典类型，存放该类的所有属性(attributes)和方法(method)</li>
+</ul>
+<pre><code class="python">&gt;&gt;&gt; class X:
+        a = 1
+&gt;&gt;&gt; X = type(&#39;X&#39;, (object,), dict(a=1))</code></pre>
+<a id="more"></a>
+<h2 id="类的创建过程"><a href="#类的创建过程" class="headerlink" title="类的创建过程"></a>类的创建过程</h2><p>要了解元类(meta-class)的作用，我们就需要了解 Python 里类的创建过程，如下：<br><img src="https://lotabout.me/2018/Understanding-Python-MetaClass/class-creation.svg" srcset="/img/loading.gif" alt="类class的创建过程"></p>
+<ol>
+<li>当 Python 见到 class 关键字时，会首先解析 class 中的内容。例如解析基类信息，最重要的是找到对应的元类信息（默认是 type)。</li>
+<li>元类找到后，Python 需要准备 namespace （也可以认为是上节中 type 的 dict 参数）。如果元类实现了 <strong>prepare</strong> 函数，则会调用它来得到默认的 namespace 。</li>
+<li>之后是调用 exec 来执行类的 body，包括属性和方法的定义，最后这些定义会被保存进 namespace。</li>
+<li>上述步骤结束后，就得到了创建类需要的所有信息，这时 Python 会调用元类的构造函数来真正创建类。如果你想在类的创建过程中做一些定制(customization)的话，创建过程中任何用到了元类的地方，我们都能通过覆盖元类的默认方法来实现定制。这也是元类“无所不能”的所在，它深深地嵌入了类的创建过程。</li>
+</ol>
+<h2 id="自定义元类"><a href="#自定义元类" class="headerlink" title="自定义元类"></a>自定义元类</h2><p>元类的主要目的就是为了当创建类时能够自动地改变类。通常，你会为API做这样的事情，你希望可以创建符合当前上下文的类。假想一个很傻的例子，你决定在你的模块里所有的类的属性都应该是大写形式。有好几种方法可以办到，但其中一种就是通过设定<strong>metaclass</strong>。采用这种方法，这个模块中的所有类都会通过这个元类来创建，我们只需要告诉元类把所有的属性都改成大写形式就万事大吉了。</p>
+<pre><code class="python"># 元类会自动将你通常传给‘type’的参数作为自己的参数传入
+def upper_attr(future_class_name, future_class_parents, future_class_attr):
+    &#39;&#39;&#39;返回一个类对象，将属性都转为大写形式&#39;&#39;&#39;
+    #选择所有不以&#39;__&#39;开头的属性 
+    attrs = ((name, value) for name, value in future_class_attr.items() if not name.startswith(&#39;__&#39;))
+    # 将它们转为大写形式
+    uppercase_attr = dict((name.upper(), value) for name, value in attrs)
+    #通过&#39;type&#39;来做类对象的创建
+    return type(future_class_name, future_class_parents, uppercase_attr) #返回一个类
+
+class Foo(object):
+    __metaclass__ = upper_attr
+    bar = &#39;bip&#39;</code></pre>
+<p>使用class来创建元类：</p>
+<pre><code class="python">class UpperAttrMetaclass(type):
+    def __new__(cls, name, bases, dct):
+        attrs = ((name, value) for name, value in dct.items() if not name.startswith(&#39;__&#39;))
+        uppercase_attr = dict((name.upper(), value) for name, value in attrs)
+        return super(UpperAttrMetaclass, cls).__new__(cls, name, bases, uppercase_attr)</code></pre>
+<h2 id="元类中的特殊方法"><a href="#元类中的特殊方法" class="headerlink" title="元类中的特殊方法"></a>元类中的特殊方法</h2><p>type 类，作为Python中所有类（包括type本身）的默认元类，定义了一些特殊方法，可供自定义的元类覆盖，以完成特定的行为。常见的几个特殊方法有:</p>
+<ul>
+<li><code>__new__(cls,name,base,attr)</code>: 元类中, <strong>new</strong> 会在你定义类的时候执行, 只执行一次.</li>
+<li><code>__init__(self, name, *args, **kwargs)</code>: 该元类的实例(也就是普通类)创建后被调用，用于为初始化实例的.</li>
+<li><code>__call__(self, *args, **kwargs)</code>: 元类创建的实例(也就是普通类),构造普通类的对象时调用</li>
+</ul>
+<pre><code class="python">class NewMeta(type):
+    def __new__(*args, **kwargs):
+        print(&#39;__new__() from NewMeta&#39;,args,kwargs)
+        return type.__new__(*args, **kwargs)
+
+    def __init__(self,name,*args,**kwargs):
+        print(&#39;__init__() from NewMeta&#39;,args,kwargs)
+        return type.__init__(self,name,*args,**kwargs)
+
+    def __call__(self, *args, **kwargs):
+        print(&#39;__call__() from NewMeta&#39;,args,kwargs)
+        return type.__call__(self, *args, **kwargs)
+
+class Test(object,metaclass=NewMeta):
+    pass
+
+print(&#39;---------------------------------&#39;)
+Test()</code></pre>
+<p>结果为：</p>
+<pre><code class="text">__new__() from NewMeta (&lt;class &#39;__main__.NewMeta&#39;&gt;, &#39;Test&#39;, (&lt;class &#39;object&#39;&gt;,), {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__qualname__&#39;: &#39;Test&#39;}) {}
+__init__() from NewMeta ((&lt;class &#39;object&#39;&gt;,), {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__qualname__&#39;: &#39;Test&#39;}) {}
+---------------------------------
+__call__() from NewMeta () {}</code></pre>
+<p>类在创建类的时候<strong>new</strong>只会被调用一次。而这个<strong>new</strong>就是用来创建出我们的类。因为普通类是元类创建出来的类，可以认为普通类是元类的实例对象。所以每次运行普通类的时候都会去调用元类的<strong>call</strong>。而在<strong>call</strong>中我们拿到已经创建好的实例对象。</p>
+<h2 id="通过元类来实现单例模式"><a href="#通过元类来实现单例模式" class="headerlink" title="通过元类来实现单例模式"></a>通过元类来实现单例模式</h2><p>当初我也很疑惑为什么我们是从写使用元类的<strong>init</strong>方法，而不是使用<strong>new</strong>方法来初为元类增加一个属性。其实我只是上面那一段关于元类中<strong>new</strong>方法迷惑了，它主要用于我们需要对类的结构进行改变的时候我们才要重写这个方法。</p>
+<pre><code class="python">class Singleton(type):
+    def __init__(self, *args, **kwargs):
+        print &quot;__init__&quot;
+        self.__instance = None
+        super(Singleton,self).__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        print &quot;__call__&quot;
+        if self.__instance is None:
+            self.__instance = super(Singleton,self).__call__(*args, **kwargs)
+        return self.__instance
+
+class Foo(object):
+    __metaclass__ = Singleton
+    #在代码执行到这里的时候，元类中的__new__方法和__init__方法其实已经被执行了，而不是在Foo实例化的时候执行。且仅会执行一次。
+
+foo1 = Foo()
+foo2 = Foo()
+print Foo.__dict__  
+# _Singleton__instance&#39;: &lt;__main__.Foo object at 0x100c52f10&gt;
+# 存在一个私有属性来保存属性，而不会污染Foo类（其实还是会污染，只是无法直接通过__instance属性访问）
+
+print foo1 is foo2  # True
+
+# 输出
+# __init__
+# __call__
+# __call__
+# {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__metaclass__&#39;: &lt;class &#39;__main__.Singleton&#39;&gt;, &#39;_Singleton__instance&#39;: &lt;__main__.Foo object at 0x100c52f10&gt;, &#39;__dict__&#39;: &lt;attribute &#39;__dict__&#39; of &#39;Foo&#39; objects&gt;, &#39;__weakref__&#39;: &lt;attribute &#39;__weakref__&#39; of &#39;Foo&#39; objects&gt;, &#39;__doc__&#39;: None}
+# True</code></pre>
+<p>基于这个例子：</p>
+<ul>
+<li>我们知道元类(Singleton)生成的实例是一个类(Foo),而这里我们仅仅需要对这个实例(Foo)增加一个属性(<strong>instance)来判断和保存生成的单例。想想也知道为一个类添加一个属性当然是在</strong>init__中实现了。</li>
+<li>关于<strong>call</strong>方法的调用，因为Foo是Singleton的一个实例。所以Foo()这样的方式就调用了Singleton的<strong>call</strong>方法。不明白就回头看看上一节中的<strong>call</strong>方法介绍。假如我们通过元类的<strong>new</strong>方法来也可以实现，但显然没有通过<strong>init</strong>来实现优雅，因为我们不会为了为实例增加一个属性而重写<strong>new</strong>方法。所以这个形式不推荐。</li>
+</ul>
+<pre><code class="python">class Singleton(type):
+    def __new__(cls, name,bases,attrs):
+        print &quot;__new__&quot; 
+        attrs[&quot;_instance&quot;] = None
+        return  super(Singleton,cls).__new__(cls,name,bases,attrs)
+
+    def __call__(self, *args, **kwargs):
+        print &quot;__call__&quot;
+        if self._instance is None:
+            self._instance = super(Singleton,self).__call__(*args, **kwargs)
+        return self._instance
+
+class Foo(object):
+    __metaclass__ = Singleton
+
+foo1 = Foo()
+foo2 = Foo()
+print Foo.__dict__print foo1 is foo2  # True
+
+# 输出# __new__
+# __call__
+# __call__
+# {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__metaclass__&#39;: &lt;class &#39;__main__.Singleton&#39;&gt;, &#39;_instance&#39;: &lt;__main__.Foo object at 0x103e07ed0&gt;, &#39;__dict__&#39;: &lt;attribute &#39;__dict__&#39; of &#39;Foo&#39; objects&gt;, &#39;__weakref__&#39;: &lt;attribute &#39;__weakref__&#39; of &#39;Foo&#39; objects&gt;, &#39;__doc__&#39;: None}
+# True</code></pre>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ol>
+<li>深刻理解Python中的元类(metaclass):<a href="http://blog.jobbole.com/21351/" target="_blank" rel="noopener">http://blog.jobbole.com/21351/</a></li>
+<li>Python 元类 (MetaClass) 小教程: <a href="https://lotabout.me/2018/Understanding-Python-MetaClass/" target="_blank" rel="noopener">https://lotabout.me/2018/Understanding-Python-MetaClass/</a></li>
+<li>深刻理解Python中的元类(metaclass)以及元类实现单例模式: <a href="https://www.cnblogs.com/tkqasn/p/6524879.html" target="_blank" rel="noopener">https://www.cnblogs.com/tkqasn/p/6524879.html</a></li>
+<li>python3中的元类: <a href="http://blog.lujun9972.win/blog/2018/02/23/python3%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB/" target="_blank" rel="noopener">http://blog.lujun9972.win/blog/2018/02/23/python3%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB/</a></li>
+<li>定义可选参数的元类: <a href="https://python3-cookbook.readthedocs.io/zh_CN/latest/c09/p15_define_metaclass_that_takes_optional_arguments.html" target="_blank" rel="noopener">https://python3-cookbook.readthedocs.io/zh_CN/latest/c09/p15_define_metaclass_that_takes_optional_arguments.html</a></li>
+<li>Python中的类元编程: <a href="https://segmentfault.com/a/1190000014323911" target="_blank" rel="noopener">https://segmentfault.com/a/1190000014323911</a></li>
+<li>Python 类与元类的深度挖掘: <a href="http://python.jobbole.com/84986/" target="_blank" rel="noopener">http://python.jobbole.com/84986/</a></li>
+<li>如何从Python 3.x中的类定义传递参数到元类？</li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Python/">Python</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/metaclass/">metaclass</a>
+                    
+                      <a class="hover-with-bg" href="/tags/python3/">python3</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%85%83%E7%B1%BB/">元类</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/04/11/%E5%A4%9A%E7%BA%A7%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E4%B8%AD%E7%9A%84%E8%A7%84%E5%88%92%E9%97%AE%E9%A2%98%E7%AE%80%E5%8C%96/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">多级网络优化的规划问题简化-Python预演</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2019/01/21/pyarrow%E5%88%9D%E6%8E%A2/">
+                        <span class="hidden-mobile">arrow的性能分析及在python中的使用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "python中的元类编程详解&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

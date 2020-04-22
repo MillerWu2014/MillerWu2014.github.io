@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>深度学习-GAN网络详解及TensorFlow实现 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 十一月 6日 2018, 11:06 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="GAN的基本介绍"><a href="#GAN的基本介绍" class="headerlink" title="GAN的基本介绍"></a>GAN的基本介绍</h2><p>2014 年，Ian Goodfellow 及其蒙特利尔大学的同事引入了生成对抗网络（GAN）。这是一种学习数据的基本分布的全新方法，让生成出的人工对象可以和真实对象之间达到惊人的相似度。</p>
+<h3 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h3><p>GAN（Generative Adversarial Networks），是一种生成式的，对抗网络。再具体一点，就是通过对抗的方式，去学习数据分布的生成式模型。所谓的对抗，指的是生成网络和判别网络的互相对抗。生成网络尽可能生成逼真样本，判别网络则尽可能去判别该样本是真实样本，还是生成的假样本。示意图如下：</p>
+<p><img src="/uploads/640.png" srcset="/img/loading.gif" alt="img"></p>
+<h3 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h3><p>生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器$G$的目标是基于噪声变量$z$生成一个对象$x^{‘}$，并使其看起来和真的$x$一样。而判别器$D$的目标就是找到生成出的结果和真实$x$之间的差异，差异越小越好。如上图所示。隐变量$ z $（通常为服从高斯分布的随机噪声）通过 Generator 生成 $X_{fake}$, 判别器负责判别输入的 data 是生成的样本 $X_{fake}$还是真实样本 $X_{real}$。通过公式描述如下所示：<br>$$<br>\min <em>{G} \max _{D} V(D, G)=\mathbb{E}</em>{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}<em>{\boldsymbol{z} \sim p</em>{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]<br>$$<br>对于判别器 $D$ 来说，这是一个二分类问题，$V(D,G)$ 为二分类问题中常见的交叉熵损失。对于生成器 $G$ 来说，为了尽可能欺骗 $D$，所以需要最大化生成样本的判别概率 $D(G(z))$，即最小化 $log(1-D(G(z)))$，注意：$log(D(x))$ 一项与生成器 $G$ 无关，所以可以忽略。</p>
+<p>实际训练时，生成器和判别器采取交替训练，即先训练 $D$，然后训练 $G$，不断往复。值得注意的是，对于生成器，其最小化的是$\max _{D} V(D, G)$，即最小化$V(D,G)$ 的最大值，这样形成一个对抗的过程。<a id="more"></a></p>
+<h3 id="目标函数"><a href="#目标函数" class="headerlink" title="目标函数"></a>目标函数</h3><p>GAN网络的提出者Ian Goodfellow证明了，当经典GAN在最优化时就是最小化两个分布的JS散度。但在实际使用中，衡量两个分布的相似性有很多方式，如KL散度，JS散度，F散度，Bregman散度，Wasserstein距离等。因此可以定义不同的距离度量方式来定义目标函数。Wasserstein距离如下：<br>$$<br>W(p, q)=\inf <em>{\gamma \sim \Pi(p, q)} \mathbb{E}</em>{(x, y) \sim \gamma}[|x-y|]<br>$$</p>
+<h2 id="GAN的训练过程"><a href="#GAN的训练过程" class="headerlink" title="GAN的训练过程"></a>GAN的训练过程</h2><p>前面说过GAN包含了生成器和判别器，实际上是两个网络：生成网络和判别网络。那么在整个网络中，怎么来对网络进行训练呢？</p>
+<h3 id="生成器"><a href="#生成器" class="headerlink" title="生成器"></a>生成器</h3><p>对于生成器（生成网络）来说，输入一个$n$维向量，输出目标大小的样本，因此首先需要得到一个输入向量。以图片为例，可以输入一个分布的向量，输出图片像素大小的图片。</p>
+<blockquote>
+<p>这里的生成器可以是任意可以输出图片的模型，比如最简单的全连接神经网络，又或者是反卷积网络等。</p>
+</blockquote>
+<p>一般输入向量用随机输入即可，随机输入最好满足常见的分布，如高斯分布，均值分布等。输入向量经过生成网络后输出一个目标样本。</p>
+<h3 id="判别器"><a href="#判别器" class="headerlink" title="判别器"></a>判别器</h3><p>判别器一般采用常用的判别器，输入真实图片和生成的图片，辨别它们之间的差异。判别器可以为任意的判别器模型，如全连接网络，CNN网络等。</p>
+<h3 id="训练过程"><a href="#训练过程" class="headerlink" title="训练过程"></a>训练过程</h3><p>上面对生成器和判别器进行了说明，下面可以说明如何训练，对基本流程进行简要的说明。基本训练流程如下：</p>
+<ul>
+<li>初始化判别器的参数$\theta_{D}$和生成器$G$的参数$\theta_{G}$</li>
+<li>从真实样本中采样 $m$个样本$\left{x^{1}, x^{2}, \ldots x^{m}\right}$，从先验分布噪声中采样$m$个噪声样本${z^{1}, z^{2}, \ldots, z^{m}}$并通过生成器获取 $m$个生成样本$\left{\tilde{x}^{1}, \tilde{x}^{2}, \ldots, \tilde{x}^{m}\right}$固定生成器$G$，训练判别器$D$尽可能好地准确判别真实样本和生成样本，尽可能大地区分正确样本和生成的样本。</li>
+<li><strong>循环$k$次更新判别器之后，使用较小的学习率来更新一次生成器的参数</strong>，训练生成器使其尽可能能够减小生成样本与真实样本之间的差距，也相当于尽量使得判别器判别错误。</li>
+<li>多次更新迭代之后，最终理想情况是使得判别器判别不出样本来自于生成器的输出还是真实的输出。亦即最终样本判别概率均为0.5。使得生成器和判别器之间达到平衡（这点也被Ian Goodfellow证明会达到<a href="[https://zh.wikipedia.org/zh-hans/%E7%B4%8D%E4%BB%80%E5%9D%87%E8%A1%A1%E9%BB%9E](https://zh.wikipedia.org/zh-hans/納什均衡點)">纳什均衡</a>）。</li>
+</ul>
+<blockquote>
+<p>之所以要训练k次判别器，再训练生成器，是因为要先拥有一个好的判别器，使得能够教好地区分出真实样本和生成样本之后，才好更为准确地对生成器进行更新。下面是GAN的论文中对训练过程的描述，如下图所示。</p>
+</blockquote>
+<p><img src="/uploads/gan_train_p.jpg" srcset="/img/loading.gif" alt="img"></p>
+<blockquote>
+<p>注：图中的<strong>黑色虚线</strong>表示真实的样本的分布情况，<strong>蓝色虚线</strong>表示判别器判别概率的分布情况，<strong>绿色实线</strong>表示生成样本的分布。 $Z$ 表示噪声， $Z$到 $x$表示通过生成器之后的分布的映射情况。</p>
+<p>我们的目标是使用生成样本分布（绿色实线）去拟合真实的样本分布（黑色虚线），来达到生成以假乱真样本的目的。</p>
+<p>可以看到在<strong>（a）</strong>状态处于最初始的状态的时候，生成器生成的分布和真实分布区别较大，并且判别器判别出样本的概率不是很稳定，因此会先训练判别器来更好地分辨样本。<br>通过多次训练判别器来达到<strong>（b）</strong>样本状态，此时判别样本区分得非常显著和良好。然后再对生成器进行训练。训练生成器之后达到<strong>（c）</strong>样本状态，此时生成器分布相比之前，逼近了真实样本分布。<br>经过多次反复训练迭代之后，最终希望能够达到<strong>（d）</strong>状态，生成样本分布拟合于真实样本分布，并且判别器分辨不出样本是生成的还是真实的（判别概率均为0.5）。也就是说我们这个时候就可以生成出非常真实的样本啦，目的达到。  </p>
+</blockquote>
+<h2 id="GAN存在的问题"><a href="#GAN存在的问题" class="headerlink" title="GAN存在的问题"></a>GAN存在的问题</h2><p>GAN网络在理论上偏于完美，但是在实践过程中还是存在较多的问题，主要存在以下问题：</p>
+<ol>
+<li><p>GAN 提出者 Ian Goodfellow 在理论中虽然证明了 GAN 是可以达到纳什均衡的。可是我们在实际实现中，我们是在参数空间优化，而非函数空间，这导致理论上的保证在实践中是不成立的。 </p>
+</li>
+<li><p>不收敛（non-convergence）的问题，所有的理论都认为 GAN 应该在纳什均衡（Nash equilibrium）上有卓越的表现，但梯度下降只有在凸函数的情况下才能保证实现纳什均衡。当博弈双方都由神经网络表示时，在没有实际达到均衡的情况下，让它们永远保持对自己策略的调整是可能的。</p>
+</li>
+<li><p>GAN 的优化目标是一个极小极大（minmax）问题，即$\min _{G} \max _{D} V(G, D)$，也就是说，优化生成器的时候，最小化的是$\max _{D} V(G, D)$。可是我们是迭代优化的，要保证 $V(G,D)$ 最大化，就需要迭代非常多次，这就导致训练时间很长。如果我们只迭代一次判别器，然后迭代一次生成器，不断循环迭代。这样原先的极小极大问题，就容易变成极大极小（maxmin）问题，可二者是不一样的，会出现mode collapse（模型崩溃）。即：<br>$$<br>\min _{G} \max _{D} V(G, D) \neq \max _{D} \min _{G} V(G, D)<br>$$</p>
+</li>
+</ol>
+<p>针对上面的主要问题，很多其他GAN网络对经典的GAN网络进行了优化，如WGAN，StackGAN等，都是在GAN的基础上进行优化，扩展，时期应用更广泛。</p>
+<h2 id="GAN常见的模型结构"><a href="#GAN常见的模型结构" class="headerlink" title="GAN常见的模型结构"></a>GAN常见的模型结构</h2><h3 id="DCGAN"><a href="#DCGAN" class="headerlink" title="DCGAN"></a>DCGAN</h3><p>DCGAN 提出使用 CNN 结构来稳定 GAN 的训练，并使用了以下一些 trick： </p>
+<ul>
+<li>Batch Normalization</li>
+<li>使用 Transpose convlution 进行上采样 </li>
+<li>使用 Leaky ReLu 作为激活函数</li>
+</ul>
+<h3 id="StackGAN"><a href="#StackGAN" class="headerlink" title="StackGAN"></a><a href="https://arxiv.org/abs/1612.03242" target="_blank" rel="noopener">StackGAN</a></h3><p>StackGAN—构建两个GAN，第一个GAN（Stage-IGAN）用于根据文本描述生成一张分辨率低的图像，包括目标物体的大致形状和颜色。 第二个GAN 将Stage-I 生成的低分辨率图片和text作为输入, 修正之前生成的图并添加细节生成高分辨率的更加细致的图片。</p>
+<p><img src="/uploads/stack_gan_struct.png" srcset="/img/loading.gif" alt="stackgan"></p>
+<h3 id="WGAN"><a href="#WGAN" class="headerlink" title="WGAN"></a><a href="https://arxiv.org/abs/1701.07875" target="_blank" rel="noopener">WGAN</a></h3><p>WGAN 提出了一种全新的距离度量方式——地球移动距离（EM, Earth-mover distance），也叫 <code>Wasserstein</code> 距离。即散度定义其中方式之一。<code>Wessertein</code>距离相比KL散度和JS散度的优势在于：即使两个分布的支撑集没有重叠或者重叠非常少，仍然能反映两个分布的远近。而JS散度在此情况下是常量，KL散度可能无意义。WGAN也是基于这个对经典GAN进行了优化。</p>
+<p>还有很多GAN的结构，这儿只是列出了冰山一角，针对不同的应用场景有不同的网络结构。但都是基于经典的GAN模型基础上进行的结构优化，优化trick等。</p>
+<h2 id="GAN的应用"><a href="#GAN的应用" class="headerlink" title="GAN的应用"></a>GAN的应用</h2><p>GAN 在生成样本过程成不需要显式建模任何数据分布就可以生成<code>real-like</code> 的样本，所以 GAN 在图像，文本，语音等诸多领域都有广泛的应用。</p>
+<p>在图像领域，在图像翻译，超分辨率，目标监测，图像联合分布学习，视频生成等。也可以做序列生成，音乐生成；语言和语音转换等。下面对各个领域的应用进行了总结：</p>
+<p><img src="/uploads/1558418520398.png" srcset="/img/loading.gif" alt="1558418520398"></p>
+<h2 id="GAN的TensorFlow实现"><a href="#GAN的TensorFlow实现" class="headerlink" title="GAN的TensorFlow实现"></a>GAN的TensorFlow实现</h2><p>下面时对GAN网络的基础实现，生成器和判别器均是使用2层全连接的网络结构，在训练过程中先训练判别器再训练生成器，1-1的训练（即训练一次判别器后训练一次生成器），在每迭代10000步就生成一批图片。损失函数也是使用原始论文中的形式。具体代码参考如下：</p>
+<pre><code class="python">import tensorflow as tf
+import numpy as np
+import matplotlib.gridspec as gridspec
+
+from typing import List
+from matplotlib import pyplot as plt
+from tensorflow.examples.tutorials.mnist import input_data
+
+weight_std = 0.1  # 参数初始化分布参数
+
+
+def variable_init(size: List):
+    return tf.truncated_normal(shape=size, stddev=weight_std)
+
+
+X = tf.placeholder(tf.float32, shape=[None, 784])
+
+# 定义判别器的权重矩阵和偏置项向量, 由此可知判别网络为三层全连接网络
+d_w1 = tf.Variable(variable_init([784, 128]))
+d_b1 = tf.Variable(variable_init([128]))
+
+d_w2 = tf.Variable(variable_init([128, 1]))
+d_b2 = tf.Variable(variable_init([1]))
+theta_d = [d_w1, d_w2, d_b1, d_b2]
+
+# 定义生成器的输入噪声为100维度的向量组，None根据批量大小确定
+Z = tf.placeholder(tf.float32, shape=[None, 100])
+
+
+def sample_z(m, n):
+    return np.random.normal(0, 1, size=(m, n)).astype(np.float32)
+
+
+def generator(z):
+    &quot;&quot;&quot;生成器:输出层为784个神经元, 并输出手写字体图片&quot;&quot;&quot;
+    g_w1 = tf.Variable(variable_init([100, 128]))
+    g_b1 = tf.Variable(variable_init([128]))
+    g_h1 = tf.nn.relu(tf.matmul(z, g_w1)+g_b1)
+
+    g_w2 = tf.Variable(variable_init([128, 784]))
+    g_b2 = tf.Variable(tf.zeros(shape=[784]))
+    g_h2 = tf.matmul(g_h1, g_w2) + g_b2
+    theta_g = [g_w1, g_w2, g_b1, g_b2]
+    return tf.nn.tanh(g_h2), theta_g  # None, 784
+
+
+def discriminator(x):
+    &quot;&quot;&quot;判别器&quot;&quot;&quot;
+    d_h1 = tf.nn.relu(tf.matmul(x, d_w1)+d_b1)
+    d_h2 = tf.matmul(d_h1, d_w2) + d_b2
+    return tf.nn.sigmoid(d_h2), d_h2  # (batch_size, 1)
+
+
+def plot(samples):
+    fig = plt.figure(figsize=(4, 4))
+    gs = gridspec.GridSpec(4, 4)
+    gs.update(wspace=0.05, hspace=0.05)
+
+    for i, sample in enumerate(samples):
+        ax = plt.subplot(gs[i])
+        plt.axis(&#39;off&#39;)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_aspect(&#39;equal&#39;)
+        plt.imshow(sample.reshape(28, 28), cmap=&#39;Greys_r&#39;)
+    return fig
+
+
+g_sample, theta_g = generator(Z)  # batch_size, 784
+d_real, d_logit_real = discriminator(X)
+d_fake, d_logit_fake = discriminator(g_sample)
+
+# 以下为原论文的判别器损失和生成器损失
+d_loss = -(tf.log(d_real) + tf.log(1. - d_fake))
+g_loss = -tf.log(d_fake)
+
+D_solver = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(d_loss, var_list=theta_d)
+G_solver = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(g_loss, var_list=theta_g)
+
+batch_size = 128
+z_dims = 100
+mnist = input_data.read_data_sets(&quot;../../data/mnist&quot;, one_hot=True)
+
+
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    i = 0
+    for it in range(100000):
+        if it % 10000 == 0:
+            samples = sess.run(g_sample, feed_dict={Z: sample_z(16, z_dims)})
+
+            fig = plot(samples)
+            plt.savefig(&#39;./out/{}.png&#39;.format(str(i).zfill(3)), bbox_inches=&#39;tight&#39;)
+            i += 1
+            plt.close(fig)
+
+        X_mb, _ = mnist.train.next_batch(batch_size)
+        _, D_loss_curr = sess.run([D_solver, d_loss], feed_dict={X: X_mb, Z: sample_z(batch_size, z_dims)})
+        _, G_loss_curr = sess.run([G_solver, g_loss], feed_dict={Z: sample_z(batch_size, z_dims)})
+
+        if it % 2000 == 0:
+            print(&#39;Iter: {}&#39;.format(it))
+            print()
+</code></pre>
+<p>最终训练后，生成的图片如下:</p>
+<p><img src="/uploads/reult009.png" srcset="/img/loading.gif" alt=""></p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ol>
+<li>到底什么是生成对抗网络GAN？： <a href="https://www.msra.cn/zh-cn/news/features/gan-20170511" target="_blank" rel="noopener">https://www.msra.cn/zh-cn/news/features/gan-20170511</a></li>
+<li>通俗理解生成对抗网络GAN： <a href="https://zhuanlan.zhihu.com/p/33752313" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/33752313</a></li>
+<li>简单理解和试验生成对抗网络GAN： <a href="https://blog.csdn.net/on2way/article/details/72773771" target="_blank" rel="noopener">https://blog.csdn.net/on2way/article/details/72773771</a></li>
+<li>GAN入门及TF源码实现： <a href="https://blog.csdn.net/qq_31456593/article/details/71113926" target="_blank" rel="noopener">https://blog.csdn.net/qq_31456593/article/details/71113926</a></li>
+<li>GAN完整理论推导与实现： <a href="https://www.jiqizhixin.com/articles/2017-10-1-1" target="_blank" rel="noopener">https://www.jiqizhixin.com/articles/2017-10-1-1</a></li>
+<li>CNN反向传播过程详解： <a href="https://zhuanlan.zhihu.com/p/40951745" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/40951745</a></li>
+<li>GAN完整理论推导和实现： <a href="https://www.jiqizhixin.com/articles/2017-10-1-1" target="_blank" rel="noopener">https://www.jiqizhixin.com/articles/2017-10-1-1</a></li>
+<li>GAN学习指南：从原理入门到制作生成Demo： <a href="https://zhuanlan.zhihu.com/p/24767059" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/24767059</a></li>
+<li>Generative Adversarial Nets（译）： <a href="https://blog.csdn.net/wspba/article/details/54577236" target="_blank" rel="noopener">https://blog.csdn.net/wspba/article/details/54577236</a></li>
+<li>2018 年最棒的三篇 GAN 论文：<a href="https://www.leiphone.com/news/201901/k1ogqdXFO6arLA5L.html" target="_blank" rel="noopener">https://www.leiphone.com/news/201901/k1ogqdXFO6arLA5L.html</a></li>
+<li>GAN论文综述： <a href="https://www.jiqizhixin.com/articles/2019-03-19-12" target="_blank" rel="noopener">https://www.jiqizhixin.com/articles/2019-03-19-12</a></li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/GNN/">GNN</a>
+                    
+                      <a class="hover-with-bg" href="/tags/deep-learning/">deep learning</a>
+                    
+                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/generator/">generator</a>
+                    
+                      <a class="hover-with-bg" href="/tags/discriminator/">discriminator</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/11/24/KL%E6%95%A3%E5%BA%A6,JS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">KL散度,JS散度和wasserstein距离</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/10/26/TensorFlow%E4%B8%AD%E7%9A%84KeyPoint/">
+                        <span class="hidden-mobile">TensorFlow中的KeyPoint</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "深度学习-GAN网络详解及TensorFlow实现&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 100vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+          </div>
+
+          
+            <div class="scroll-down-bar">
+              <i class="fas fa-angle-down scroll-down-arrow"></i>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-md">
+        <div class="py-5 z-depth-3" id="board"
+          style=margin-top:0>
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/24/spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/">
+        <p class="h4 index-header">spark中遇到的问题汇总</p>
+      </a>
+
+      <a href="/2017/07/24/spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">
+出现“org.apache.spark.SparkException: Task not serializable”这个错误
+
+在编写spark程序是出现了org.apache.spark.SparkException: Task not serializable错误，由于在操作RDD算子map中使用到了类中定义的其他函数或者定义的其他变量，而引发的未序列化问题。在实际开发过程中难免会引用定义的其他函数或者变量进行操作。为了解决为序列化的问题需要对类进行序列化处理。下面的代码是未序列化之前：
+case class TypeMatched(label: Boolean, features:Array[Int])
+
+class loadData {
+    /*
+    * Created by Miller on 17-7-17.
+    * Load sandbox&#39;s bson data from location and transform to rdd type
+    * Use spark analysis data and static data
+    * */
+
+    val dataPath: String = &quot;/opt/Project/spark_project/data/sbx_data/text_data_by_spark.csv&quot;
+    val sc: SparkContext = new SparkContext(new SparkConf().setMaster(&quot;local[*]&quot;).setAppName(&quot;LoadSandboxData&quot;))
+
+    // This method use to generate RDD
+    def toRDD: RDD[Array[Int]] = {
+        sc.textFile(dataPath).map(line =&gt; line.split(&quot;,&quot;).map(x =&gt; x.toInt))
+    }
+
+    private def IntToBoolean(s: Int): Boolean = if (s &gt; 0) true else false
+
+    def toTypeData(rdds: RDD[Array[Int]]) = {
+        rdds.map(array =&gt; {
+            val _label_ = IntToBoolean(array(0))
+            val _features_ = array.slice(0, array.length)
+            TypeMatched(_label_, _features_)
+        })
+    }
+}...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-24&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/spark/">spark</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+            <a href="/tags/RDD/">RDD</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/20/abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8/">
+        <p class="h4 index-header">abc中的元类和six模块配合使用</p>
+      </a>
+
+      <a href="/2017/07/20/abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">metaclass是类的类或者元类，秉承Python一切皆对象的理念，Python中的类也是一类对象，metaclass的实例就是类(class)，自己写metaclass时需要让其继承自type对象。关于metaclass的介绍，可以看python学习手册中的元类概念部分。ABC（抽象基类），主要定义了基本类和最基本的抽象方法，可以为子类定义共有的API，不需要具体实现。abc模块，Python对于ABC的支持模块，定义了一个特殊的metaclass-ABCMeta 还有一些装饰器— @abstractmethod和@abstarctproperty 。abc.ABCMeta 是一个metaclass，用于在Python程序中创建抽象基类。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-20&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/six/">six</a>&nbsp;
+          
+            <a href="/tags/metaclass/">metaclass</a>&nbsp;
+          
+            <a href="/tags/abc/">abc</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/14/%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95/">
+        <p class="h4 index-header">最优化-梯度下降算法</p>
+      </a>
+
+      <a href="/2017/07/14/%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">梯度下降算法是最优化算法之一，在大量的机器学习算法和深度学习中都会被用到。优化是指当改变$x$以最小化或最大化某个函数$f(x)$，该函数一般为算法中的目标函数或损失函数，或者称为代价函数、误差函数等。在优化过程中需要通过导数$f’(x)$或$\frac{dy}{dx}$来描述缩放$x$对输出$f(x)$的变化:$f(x+\theta) \approx f(x)+\theta f’(x)$。对于任意小的$\eta$使得$f(x-\eta sign(f’(x))) \lt f(x)$，因此可以将$x$往导数的相反方向移动一小步来减小$f(x)$，这个过程就是梯度下降。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-14&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/%E4%BC%98%E5%8C%96/">优化</a>&nbsp;
+          
+            <a href="/tags/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D/">梯度下降</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/09/numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C/">
+        <p class="h4 index-header">numba加速python程序运行</p>
+      </a>
+
+      <a href="/2017/07/09/numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">python作为一个动态语言，在运行效率上为一大缺陷，但是作为一门成熟的语言，有很多方式可以提高python的运行效率，如:cpython, pypy,numba,LLVMPy。个人主要用户python处理数据和写一些数据挖掘方面的算法，因此使用numba较为方便。因此对numba说明下，并作为笔记记录以便以后查阅。numba的来源主要，NumPy的创始人Travis Oliphant在离开Enthought之后，创建了CONTINUUM，致力于将Python大数据处理方面的应用。最近推出的Numba项目能够将处理NumPy数组的Python函数JIT编译为机器码执行，从而上百倍的提高程序的运算速度。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/numba/">numba</a>&nbsp;
+          
+            <a href="/tags/numpy/">numpy</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/09/%E8%9D%99%E8%9D%A0%E4%BE%A0%E5%89%8D%E4%BC%A02-%E9%BB%91%E6%9A%97%E9%AA%91%E5%A3%AB%E8%A7%82%E5%90%8E%E6%84%9F/">
+        <p class="h4 index-header">蝙蝠侠前传黑暗骑士观后感</p>
+      </a>
+
+      <a href="/2017/07/09/%E8%9D%99%E8%9D%A0%E4%BE%A0%E5%89%8D%E4%BC%A02-%E9%BB%91%E6%9A%97%E9%AA%91%E5%A3%AB%E8%A7%82%E5%90%8E%E6%84%9F/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">对《蝙蝠侠：黑暗骑士》这部电影是百看不厌，这部电影在当时也是获得了相当高的评价，从这部电影标题就具有两面性，若从布鲁斯韦恩的角度看，黑暗骑士是具有褒义，而从丹特的角度则最终反映了人内容的黑暗面。电影中布鲁斯·韦恩，哈维·丹特，小丑，吉姆·戈登这几个主要的人物，各自将自己的角色演的非常的到位，特别是小丑。在电影中对英雄主意进行了重新定义，从最底层的社会到最上层的社会均展现的淋漓尽致，都反映出了各个阶层的丑陋面貌和各类人的信仰以及精神堡垒等等。对人性的丑恶进行了深刻的思考，特别是通过哈维·丹特在电影中的英雄人物最终沦落到和小丑一样，从光明骑士到两面骑士最终到黑暗骑士。
+首先看这部电影的导演克里斯托弗·诺兰的又一大作，从上一部开战时刻，诺兰再次对蝙蝠侠的到来进行了深入的思考。那么诺兰的背景是怎样的呢？诺兰拥有爱尔兰血统，拥有英美双重国籍，从小就在进行拍摄，诺兰是007的狂热粉，他曾经跟大卫·S·高耶说过，最爱的邦德电影是《女王密使》。在小时候诺兰七岁就用父亲的超8摄影机拍摄自己的玩具兵人，开始了最早的电影创作。孩提时代的他住在芝加哥时，还和日后成为导演、制片人的罗科·贝利克一起拍摄短片。另外在他的手中还有《盗梦空间》,《记忆碎片》,《致命魔术》等等经典的电影。而每部电影有个共同点，在一个想象力非常丰富空间，他叙事手法非常让人出乎意料。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%80%9D%E8%80%83/">思考</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/%E7%94%B5%E5%BD%B1/">电影</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/09/jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+        <p class="h4 index-header">jupyter-notebook远程登陆配置以及spark多语言环境配置</p>
+      </a>
+
+      <a href="/2017/07/09/jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">jupyter notebook是一个基于浏览器的python数据分析工具，使用起来非常方便，具有极强的交互方式和富文本的展示效果。jupyter是它的升级版，它的安装也非常方便，一般Anaconda安装包中会自带。安装好以后直接输入jupyter notebook便可以在浏览器中使用。但是它默认只能在本地访问，如果想把它安装在服务器上，然后在本地远程访问，则需要进行如下配置：...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/jupyter/">jupyter</a>&nbsp;
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/09/spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/">
+        <p class="h4 index-header">spark中创建RDD的几种方式</p>
+      </a>
+
+      <a href="/2017/07/09/spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">创建RDD主要有三种方式：从外部数据创建RDD，从另外一个RDD创建，对现有的数据列表或者数据集合进行创建。三种方式均能够创建RDD对象。RDD可以包含Scala，Python，Java的任意类型的对象，因此任何数据均可以创建RDD。spark创建RDD时首先需要通过SpakContext作为对象，创建一个sc对象，再通过sc来创建RDD。sc对象之前可以通过sparkconf对象对SpakContext进行设置。如集群的URL和应用名等等。下面是对SpakContext对象设置。如下：
+from pyspark import SparkContext, SparkConf
+
+conf = SparkConf().setAppName(&quot;test&quot;).setMaster(&quot;local&quot;).setSparkHome(&quot;/opt/spark1.6.0/&quot;)
+sc = SparkContext(conf=conf)
+上面通过SparkConf对象设置了conf. 再创建sc对象，并将设置传给sc对象。SparkConf对象的方法有：set(key,value),setIfMissing(key,value),setMaster(value),setAppName(value)，setSparkHome(value)，setExecutorEnv(key=None, value=None, pairs=None)，setAll(pairs)并对应了get方法。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/spark/">spark</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+            <a href="/tags/RDD/">RDD</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/09/docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+        <p class="h4 index-header">docker部署anaconda开发环境</p>
+      </a>
+
+      <a href="/2017/07/09/docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">由于在工作中使用docker部署一个科学计算的环境anaconda，如：docker run -d -p 50001:22 anaconda2:ssh /usr/sbin/sshd -D，可以简单的用脚本启动一个指定本地端口映射到容器22端口的一个容器环境，特别是在生成多个容器时。因此使用python写一个脚本能够实现该功能。避免在工作中重复使用docker run的命令来生成容器。该脚本还可以扩展一些功能，如获取容器的虚拟IP，获取容器的名称和容器ID，对容器的操作等等。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/docker/">docker</a>&nbsp;
+          
+            <a href="/tags/anaconda/">anaconda</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/08/%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe/">
+        <p class="h4 index-header">使用spark读取mysql数据库数据转化为dataframe</p>
+      </a>
+
+      <a href="/2017/07/08/%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">使用spark中的接口连接mysql数据库并读取并查询出数据库中的数据并转化为spark中的dataframe格式的RDD。其中实现了两种方式查询数据，一种单表查询和另外一种的多表关联查询数据。其中使用的方式在下面代码的main函数中。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-08&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/spark/">spark</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+            <a href="/tags/RDD/">RDD</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/06/%E7%89%B9%E5%BE%81%E5%8F%AF%E8%A7%86%E5%8C%96%E5%92%8C%E7%89%B9%E5%BE%81%E9%99%8D%E7%BB%B4%E7%AE%97%E6%B3%95T-SNE%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">特征可视化和特征降维算法T-SNE模型详解</p>
+      </a>
+
+      <a href="/2017/07/06/%E7%89%B9%E5%BE%81%E5%8F%AF%E8%A7%86%E5%8C%96%E5%92%8C%E7%89%B9%E5%BE%81%E9%99%8D%E7%BB%B4%E7%AE%97%E6%B3%95T-SNE%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">
+T-SNE(t-distributed stochastic neighbor embedding)是用于降维的一种机器学习算法，是由 Laurens van der Maaten 和 Geoffrey Hinton在08年提出来。此外，t-SNE 是一种非线性降维算法，非常适用于高维数据降维到2维或者3维，进行可视化。t-SNE是由SNE(Stochastic Neighbor Embedding, SNE; Hinton and Roweis, 2002)发展而来。我们先介绍SNE的基本原理，之后再扩展到t-SNE。最后再看一下t-SNE的实现以及一些优化。
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-06&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/%E7%89%B9%E5%BE%81%E8%BF%87%E7%A8%8B/">特征过程</a>&nbsp;
+          
+            <a href="/tags/%E9%99%8D%E7%BB%B4/">降维</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+
+
+  <nav aria-label="index posts navigation">
+    <span class="pagination pg-blue justify-content-center mt-5" id="pagination">
+      <a class="extend prev" rel="prev" href="/page/3/"><i class="fas fa-angle-double-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/5/"><i class="fas fa-angle-double-right"></i></a>
+    </span>
+  </nav>
+  
+  <script>
+    for (ele of document.getElementById("pagination").getElementsByTagName("a")) {
+      ele.href += '#board';
+    }
+  </script>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "记录个人知识,分享知识和经验;多记录,多思考&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

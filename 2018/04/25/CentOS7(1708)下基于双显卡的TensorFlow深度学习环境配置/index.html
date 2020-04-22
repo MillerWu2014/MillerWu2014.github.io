@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>CentOS_7(1708)下基于Tensorflow对双GPU深度学习环境配置 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期三, 四月 25日 2018, 11:30 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      18 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>在工作种需要对tensorflow的GPU环境进行配置，主要是基于centos7下的单机多显卡环境进行部署，因此首先需要对centos7进行安装。其次对显卡驱动的安装，因为是多显卡，在安装多显卡驱动的时候和但显卡驱动安装有一定的区别。下面对整个过程进行详细的说明，如果遇到类似的环境部署，可以参考该文档。</p>
+<h2 id="1-Linux系统centos7-1708的安装"><a href="#1-Linux系统centos7-1708的安装" class="headerlink" title="1.Linux系统centos7-1708的安装"></a>1.Linux系统centos7-1708的安装</h2><p>通过镜像写入软件将系统镜像写入到U盘，再对整个系统进行安装。在安装过程中通过U盘启动，在选择时有<em>UEFI</em>模式和非<em>UEFI</em>模式，选择非<em>UEFI</em>模式的U盘启动。进入到安装选择界面。</p>
+<h3 id="1-1-修改镜像挂载地址"><a href="#1-1-修改镜像挂载地址" class="headerlink" title="1.1 修改镜像挂载地址"></a>1.1 修改镜像挂载地址</h3><p>选择<code>Install CentOS7</code>选项后，进入到安装过程，如果整个过程顺利，则可以继续，本1.1就可以忽略。如出现问题：<code>failed to map image memory......</code>的情况，那么就需要修改镜像挂载地址。在出现该错误后继续，间隔1-2分钟后会出现命令行。可以查看dev下的目录(<code>ls /dev</code>)。我的U盘被挂载到了<code>/dev/sdb4</code>，需要把该目录记录下来，后续会使用。</p>
+<p>再重启计算机，进入到U盘启动后的界面，选择<code>Install CentOS7</code>，然后按<code>tab</code>进入到编辑模式，修改其中的命令行：<code>Linuxefi /images/pxeboot/vmlinuzinst.stage22=hd:LABEL=CentOS\x207\x20x\86_64 quiet</code>，将修改为：<code>Linuxefi /images/pxeboot/vmlinuzinst.stage22=hd:/dev/sdb4 quiet</code>，再通过<code>Enter</code>快捷键执行安装。然后进入到图形安装界面。如果还是不能进入到图形界面，安装出错，请参考下面。</p>
+<h3 id="1-2-图形界面出错问题解决"><a href="#1-2-图形界面出错问题解决" class="headerlink" title="1.2 图形界面出错问题解决"></a>1.2 图形界面出错问题解决</h3><p>如果图形界面安装出现问题(<code>x startup failed falling back to text mod</code>)，一般是安装基础的图形界面出问题。解决方法是重启计算机，U盘启动，不选择<code>Install CentOS7</code>，选择<code>Troubleshooting --&gt;</code>，进入到选项，并选择第一项，修改镜像地址(tab或e修改，修改的地方和1.1中的一样)。</p>
+<h3 id="1-3-配置SSH服务"><a href="#1-3-配置SSH服务" class="headerlink" title="1.3 配置SSH服务"></a>1.3 配置SSH服务</h3><p>安装完系统后配置ssh服务，本文中将ssh端口修改为22222，需要开放22222端口。ssh具体配置就不详细说明。</p>
+<h2 id="2-Linux查看显卡的相关命令"><a href="#2-Linux查看显卡的相关命令" class="headerlink" title="2.Linux查看显卡的相关命令"></a>2.Linux查看显卡的相关命令</h2><p><code>lspci</code>命令查看硬件接口信息，可以通过<code>lspci |grep -i vga</code>来查询显卡，可以看出电脑的所有显卡，显示显卡型号。也可以显示显卡比较详细的信息：<code>lspci -vnn | grep VGA -A 12</code></p>
+<a id="more"></a>
+<h2 id="3-安装nvidia显卡驱动"><a href="#3-安装nvidia显卡驱动" class="headerlink" title="3.安装nvidia显卡驱动"></a>3.安装nvidia显卡驱动</h2><pre><code class="shell">rpm -Uvh &lt;http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm&gt;  # 添加源
+yum install nvidia-detect  # 安装nvidia-detect命令
+nvidia-detect -v  # 检测显卡型号
+yum update  # 更新yum
+yum update kernel kernel-devel  # 更新核
+lsmod|grep nouveau</code></pre>
+<p>修改<code>/lib/modprobe.d/dist-blacklist.conf</code>文件，在文件中加入：<code>blacklist nouveau options nouveau modeset=0</code></p>
+<h3 id="3-1-更改并重新生成grub2"><a href="#3-1-更改并重新生成grub2" class="headerlink" title="3.1 更改并重新生成grub2"></a>3.1 更改并重新生成grub2</h3><p>打开 <code>/etc/default/grub</code>文件，在其中的：<code>GRUB_CMDLINE_LINUX=”rd.lvm.lv=vg_centos/lv_root rd.lvm.lv=vg_centos/lv_swap rhgb quiet”</code> quiet后面加入<code>rdblacklist=nouveau</code>，保存。</p>
+<pre><code class="shell">grub2-mkconfig -o /boot/grub2/grub.cfg</code></pre>
+<p>我们首先把现有的移动到其它路径下以作为留手备份，打开终端执行：</p>
+<p><code>sudo mv /boot/initramfs-$(uname -r).img /你喜欢的路径，</code>然后重建它，执行：<code>sudo dracut /boot/initramfs-$(uname -r).img $(uname -r)</code>即可。</p>
+<h3 id="3-2-安装NVIDIA驱动"><a href="#3-2-安装NVIDIA驱动" class="headerlink" title="3.2 安装NVIDIA驱动"></a>3.2 安装NVIDIA驱动</h3><p>官网<a href="http://www.nvidia.com/Download/index.aspx?lang=en-us" target="_blank" rel="noopener">下载</a>驱动，下载下来时.run的文件，然后运行<code>sh *.run</code>即可。然后遇到提示什么的直接<code>yes</code>即可。在安装了驱动后提供了驱动自动更新的命令：<code>nvidia-installer --update</code>。安装完后查看<code>/etc/X11/xorg.conf</code>的内容，会发现 Device 的 Driver 设置会成为NVidia。</p>
+<p>再通过<code>lspci |grep -i vga</code>查看显卡，发现intel的集成显卡不见了，因为前面将集成显卡禁用掉了。因此只能看现在的独立显卡。</p>
+<h3 id="3-3-安装Bumblebee"><a href="#3-3-安装Bumblebee" class="headerlink" title="3.3 安装Bumblebee"></a>3.3 安装Bumblebee</h3><pre><code class="shell"> yum -y install bumblebee</code></pre>
+<p>在Bumblebee官方wiki上对cuda使用进行了说明，如果使用cuda可以不用Bumblebee，因此也可以不用安装Bumblebee，不用配置切换。</p>
+<h2 id="4-安装CUDA-toolkit"><a href="#4-安装CUDA-toolkit" class="headerlink" title="4.安装CUDA-toolkit"></a>4.安装CUDA-toolkit</h2><p>下载地址在<a href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=CentOS&target_version=7&target_type=runfilelocal" target="_blank" rel="noopener">这里</a>选择合适的版本，本次选用的cuda9.1的最新版本安装，下载后放入某个目录下面，并运行<code>sh ./cuda_9.1.85_387.26_linux.run</code>进行安装，安装过程中一定要注意某些选项：</p>
+<pre><code class="tex">Do you accept the previously read EULA?
+accept/decline/quit: accept
+Install NVIDIA Accelerated Graphics Driver for Linux-x86_64 387.26?
+(y)es/(n)o/(q)uit: n
+Install the CUDA 9.1 Toolkit?
+(y)es/(n)o/(q)uit: y
+
+Enter Toolkit Location
+ [ default is /usr/local/cuda-9.1 ]:
+
+Do you want to install a symbolic link at /usr/local/cuda?
+(y)es/(n)o/(q)uit:
+Do you want to install a symbolic link at /usr/local/cuda?
+(y)es/(n)o/(q)uit: y
+
+Install the CUDA 9.1 Samples?
+(y)es/(n)o/(q)uit: y
+
+Enter CUDA Samples Location
+ [ default is /root ]: /usr/local/cuda-9.1/examples</code></pre>
+<p>如果出现部分lib缺失的情况，那么就需要安装相应的依赖库，主要出现以下的情况</p>
+<pre><code class="tex">Installing the CUDA Toolkit in /usr/local/cuda-9.1 ...
+Missing recommended library: libGLU.so
+Missing recommended library: libX11.so
+Missing recommended library: libXi.so
+Missing recommended library: libXmu.so</code></pre>
+<p>在通过命令<code>yum install mesa-libGLU-devel libXi-devel libXmu-devel</code>来安装依赖库并重新安装cuda-toolkit。并按照上面的过程进行安装。安装完后会提示：</p>
+<pre><code>lease make sure that
+ -   PATH includes /usr/local/cuda-9.1/bin
+ -   LD_LIBRARY_PATH includes /usr/local/cuda-9.1/lib64, or, add /usr/local/cuda-9.1/lib64 to /etc/ld.so.conf and run ldconfig as root
+
+To uninstall the CUDA Toolkit, run the uninstall script in /usr/local/cuda-9.1/bin</code></pre><p>配置cuda，将cuda/bin和cuda/lib分布添加到PATH和LD_LIBRARY_PATH。如将环境变量添加到<code>/etc/profile</code>中：<code>export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda-9.1/lib64:/usr/local/cuda/lib64</code>，<code>export PATH=$PATH:/usr/local/cuda-9.1/bin:/usr/local/cuda/bin</code>，<code>export CUDA_HOME=/usr/local/cuda-9.1</code>并<code>source /etc/profile</code>。如果要对cuda进行测试，进入到examples目录下的对NVIDIA_CUDA-9.1_Samples下的文件进行编译。编译后运行某个example进行测试。如下：</p>
+<pre><code>[root@localhost deviceQuery]# ./deviceQuery
+./deviceQuery Starting...
+
+ CUDA Device Query (Runtime API) version (CUDART static linking)
+
+Detected 2 CUDA Capable device(s)
+
+Device 0: &quot;GeForce GTX 1060 6GB&quot;
+  CUDA Driver Version / Runtime Version          9.1 / 9.1
+  CUDA Capability Major/Minor version number:    6.1
+  Total amount of global memory:                 6078 MBytes (6373572608 bytes)
+  (10) Multiprocessors, (128) CUDA Cores/MP:     1280 CUDA Cores
+  GPU Max Clock rate:                            1785 MHz (1.78 GHz)
+  Memory Clock rate:                             4004 Mhz
+  Memory Bus Width:                              192-bit
+  L2 Cache Size:                                 1572864 bytes
+  Maximum Texture Dimension Size (x,y,z)         1D=(131072), 2D=(131072, 65536), 3D=(16384, 16384, 16384)
+  Maximum Layered 1D Texture Size, (num) layers  1D=(32768), 2048 layers
+  Maximum Layered 2D Texture Size, (num) layers  2D=(32768, 32768), 2048 layers
+  Total amount of constant memory:               65536 bytes
+  Total amount of shared memory per block:       49152 bytes
+  Total number of registers available per block: 65536
+  Warp size:                                     32
+  Maximum number of threads per multiprocessor:  2048
+  Maximum number of threads per block:           1024
+  Max dimension size of a thread block (x,y,z): (1024, 1024, 64)
+  Max dimension size of a grid size    (x,y,z): (2147483647, 65535, 65535)
+  Maximum memory pitch:                          2147483647 bytes
+  Texture alignment:                             512 bytes
+  Concurrent copy and kernel execution:          Yes with 2 copy engine(s)
+  Run time limit on kernels:                     No
+  Integrated GPU sharing Host Memory:            No
+  Support host page-locked memory mapping:       Yes
+  Alignment requirement for Surfaces:            Yes
+  Device has ECC support:                        Disabled
+  Device supports Unified Addressing (UVA):      Yes
+  Supports Cooperative Kernel Launch:            Yes
+  Supports MultiDevice Co-op Kernel Launch:      Yes
+  Device PCI Domain ID / Bus ID / location ID:   0 / 2 / 0
+  Compute Mode:
+     &lt; Default (multiple host threads can use ::cudaSetDevice() with device simultaneously) &gt;
+
+Device 1: &quot;GeForce GTX 1050 Ti&quot;
+  CUDA Driver Version / Runtime Version          9.1 / 9.1
+  CUDA Capability Major/Minor version number:    6.1
+  Total amount of global memory:                 4040 MBytes (4235919360 bytes)
+  ( 6) Multiprocessors, (128) CUDA Cores/MP:     768 CUDA Cores
+  GPU Max Clock rate:                            1392 MHz (1.39 GHz)
+  Memory Clock rate:                             3504 Mhz
+  Memory Bus Width:                              128-bit
+  L2 Cache Size:                                 1048576 bytes
+  Maximum Texture Dimension Size (x,y,z)         1D=(131072), 2D=(131072, 65536), 3D=(16384, 16384, 16384)
+  Maximum Layered 1D Texture Size, (num) layers  1D=(32768), 2048 layers
+  Maximum Layered 2D Texture Size, (num) layers  2D=(32768, 32768), 2048 layers
+  Total amount of constant memory:               65536 bytes
+  Total amount of shared memory per block:       49152 bytes
+  Total number of registers available per block: 65536
+  Warp size:                                     32
+  Maximum number of threads per multiprocessor:  2048
+  Maximum number of threads per block:           1024
+  Max dimension size of a thread block (x,y,z): (1024, 1024, 64)
+  Max dimension size of a grid size    (x,y,z): (2147483647, 65535, 65535)
+  Maximum memory pitch:                          2147483647 bytes
+  Texture alignment:                             512 bytes
+  Concurrent copy and kernel execution:          Yes with 2 copy engine(s)
+  Run time limit on kernels:                     No
+  Integrated GPU sharing Host Memory:            No
+  Support host page-locked memory mapping:       Yes
+  Alignment requirement for Surfaces:            Yes
+  Device has ECC support:                        Disabled
+  Device supports Unified Addressing (UVA):      Yes
+  Supports Cooperative Kernel Launch:            Yes
+  Supports MultiDevice Co-op Kernel Launch:      Yes
+  Device PCI Domain ID / Bus ID / location ID:   0 / 1 / 0
+  Compute Mode:
+     &lt; Default (multiple host threads can use ::cudaSetDevice() with device simultaneously) &gt;
+&gt; Peer access from GeForce GTX 1060 6GB (GPU0) -&gt; GeForce GTX 1050 Ti (GPU1) : No
+&gt; Peer access from GeForce GTX 1050 Ti (GPU1) -&gt; GeForce GTX 1060 6GB (GPU0) : No
+
+deviceQuery, CUDA Driver = CUDART, CUDA Driver Version = 9.1, CUDA Runtime Version = 9.1, NumDevs = 2
+Result = PASS</code></pre><p>上面<code>Result = PASS</code>说明校验通过。</p>
+<pre><code>[root@localhost bandwidthTest]# ./bandwidthTest
+[CUDA Bandwidth Test] - Starting...
+Running on...
+
+ Device 0: GeForce GTX 1060 6GB
+ Quick Mode
+
+ Host to Device Bandwidth, 1 Device(s)
+ PINNED Memory Transfers
+   Transfer Size (Bytes)        Bandwidth(MB/s)
+   33554432                     6374.1
+
+ Device to Host Bandwidth, 1 Device(s)
+ PINNED Memory Transfers
+   Transfer Size (Bytes)        Bandwidth(MB/s)
+   33554432                     6448.6
+
+ Device to Device Bandwidth, 1 Device(s)
+ PINNED Memory Transfers
+   Transfer Size (Bytes)        Bandwidth(MB/s)
+   33554432                     144068.5
+
+Result = PASS
+
+NOTE: The CUDA Samples are not meant for performance measurements. Results may vary when GPU Boost is enabled.</code></pre><p><code>Result = PASS</code>说明通信正常。</p>
+<h2 id="5-安装cuDNN"><a href="#5-安装cuDNN" class="headerlink" title="5.安装cuDNN"></a>5.安装cuDNN</h2><p>首先下载和CUDA对应版本的cuDNN的版本。下载地址在<a href="https://developer.nvidia.com/rdp/cudnn-download" target="_blank" rel="noopener">这里</a>，再上传到服务器上某个目录，进行操作。首先下载的文件为压缩格式的，主要操作过程如下：</p>
+<pre><code class="shell"># 切换到压缩包位置
+cp cudnn-9.1-linux-x64-v7.1.solitairetheme8 cudnn-9.1-linux-x64-v7.1.tgz
+tar -xvf cudnn-9.1-linux-x64-v7.1.tgz
+
+cp ./lib64/* /usr/local/cuda-9.1/lib64/
+cp ./include/* /usr/local/cuda-9.1/include/
+chmod a+r /usr/local/cuda-9.1/include/cudnn.h /usr/local/cuda-9.1/lib64/libcudnn*</code></pre>
+<p>通过上面的过程就安装配置完成了。</p>
+<h2 id="6-安装tensorflow-gpu"><a href="#6-安装tensorflow-gpu" class="headerlink" title="6.安装tensorflow-gpu"></a>6.安装tensorflow-gpu</h2><h3 id="6-1-Anaconda安装"><a href="#6-1-Anaconda安装" class="headerlink" title="6.1 Anaconda安装"></a>6.1 Anaconda安装</h3><p>在清华大学的镜像网站（<a href="https://mirrors.tuna.tsinghua.edu.cn/）上下载最新的Anaconda版本，我们下载的是5.1.0版本，python版本为3.6.4，然后进行安装：" target="_blank" rel="noopener">https://mirrors.tuna.tsinghua.edu.cn/）上下载最新的Anaconda版本，我们下载的是5.1.0版本，python版本为3.6.4，然后进行安装：</a></p>
+<pre><code class="shell">sh Anaconda3-5.1.0-Linux-x86_64.sh
+# prefix处输入/opt/anaconda3，将anaconda安装到/opt/anaconda目录下
+# 并将python和anaconda的bin目录加入到.bashrc下</code></pre>
+<p>安装了anaconda后，将pip，numpy，scipy，matplotlib，pandas，jupyter-notebook等都集成了，再安装一个查看gpu状态的工具：</p>
+<pre><code class="shell">pip install gpustat</code></pre>
+<h3 id="6-2-安装Tensorflow的GPU版本"><a href="#6-2-安装Tensorflow的GPU版本" class="headerlink" title="6.2 安装Tensorflow的GPU版本"></a>6.2 安装Tensorflow的GPU版本</h3><p>在安装了anaconda后，可以安装一个查看GPU状态的工具，通过pip进行安装即可：<code>pip install gpustat</code>。安装tensorflow直接执行<code>conda install tensorflow-gpu</code>，会自动安装tensorflow的GPU版本并将cuda的相关动态链接库安装好，cuda相关的动态库都已经安装在了<code>${CONDA_HOME}/anaconda3/lib</code>。</p>
+<p>由于conda上面支持的<code>tensorflow-gpu</code>版本，因此conda安装<code>tensorflow-gpu</code>会将cudnn，cuda以及mkl一起安装，版本会自动对应，因此相对来说比较容易，且不容易出错。</p>
+<p>还可以通过pip来安装最新的<code>tensorflow</code>版本：<code>pip install tensorflow-gpu</code>，pip会找到相应的版本安装。安装后可能会出现GPU不可用的情况，这种情况基本是tensorflow安装的版本问题。</p>
+<p>安装完成后进行测试：</p>
+<pre><code class="shell">&gt;&gt;&gt; hello = tf.constant(&#39;Hello, Tensorflow&#39;)
+&gt;&gt;&gt; sess = tf.Session()
+2018-04-16 02:26:55.745130: I tensorflow/core/platform/cpu_feature_guard.cc:140] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-04-16 02:26:56.924933: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:898] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-04-16 02:26:56.925576: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1344] Found device 0 with properties:
+name: GeForce GTX 1060 6GB major: 6 minor: 1 memoryClockRate(GHz): 1.7845
+pciBusID: 0000:02:00.0
+totalMemory: 5.94GiB freeMemory: 5.86GiB
+2018-04-16 02:26:56.992033: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:898] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-04-16 02:26:56.992277: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1344] Found device 1 with properties:
+name: GeForce GTX 1050 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.392
+pciBusID: 0000:01:00.0
+totalMemory: 3.94GiB freeMemory: 3.89GiB
+2018-04-16 02:26:56.992325: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1408] Ignoring visible gpu device (device: 1, name: GeForce GTX 1050 Ti, pci bus id: 0000:01:00.0, compute capability: 6.1) with Cuda multiprocessor count: 6. The minimum required count is 8. You can adjust this requirement with the env var TF_MIN_GPU_MULTIPROCESSOR_COUNT.
+2018-04-16 02:26:56.992342: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1423] Adding visible gpu devices: 0
+2018-04-16 02:26:57.159155: I tensorflow/core/common_runtime/gpu/gpu_device.cc:911] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-04-16 02:26:57.159213: I tensorflow/core/common_runtime/gpu/gpu_device.cc:917]      0 1
+2018-04-16 02:26:57.159237: I tensorflow/core/common_runtime/gpu/gpu_device.cc:930] 0:   N N
+2018-04-16 02:26:57.159245: I tensorflow/core/common_runtime/gpu/gpu_device.cc:930] 1:   N N
+2018-04-16 02:26:57.159377: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1041] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 5649 MB memory) -&gt; physical GPU (device: 0, name: GeForce GTX 1060 6GB, pci bus id: 0000:02:00.0, compute capability: 6.1)
+&gt;&gt;&gt; print(sess.run(hello))
+b&#39;Hello, Tensorflow&#39;</code></pre>
+<h3 id="6-3-安装keras"><a href="#6-3-安装keras" class="headerlink" title="6.3 安装keras"></a>6.3 安装keras</h3><p>安装keras较简单，直接用pip安装即可：<code>pip install keras</code>，会自动安装到site-packages，进入到/root/.keras/keras.json文件修改backed为tensorflow：</p>
+<pre><code class="json">{
+    &quot;floatx&quot;: &quot;float32&quot;,
+    &quot;epsilon&quot;: 1e-07,
+    &quot;backend&quot;: &quot;tensorflow&quot;,
+    &quot;image_data_format&quot;: &quot;channels_last&quot;
+}</code></pre>
+<h2 id="7-配置jupyter-notebook或jupyter-lab"><a href="#7-配置jupyter-notebook或jupyter-lab" class="headerlink" title="7.配置jupyter-notebook或jupyter-lab"></a>7.配置jupyter-notebook或jupyter-lab</h2><p>jupyter配置好后，可以远程连接服务器上的jupyter-server，方便多人使用anaconda的环境。首先，需要对jupyter的cnfig进行配置，先生成一个配置文件：</p>
+<pre><code class="shell">jupyter notebook --generate-config
+# Writing default config to: /root/.jupyter/jupyter_notebook_config.py</code></pre>
+<p>在设置服务器登陆的密码：</p>
+<pre><code class="python">In [1]: from notebook.auth import passwd
+
+In [2]: passwd()
+Enter password:
+Verify password:
+Out[2]: &#39;sha1:1c5cf71ad9a3:dad7ae0af719426816841d239f5e8247176dd0adsf&#39;</code></pre>
+<p>将生成的<code>sha1:...</code>复制下来在配置文件中进行配置(<code>vim ~/.jupyter/jupyter_notebook_config.py</code>)，配置项主要有：</p>
+<pre><code class="shell">c.NotebookApp.password =
+c.NotebookApp.port = 8888
+c.NotebookApp.allow_root = True
+c.NotebookApp.open_browser = False
+c.NotebookApp.notebook_dir = &#39;/opt/workspace&#39;</code></pre>
+<p>开放相应的端口：</p>
+<pre><code class="shell">[root@localhost cuda]# firewall-cmd --zone=public --add-port=8888/tcp --permanent
+[root@localhost cuda]# firewall-cmd --zone=public --add-port=8889/tcp --permanent
+[root@localhost cuda]# firewall-cmd --reload</code></pre>
+<h2 id="8-可能出现的错误及解决办法"><a href="#8-可能出现的错误及解决办法" class="headerlink" title="8.可能出现的错误及解决办法"></a>8.可能出现的错误及解决办法</h2><h3 id="8-1-出现错误-39-GLIBC-2-23-39-not-fund"><a href="#8-1-出现错误-39-GLIBC-2-23-39-not-fund" class="headerlink" title="8.1 出现错误&#39;GLIBC_2.23&#39; not fund"></a>8.1 出现错误<code>&#39;GLIBC_2.23&#39; not fund</code></h3><p><code>ImportError: /lib64/libm.so.6: version GLIBC_2.23&#39; not found (required by /opt/anaconda3/lib/python3.6/site-packages/tensorflow/python/_pywrap_tensorflow_internal.so)</code></p>
+<pre><code class="shell">mkdir ~/glibc
+cd ~/glibc 
+
+wget http://ftp.gnu.org/gnu/glibc/glibc-2.23.tar.gz
+tar zxvf glibc-2.23.tar.gz
+cd glibc-2.23
+mkdir build
+cd build
+
+../configure --prefix=/opt/glibc-2.23
+make -j4
+sudo make install
+
+export LD_LIBRARY_PATH=/opt/glibc-2.23/lib</code></pre>
+<p>这个错误修复后可能会出现python无法使用的情况。python最初是根据glibc-2.17安装的，因此python会出现问题。但是这种放肆能解决上面的错误。在其他场景能通过这种方式。</p>
+<h3 id="8-2出现错误：InvalidArgumentError"><a href="#8-2出现错误：InvalidArgumentError" class="headerlink" title="8.2出现错误：InvalidArgumentError"></a>8.2出现错误：<code>InvalidArgumentError</code></h3><p>出现错误如下，只检测到了CPU但是没有检测到GPU。基本是tensorflow的版本和cuda和cudnn的版本未匹配。如果可以通过conda来安装就通过conda安装，会自动匹配对应的版本。</p>
+<pre><code class="tex">(see above for traceback): Cannot assign a device for operation &#39;matmul/bias&#39;: Operation was illuminated assigned to /device:GPU:1 but available devices are [/job:localhost/replica:0/task:0/device :CPU:0 ]. Make sure the device specification refers to a valid device`</code></pre>
+<p>还有另外一个问题，只能检测到一个CPU，另外一个CPU不在GPU列表中，这种情况下主要是因为tensorflow单机默认只是用一个GPU，因此需要进行指定某个GPU，但是需要设置一个环境变量<code>TF_MIN_GPU_MULTIPROCESSOR_COUNT</code>。在系统种可以设置一个环境变量<code>export TF_MIN_GPU_MULTIPROCESSOR_COUNT=2</code>；在工程种应用时需要通过代码设置下环境变量，如下：</p>
+<pre><code class="python">import os
+os.environ[&#39;TF_MIN_GPU_MULTIPROCESSOR_COUNT&#39;] = &#39;2&#39;</code></pre>
+<h3 id="8-3-出现FutureWarning警告"><a href="#8-3-出现FutureWarning警告" class="headerlink" title="8.3 出现FutureWarning警告"></a>8.3 出现FutureWarning警告</h3><p>出现这个警告<code>FutureWarning: Conversion of the second argument of issubdtype from float to np.floating is deprecated. In future, it will be treated as np.float64 == np.dtype(float).type</code>.解决办法：更新_h5py_的版本到_2.8.0rc1_，通过<code>pip install h5py==2.8.0rc1</code>命令来更新。</p>
+<h2 id="9-Refrence"><a href="#9-Refrence" class="headerlink" title="9.Refrence"></a>9.Refrence</h2><p>1.<a href="https://wizardforcel.gitbooks.io/vbird-linux-basic-4e/content/204.html" target="_blank" rel="noopener">Linux驱动程序安装范例</a></p>
+<p>2.<a href="http://infonook.org/centos-bumblebee-nvidia/" target="_blank" rel="noopener">CentOS 7(1708) Intel+Nvidia双显卡笔记本安装Nvidia驱动并用Bumblebee控制独显</a></p>
+<p>3.<a href="https://wiki.archlinux.org/index.php/Bumblebee_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)" target="_blank" rel="noopener">Bumblebee wiki</a></p>
+<p>4.<a href="http://notes.maxwi.com/2017/02/26/ubuntu-cuda8-env-set/" target="_blank" rel="noopener">CUDA的安装配置</a></p>
+<p>5.<a href="http://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html#installlinux" target="_blank" rel="noopener">cuDNN官方配置</a></p>
+<p>6.<a href="https://ying-zhang.github.io/cloud/2017/setup-tensorflow-gpu-centos7/" target="_blank" rel="noopener">Centos7安装tensorflow深度学习环境</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/gpu/">gpu</a>
+                    
+                      <a class="hover-with-bg" href="/tags/deeplearning/">deeplearning</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/04/26/TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">TensorBoard的使用教程</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
+                        <span class="hidden-mobile">AWS上EC2主机(ubuntu)下对某个端口的开放</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "CentOS_7(1708)下基于Tensorflow对双GPU深度学习环境配置&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

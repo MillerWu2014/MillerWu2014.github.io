@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>python科学计算加速 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 四月 14日 2018, 9:15 上午
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="1-使用GPU"><a href="#1-使用GPU" class="headerlink" title="1.使用GPU"></a>1.使用GPU</h2><p>使用GPU有两种方式：numba和pycuda，可以通过这两个package和python实现CUDA程序。</p>
+<h3 id="1-1-numba"><a href="#1-1-numba" class="headerlink" title="1.1 numba"></a>1.1 numba</h3><p>CUDA官方加速是通过numba来使用GPU或CPU加速，在很早以前是通过numbapro实现的，属于收费版本，后面全部整合成了numba和accelerate，而且免费开放，在Anaconda环境下已经安装了numba，只需要使用即可。使用numba的GPU加速需要进行配置。具体配置方式可查看官方文档。</p>
+<p>Refrence</p>
+<p>[1].numba官方地址：<a href="http://numba.pydata.org/" target="_blank" rel="noopener">http://numba.pydata.org/</a></p>
+<p>[2].numba官方文档：<a href="http://numba.pydata.org/doc.html" target="_blank" rel="noopener">http://numba.pydata.org/doc.html</a></p>
+<p>[3].numba配置CUDA的GPU：<a href="http://blog.csdn.net/u013975830/article/details/78822919" target="_blank" rel="noopener">http://blog.csdn.net/u013975830/article/details/78822919</a><a id="more"></a></p>
+<h3 id="1-2-pycudapy"><a href="#1-2-pycudapy" class="headerlink" title="1.2 pycudapy"></a>1.2 pycudapy</h3><p>cuda也是提供python到gpu的接口，简单可以使用pycuda自身的接口实现，复杂的就需要自己实现cuda程序再通过pycuda实现。</p>
+<p>Refrence</p>
+<p>[1].CUDA和pycuda环境的配置：<a href="http://blog.csdn.net/zhouqingtaostudy/article/details/50896948" target="_blank" rel="noopener">http://blog.csdn.net/zhouqingtaostudy/article/details/50896948</a></p>
+<p>[2].pycuda的官网：<a href="https://documen.tician.de/pycuda/" target="_blank" rel="noopener">https://documen.tician.de/pycuda/</a>    <a href="https://mathema.tician.de/software/pycuda/" target="_blank" rel="noopener">https://mathema.tician.de/software/pycuda/</a></p>
+<p>[3].pycuda的tutorial翻译：<a href="http://blog.cycleuser.org/pycuda-tutorial-zhong-wen-ban.html" target="_blank" rel="noopener">http://blog.cycleuser.org/pycuda-tutorial-zhong-wen-ban.html</a></p>
+<p>[4].pycuda的notebook：<a href="http://nbviewer.jupyter.org/github/Kivy-CN/Duke-STA-633-CN/tree/master/%E5%B7%B2%E7%BB%8F%E7%BF%BB%E8%AF%91%E7%9A%84%E8%AE%B2%E5%BA%A7%E5%86%85%E5%AE%B9/Topic21_GPU_Computing/" target="_blank" rel="noopener">http://nbviewer.jupyter.org/github/Kivy-CN/Duke-STA-633-CN/tree/master/已经翻译的讲座内容/Topic21_GPU_Computing/</a></p>
+<p>[5].pycuda的翻译：<a href="https://zhuanlan.zhihu.com/p/32062796" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/32062796</a></p>
+<h2 id="2-使用C加速"><a href="#2-使用C加速" class="headerlink" title="2.使用C加速"></a>2.使用C加速</h2><p>python中可以使用c实现部分功能来进行加速，比如Cython，Cython也可以和numpy配合使用，来对numpy进行加速。</p>
+<h3 id="2-1-Cython加速"><a href="#2-1-Cython加速" class="headerlink" title="2.1 Cython加速"></a>2.1 Cython加速</h3><p>(1) 使用Cython和numpy结合    将两者结合使用可以有效的加速python中的核心代码，下面通过示例说明怎么结合。下面通过cython的形式实现一个矩阵点乘的方法，具体代码如下，文件名为<code>multi.pyx</code>：</p>
+<pre><code class="python">from __future__ import division
+cimport cython
+import numpy as np
+cimport numpy as np
+
+DTYPE = np.float64
+ctypedef np.float64_t DTYPE_t
+
+
+@cython.boundscheck(False)
+def multi_product(np.ndarray a, np.ndarray b):
+    &quot;&quot;&quot;
+    Parameters
+    ----------
+        a: np.ndarray, the shape of (m, n)
+        b: np.ndarray, the shape of (m, n)
+    return
+    ------
+        np.ndarray, return the array shape of (m, n)
+    &quot;&quot;&quot;
+    cdef int a_array_r = a.shape[0]
+    cdef int a_array_c = a.shape[1]
+    cdef int b_array_r = b.shape[0]
+    cdef int b_array_c = b.shape[1]
+    if a_array_r != b_array_r or a_array_c != b_array_c:
+        raise Exception(&quot;ValueError: operands could not be broadcast together with shapes %s %s&quot;
+                       %(str((a_array_r, a_array_c)), str((b_array_r, b_array_c))))
+     out = np.zeros((a_array_r, a_array_c))
+    for _r_ in range(a_array_r):
+        for _c_ in range(a_array_c):
+             out[_r_, _c_] = a[_r_, _c_] * b[_r_, _c_]
+    return out</code></pre>
+<p>创建一个setup.py的文件，类似c++中的makefile配置文件，setup.py文件内容主要时配置编译，具体代码如下所示：</p>
+<pre><code class="python">import numpy
+from distutils.core import setup, Extension
+from Cython.Distutils import build_ext
+
+setup(
+    cmdclass={&#39;build_ext&#39;: build_ext},
+    ext_modules=[
+                 Extension(&quot;multi&quot;, [&quot;multi.pyx&quot;],
+                 include_dirs=[numpy.get_include()])
+              ]
+)</code></pre>
+<p>上面setup.py文件中的include_dirs非常重要，否则在后面编译pyx文件时会出现一些错误：找不到”numpy/arrayobject.h”,因此需要在setup.py文件中将依赖的.h文件给添加上。下面通过命令进行编译即可：</p>
+<pre><code class="shell">python setup.py build_ext --inplace</code></pre>
+<p> 编译后会生成<code>.so</code>文件(linux，windows下为dll文件)。后面通过python直接引用该文件，调用其中的方法即可。下面对使用cython实现的点乘方法和numpy包的<code>multiply</code>方法效率进行对比：</p>
+<pre><code class="python">import timeit
+
+print(timeit.timeit(stmt=&quot;multi.multi_product(x, y)&quot;, setup=&quot;import multi; import numpy as np; x = np.array([[1, 2, 3], [2.4, 89.0, 11]]); y = np.array([[1, 2, 3], [2.4, 89.0, 11]])&quot;, number=10000))
+
+print(timeit.timeit(stmt=&quot;np.multiply(x, y)&quot;, setup=&quot;import numpy as np; x = np.array([[1, 2, 3], [2.4, 89.0, 11]]); y = np.array([[1, 2, 3], [2.4, 89.0, 11]])&quot;, number=10000))
+
+# -------- output -------------------
+0.03196066700184019
+0.006172515997604933</code></pre>
+<p>效率上还是比不上numpy，主要是因为numpy在这方面做了深度优化。但是比纯python实现的方法要快很多。<br>Refrence</p>
+<p>[1]Cython官方文档：<a href="http://cython.org/" target="_blank" rel="noopener">http://cython.org/</a></p>
+<p>[2].Cython基础教程中文版：<a href="https://moonlet.gitbooks.io/cython-document-zh_cn/content/ch1-basic_tutorial.html" target="_blank" rel="noopener">https://moonlet.gitbooks.io/cython-document-zh_cn/content/ch1-basic_tutorial.html</a></p>
+<p>[3].Cython中<code>def</code>, <code>cdef</code>和<code>cpdef</code>区别和使用：<a href="http://notes-on-cython.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener">http://notes-on-cython.readthedocs.io/en/latest/index.html</a></p>
+<p>[4].<a href="http://www.cnblogs.com/lidyan/p/7474244.html" target="_blank" rel="noopener">Cython中def,cdef,cpdef的区别</a>: <a href="http://www.cnblogs.com/lidyan/p/7474244.html" target="_blank" rel="noopener">http://www.cnblogs.com/lidyan/p/7474244.html</a></p>
+<h3 id="2-2-PyPy-加速"><a href="#2-2-PyPy-加速" class="headerlink" title="2.2 PyPy 加速"></a>2.2 <a href="http://pypy.org/" target="_blank" rel="noopener">PyPy</a> 加速</h3><p>PyPy是用<a href="https://baike.baidu.com/item/Python" target="_blank" rel="noopener">Python</a>实现的Python解释器。</p>
+<p>[1].用 Psyco 让 Python 运行得像 C 一样快：<a href="https://www.ibm.com/developerworks/cn/linux/sdk/python/charm-28/" target="_blank" rel="noopener">https://www.ibm.com/developerworks/cn/linux/sdk/python/charm-28/</a></p>
+<h3 id="2-3-numexpr加速"><a href="#2-3-numexpr加速" class="headerlink" title="2.3 numexpr加速"></a>2.3 numexpr加速</h3><p>使用numexpr[<a href="http://numexpr.readthedocs.io/en/latest/index.html" target="_blank" rel="noopener">http://numexpr.readthedocs.io/en/latest/index.html</a>]</p>
+<p>Refrence</p>
+<p>[1].优化 Python 性能：PyPy、Numba 与 Cython比较：<a href="https://www.zhihu.com/question/24695645" target="_blank" rel="noopener">https://www.zhihu.com/question/24695645</a></p>
+<p>[2].numpy的c-api接口：<a href="http://python.usyiyi.cn/documents/NumPy_v111/reference/c-api.html" target="_blank" rel="noopener">http://python.usyiyi.cn/documents/NumPy_v111/reference/c-api.html</a></p>
+<p>[3].python中使用C代码-以numpy为例：<a href="https://segmentfault.com/a/1190000000479951" target="_blank" rel="noopener">https://segmentfault.com/a/1190000000479951</a></p>
+<p>[4].<a href="https://github.com/johnnylee/python-numpy-c-extension-examples" target="_blank" rel="noopener">python-numpy-c-extension-examples</a>：<a href="https://github.com/johnnylee/python-numpy-c-extension-examples" target="_blank" rel="noopener">https://github.com/johnnylee/python-numpy-c-extension-examples</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Python/">Python</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/numba/">numba</a>
+                    
+                      <a class="hover-with-bg" href="/tags/cython/">cython</a>
+                    
+                      <a class="hover-with-bg" href="/tags/cuda/">cuda</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">AWS上EC2主机(ubuntu)下对某个端口的开放</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/01/22/Youth%E9%9D%92%E6%98%A5-%E5%A1%9E%E7%BC%AA%E5%B0%94%C2%B7%E5%8E%84%E5%B0%94%E6%9B%BC/">
+                        <span class="hidden-mobile">Youth青春-塞缪尔·厄尔曼</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "python科学计算加速&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>对pyc和pyo文件的理解 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期二, 十月 10日 2017, 10:24 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2.2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      7 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="1-python的基本运行机制"><a href="#1-python的基本运行机制" class="headerlink" title="1. python的基本运行机制"></a>1. python的基本运行机制</h2><p>作为<code>Python</code>爱好者，需要了解<code>.py</code>脚本的<strong>基本运行机制</strong>及<strong>特性</strong>：在很多工作上<code>Python</code>的运行流程基本上<strong>取决于用户</strong>，因此源码不需要编译成二进制代码(否则无法实现大部分贴近用户的特性)，而直接从源码运行程序。当我们运行<code>python</code>文件程序的时候，<code>Python</code>解释器将<strong>源码</strong>转换为<strong>字节码</strong>，然后再由<strong>解释器</strong>来执行这些字节码。<br>因此总的来说，它具有以下三条特性：</p>
+<ol>
+<li>源码<strong>距离底层更远</strong>(根据官方文档的解释。不说，也感觉得到)</li>
+<li>运行时<strong>都需要生成字节码</strong>，交由<strong>虚拟机</strong>执行。(虚拟机在哪儿！你们也不看看各自都是用什么软件执行的！没错，就是解释器，别和我说是<code>IDLE</code>啊。虚拟机具体实现了由<code>switch-case</code>语句构成的框架函数<em><code>PyEval_EvalFrameEx</code></em>，刚刚说的字节码就是这货执行的)</li>
+<li>每次执行脚本，虚拟机<strong>总要多出加载和链接的流程</strong>。<a id="more"></a>
+
+</li>
+</ol>
+<h2 id="2-执行脚本的过程"><a href="#2-执行脚本的过程" class="headerlink" title="2. 执行脚本的过程"></a>2. 执行脚本的过程</h2><p>那么，有人要问了：不是说，运行时总要生成字节码么！那，字节码都去哪儿了？先说说，虚拟机它是怎么执行脚本的</p>
+<ol>
+<li>完成模块的加载和链接；</li>
+<li>将源代码翻译为<code>PyCodeObject</code>对象(这货就是字节码)，并将其写入内存当中(方便<code>CPU</code>读取，起到加速程序运行的作用)；</li>
+<li>从上述内存空间中读取指令并执行；</li>
+<li>程序结束后，根据命令行调用情况(即运行程序的方式)决定是否将<code>PyCodeObjec</code>t写回硬盘当中(也就是直接复制到<code>.pyc</code>或<code>.pyo</code>文件中)；</li>
+<li>之后若再次执行该脚本，则先检查本地是否有上述字节码文件。有则执行，否则重复上述步骤。</li>
+</ol>
+<p>在我们点击(或输入命令)运行脚本，并悠闲地喝咖啡时，虚拟机做了这么多的事情。不过，你有没有发现<code>.pyc</code>或<code>.pyo</code>文件是否生成，是取决于我们如何运行程序的。</p>
+<h2 id="3-pyc和pyo文件的生成"><a href="#3-pyc和pyo文件的生成" class="headerlink" title="3. pyc和pyo文件的生成"></a>3. pyc和pyo文件的生成</h2><p>虚拟机也是讲究效率的。毕竟对于比较大的项目，要将<code>PyCodeObject</code>写回硬盘也是不可避免地要花些时间的，而且它又不知道你是不是也就只执行一次，之后就对刚刚跑完的脚本弃之不顾了呢。不过，它其实也有贴心的一面。比如，</p>
+<ul>
+<li>若你在命令行直接输入<code>python path/to/projectDir</code>(假设<code>projectDir</code>目录含有<code>__main__.py</code>文件，以及其他将要调用的模块)，那么程序运行结束后便自动为当前目录下所有的脚本生成字节码文件，并保存于本地新文件夹<code>__pycache__</code>当中。(这也有可能是<code>IDE</code>写小项目时自动生成<code>.pyc</code>文件的原因，不过问题描述略微暧昧。详情参见上面知乎问题板块)</li>
+</ul>
+<p>或者是，在命令行输入<code>python path/to/projectDir/__main__.py</code>，则生成除<code>__main__.py</code>外脚本的字节码文件。不过总的来说，上述这两种行为都大大缩短了项目运行前的准备时间（毕竟分工明确的程序，规模应该不会太小，复用率也不会太低。除非吃饱了撑着，搞出这么多事情</p>
+<ul>
+<li>模块在每次导入前总会<strong>检查其字节码文件的修改时间是否与自身的一致</strong>。若是则直接从该字节码文件读取内容，否则源模块重新导入，并在最后生成同名文件覆盖当前已有的字节码，从而完成内容的更新(详见<code>import.py</code>)。这样，就避免了修改源代码后与本地字节码文件产生冲突(当然，设计者也不会这么傻。</li>
+</ul>
+<ul>
+<li><p><strong><code>.pyc文件</code></strong>是由<code>.py</code>文件经过编译后生成的字节码文件，其<strong>加载速度相对于之前的<code>.py</code>文件有所提高</strong>，而且还可以<strong>实现源码隐藏</strong>，以及<strong>一定程度上的反编译</strong>。比如，<code>Python3.3</code>编译生成的<code>.pyc</code>文件，<code>Python3.4</code>就别想着去运行啦！</p>
+</li>
+<li><p><strong><code>.pyo</code>文件</strong>也是<strong>优化</strong>(注意这两个字，便于后续的理解)编译后的程序(<strong>相比于<code>.pyc</code>文件更小</strong>)，也可以<strong>提高加载速度</strong>。但对于嵌入式系统，它可将所需模块编译成<code>.pyo</code>文件以<strong>减少容量</strong>。</p>
+<p>但总的来说，作用上是几乎与原来的<code>.py</code>脚本没有区别的，也就是然并卵 (当然，并非毫无作用。比如，我个人觉得用处最大的地方就是<strong>防止别人偷看我的代码</strong>。毕竟<code>.py</code>源文件是直接以源码的形式呈现给大家的)。呃…这么说，好像又有点自相矛盾的赶脚。</p>
+</li>
+</ul>
+<p><code>Python</code>选项</p>
+<ul>
+<li><em><code>-O</code></em>，表示<strong>优化生成.pyo字节码</strong>(这里又有优化两个字，得注意啦！)</li>
+<li><em><code>-OO</code></em>，表示进一步<strong>移除*</strong><code>-O</code><em>选项生成的字节码文件中的*</em>文档字符串*<em>(这是在作用效果上解释的，而不是说从</em><code>-O</code>*选项得到的文件去除)</li>
+<li><em><code>-m</code></em>，表示<strong>导入并运行指定的模块</strong></li>
+</ul>
+<p>对此，我们可以使用如下格式运行<code>.py</code>文件来生成<code>.pyc</code>文件(以下调用均假设<code>/path/to</code>目录含有<code>.py</code>脚本)：</p>
+<pre><code class="python">python -m py_compile /path/to/需要生成.pyc的脚本.py 
+#若批量处理.py文件
+#则替换为/path/to/{需要生成.pyc的脚本1,脚本2,...}.py
+#或者/path/to/</code></pre>
+<p>效果等同于下面:</p>
+<pre><code class="python">import py_compile
+py_compile.compile(r&#39;/path/to/需要生成.pyc的脚本.py&#39;) 
+#同样也可以是包含.py文件的目录路径
+#此处尽可能使用raw字符串，从而避免转义的麻烦。比如，这里不加“r”的话，你就得对斜杠进行转义</code></pre>
+<h2 id="3-py-compile模块"><a href="#3-py-compile模块" class="headerlink" title="3. py_compile模块"></a>3. py_compile模块</h2><p><code>py_compile</code>是<code>Python</code>的自带模块，这里面就两个函数。其下的<code>py_compile.compile*(*file*[, *cfile*[, *dfile*[, *doraise*]]])</code>可将<code>.py</code>文件编译生成<code>.pyc</code>文件，对应的参数解释如下</p>
+<ol>
+<li><em><code>file</code></em>，表示需要生成<code>.pyc</code>或<code>.pyo</code>文件的<strong>源脚本名</strong>(字符串)；</li>
+<li><em><code>cfile</code></em>，表示需要生成<code>.pyc</code>或<code>.pyo</code>文件的<strong>目标脚本名</strong>。呃…好像没有区别，也就是源脚本—–目标脚本。当然，它默认是以<code>.pyc</code>为扩展名的路径名的字符串。此外，当且仅当所使用的解释器允许编译成<code>.pyo</code>文件，才能以<code>.pyo</code>结尾。</li>
+<li><em><code>dfile</code></em>，表示编译出错时，<strong>将报错信息中的名字<code>file</code>替换为<code>dfile</code></strong>。</li>
+<li><em><code>doraise</code></em>，<strong>设置是否忽略异常</strong>。若为<code>True</code>，则抛出<code>PyCompileError</code>异常；否则直接将错误信息写入<code>sys.stderr</code>（什么！不知道<code>sys.stderr</code>！温馨提示：<code>sys.stderr</code>是<code>Python</code>自带的<strong>标准错误输出</strong>)</li>
+</ol>
+<pre><code class="python">python -O -m py_compile /path/to/需要生成.pyo的脚本.py</code></pre>
+<p>那么，有人要问了：为什么不是像生成<code>.pyc</code>文件那样采用<em><code>python -O /path/to/</code>需要生成<code>pyo</code>的脚本<code>.py</code></em>形式的调用？<br>忘记说明这一点了，很多博客以及书籍都像我上面那样解释<em><code>-O</code></em>选项的作用，但详细来解释的话是：    </p>
+<p>-O <strong>选项，将<code>.pyc</code>文件优化(注意我一直强调的优化二字，这里就用到啦！)</strong>为<code>.pyo</code>文件，而不是将<code>.py</code>文件优化编译为<code>.pyo</code>文件。(其直接的结果是优化编译后的文件略微小于<code>.pyc</code>文件，也就是减肥了。现在，大家知道<code>.pyo</code>文件为什么小的原因了吧！)</p>
+<h2 id="4-注意"><a href="#4-注意" class="headerlink" title="4. 注意"></a>4. 注意</h2><p>以上无论是生成<code>.pyc</code>还是<code>.pyo</code>文件，都将在当前脚本的目录下生成一个含有字节码的文件夹<strong><code>__pycache__</code></strong>。</p>
+<p>可能还有人会问，<strong><code>pyd</code>文件</strong>又是什么，别在意，那只是<code>Python</code>的动态链接库。如果要深究，还得扯上<code>C++</code>的知识</p>
+<p>再啰嗦一句：生成字节码的方法多了去了，不止以上这几种。比如，你们不妨试试将上面命令行调用中的<em><code>py_compile</code></em>改成<em><code>compileall</code></em>，而代码行中的<em>`py_compile.compile</em><code>改成*</code>compileall.compile_file<code>*或*</code>compileall.compile_dir`*，又或者直接使用带有编译功能的IDE生成字节码。</p>
+<p>再再啰嗦一句：知道<code>Python</code>运行机制，并不是我们一般人所必须的。但是，了解其加速程序运行以及优化代码的设计思想，对于我们在日后构造缓存系统、如何减少不必要的运行时间，以及同步更新工作内容等问题上起到很大的借鉴作用。</p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Python/">Python</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/python/">python</a>
+                    
+                      <a class="hover-with-bg" href="/tags/compile/">compile</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/10/13/%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">使用python连接hive数据库并进行数据操作</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2017/09/05/%E5%9F%BA%E4%BA%8EMLE%E7%9A%84logistic%E6%A8%A1%E5%9E%8B/">
+                        <span class="hidden-mobile">基于MLE的logistic模型</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "对pyc和pyo文件的理解&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

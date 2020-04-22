@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>特征可视化和特征降维算法T-SNE模型详解 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 七月 6日 2017, 8:20 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.6k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <blockquote>
+<p>T-SNE(<code>t-distributed stochastic neighbor embedding</code>)是用于降维的一种机器学习算法，是由 Laurens van der Maaten 和 Geoffrey Hinton在08年提出来。此外，<code>t-SNE</code> 是一种非线性降维算法，非常适用于高维数据降维到2维或者3维，进行可视化。t-SNE是由SNE(<code>Stochastic Neighbor Embedding, SNE; Hinton and Roweis</code>, 2002)发展而来。我们先介绍SNE的基本原理，之后再扩展到t-SNE。最后再看一下t-SNE的实现以及一些优化。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="1-SNE"><a href="#1-SNE" class="headerlink" title="1. SNE"></a>1. SNE</h2><h3 id="1-1-基本原理"><a href="#1-1-基本原理" class="headerlink" title="1.1 基本原理"></a>1.1 基本原理</h3><p>SNE是通过仿射(<code>affinitie</code>)变换将数据点映射到概率分布上，主要包括两个步骤：</p>
+<ul>
+<li>SNE构建一个高维对象之间的概率分布，使得相似的对象有更高的概率被选择，而不相似的对象有较低的概率被选择。</li>
+<li>SNE在低维空间里在构建这些点的概率分布，使得这两个概率分布之间尽可能的相似。</li>
+</ul>
+<p>我们看到<code>t-SNE</code>模型是非监督的降维，他跟<code>kmeans</code>等不同，他不能通过训练得到一些东西之后再用于其它数据（比如<code>kmeans</code>可以通过训练得到k个点，再用于其它数据集，而<code>t-SNE</code>只能单独的对数据做操作，也就是说他只有<code>fit\_transform</code>，而没有<code>fit</code>操作）</p>
+<h3 id="1-2-SNE原理推导"><a href="#1-2-SNE原理推导" class="headerlink" title="1.2 SNE原理推导"></a>1.2 SNE原理推导</h3><p><code>SNE</code>是先将欧几里得距离转换为条件概率来表达点与点之间的相似度。具体来说，给定一个N个高维的数据$x_1,…,x_n$注（意N不是维度）, <code>t-SNE</code>首先是计算概率$p_{ij}$)，正比于$x_i$和$x_j$之间的相似度（这种概率是我们自主构建的），即：<br>$${p_ {j \mid i} = \frac{\exp(- \mid  \mid  x_i -x_j  \mid  \mid  ^2 / (2 \sigma^2_i ))} {\sum_{k \neq i} \exp(- \mid  \mid  x_i - x_k  \mid  \mid  ^2 / (2 \sigma^2_i))}}$$<br>这里的有一个参数是$\sigma_i$，对于不同的点$x_i$取值不一样，后续会讨论如何设置。此外设置$p_{x|x}=0$,因为我们关注的是两两之间的相似度。那对于低维度下的$y_i$，我们可以指定高斯分布为方差为$\frac{1}{\sqrt{2}}$，因此它们之间的相似度如下:<br>$${q_ {j \mid i} = \frac{\exp(- \mid  \mid  x_i -x_j  \mid  \mid  ^2)} {\sum_{k \neq i} \exp(- \mid  \mid  x_i - x_k  \mid  \mid  ^2)}}$$<br>同样，设定$q_{i|i}=0$。如果降维的效果比较好，局部特征保留完整，那么$p_{i \mid j} = q_{i \mid j}$, 因此我们优化两个分布之间的距离-KL散度(<code>Kullback-Leibler divergences</code>)，那么目标函数(<code>cost function</code>)如下:<br>$$C = \sum_i KL(P_i  \mid  \mid  Q_i) = \sum_i \sum_j p_{j \mid i} \log \frac{p_{j \mid i}}{q_{j \mid i}}$$<br>这里的$p_i$表示了给定点$x_i$下，其他所有数据点的条件概率分布。需要注意的是<strong>KL散度具有不对称性</strong>，在低维映射中不同的距离对应的惩罚权重是不同的，具体来说：距离较远的两个点来表达距离较近的两个点会产生更大的<code>cost</code>，相反，用较近的两个点来表达较远的两个点产生的<code>cost</code>相对较小(注意：类似于回归容易受异常值影响，但效果相反)。即用较小的 $q_{j \mid i}=0.2$来建模较大的 $p_{j \mid i}=0.8$，$cost=p \log(\frac{p}{q})=1.11$,同样用较大的$q_{j \mid i}=0.8$来建模较小的$p_{j \mid i}=0.2$, $cost=-0.277$, 因此，<strong><code>SNE</code>会倾向于保留数据中的局部特征</strong>。</p>
+<blockquote>
+<p><strong>思考:了解了基本思路之后，你会怎么选择$\sigma$，固定初始化?</strong></p>
+</blockquote>
+<p>下面我们开始正式的推导SNE。首先不同的点具有不同的$\sigma_i$，$P_i$的熵(<code>entropy</code>)会随着$\sigma_i$的增加而增加。<code>SNE</code>使用困惑度(<code>perplexity</code>)的概念，用二分搜索的方式来寻找一个最佳的$\sigma$。其中困惑度指:<br>$$Perp(P_i) = 2^{H(P_i)}$$<br>这里的$H(P_i)$是$P_i$的熵，即:<br>$$H(P_i) = -\sum_j p_{j \mid i} \log_2 p_{j \mid i}$$<br>困惑度可以解释为一个点附近的有效近邻点个数。<code>SNE</code>对困惑度的调整比较有鲁棒性，通常选择<code>5-50</code>之间，给定之后，使用二分搜索的方式寻找合适的$\sigma$。<br>那么核心问题是如何求解梯度了,目标函数等价于$\sum \sum - p log(q)$这个式子与<code>softmax</code>非常的类似，我们知道<code>softmax</code>的目标函数是$\sum -y \log p$，对应的梯度是$y - p$(注：这里的<code>softmax</code>中<code>y</code>表示<code>label</code>，<code>p</code>表示预估值)。 同样我们可以推导<code>SNE</code>的目标函数中的<code>i</code>在<code>j</code>下的条件概率情况的梯度是$2(p_{j \mid i}-q_{j \mid i})(y_i-y_j)$， 同样<code>j</code>在<code>i</code>下的条件概率的梯度是$2(p_{j \mid i}-q_{j \mid i})(y_i-y_j)$, 最后得到完整的梯度公式如下:<br>$$\frac{\delta C}{\delta y_i} = 2 \sum_j (p_{j \mid i} - q_{j \mid i} + p_{i \mid j} - q_{i \mid j})(y_i - y_j)$$<br>在初始化中，可以用较小的$\sigma$下的高斯分布来进行初始化。为了加速优化过程和避免陷入局部最优解，梯度中需要使用一个相对较大的动量(<code>momentum</code>)。即参数更新中除了当前的梯度，还要引入之前的梯度累加的指数衰减项，如下:<br>$$Y^{(t)} = Y^{(t-1)} + \eta \frac{\delta C}{\delta Y} + \alpha(t)(Y^{(t-1)} - Y^{(t-2)})$$<br>这里的$Y^{(t)}$表示迭代<code>t</code>次的解，$\eta$表示学习速率,$\alpha(t)$表示迭代<code>t</code>次的动量。此外，在初始优化的阶段，每次迭代中可以引入一些高斯噪声，之后像模拟退火一样逐渐减小该噪声，可以用来避免陷入局部最优解。因此，<code>SNE</code>在选择高斯噪声，以及学习速率，什么时候开始衰减，动量选择等等超参数上，需要跑多次优化才可以。</p>
+<blockquote>
+<p><strong>思考:SNE有哪些不足？ 面对SNE的不足，你会做什么改进？</strong></p>
+</blockquote>
+<h2 id="2-T-SNE"><a href="#2-T-SNE" class="headerlink" title="2. T-SNE"></a>2. T-SNE</h2><p>尽管<code>SNE</code>提供了很好的可视化方法，但是他很难优化，而且存在<code>crowding problem</code>(拥挤问题)。后续中，<code>Hinton</code>等人又提出了<code>t-SNE</code>的方法。与<code>SNE</code>不同，主要如下:</p>
+<ul>
+<li>使用对称版的<code>SNE</code>，简化梯度公式</li>
+<li>低维空间下，使用<code>t</code>分布替代高斯分布表达两点之间的相似度</li>
+</ul>
+<p><code>t-SNE</code>在低维空间下使用更重长尾分布的<code>t</code>分布来避免<code>crowding</code>问题和优化问题。在这里，首先介绍一下对称版的<code>SNE</code>，之后介绍<code>crowding</code>问题，之后再介绍<code>t-SNE</code></p>
+<h3 id="2-1-Symmetric-SNE"><a href="#2-1-Symmetric-SNE" class="headerlink" title="2.1 Symmetric SNE"></a>2.1 Symmetric SNE</h3><p>优化$p_{i \mid j}$和$q_{i \mid j}$的<code>KL</code>散度的一种替换思路是，使用联合概率分布来替换条件概率分布，即<code>P</code>是高维空间里各个点的联合概率分布，<code>Q</code>是低维空间下的，目标函数为:<br>$$C = KL(P \mid  \mid Q) = \sum_i \sum_j p_{i,j} \log \frac{p_{ij}}{q_{ij}}$$<br>这里的$p_{ii}$,$q_{ii}$为0，我们将这种<code>SNE</code>称之为<code>symmetric SNE</code>(对称<code>SNE</code>)，因为他假设了对于任意<code>i</code>,$p_{ij} = p_{ji}, q_{ij} = q_{ji}$，因此概率分布可以改写为:<br>$$p_{ij} = \frac{\exp(- \mid  \mid x_i - x_i \mid  \mid ^2 / 2\sigma^2)}{\sum_{k \neq l} \exp(- \mid  \mid x_i-x_j \mid  \mid ^2 / 2\sigma^2)}  \ \ \ \  q_{ij} = \frac{\exp(- \mid  \mid y_i - y_i \mid  \mid ^2)}{\sum_{k \neq l} \exp(- \mid  \mid y_i-y_j \mid  \mid ^2)}$$<br>这种表达方式，使得整体简洁了很多。但是会引入异常值的问题。比如$x_i$是异常值，那么$∣∣x_i−x_j∣∣^2$会很大，对应的所有的<code>j</code>,$p_{il}$都会很小(之前是仅在$x_i$下很小)，导致低维映射下的$y_i$对<code>cost</code>影响很小。</p>
+<blockquote>
+<p><strong>思考: 对于异常值，你会做什么改进？pipi表示什么？</strong></p>
+</blockquote>
+<p>为了解决这个问题，我们将联合概率分布定义修正为: $p_{ij} = \frac{p_{i \mid j} + p_{j \mid i}}{2}$, 这保证了$\sum_j p_{ij} \gt \frac{1}{2n}$, 使得每个点对于<code>cost</code>都会有一定的贡献。对称<code>SNE</code>的最大优点是梯度计算变得简单了，如下:<br>$$\frac{\delta C}{\delta y_i} = 4 \sum_j (p_{ij} - q_{ij})(y_i - y_j)$$<br>实验中，发现对称<code>SNE</code>能够产生和<code>SNE</code>一样好的结果，有时甚至略好一点。</p>
+<h3 id="2-2-Crowding问题"><a href="#2-2-Crowding问题" class="headerlink" title="2.2 Crowding问题"></a>2.2 Crowding问题</h3><p>拥挤问题就是说各个簇聚集在一起，无法区分。比如有一种情况，高维度数据在降维到10维下，可以有很好的表达，但是降维到两维后无法得到可信映射，比如降维如10维中有11个点之间两两等距离的，在二维下就无法得到可信的映射结果(最多3个点)。 进一步的说明，假设一个以数据点$x_i$为中心，半径为r的m维球(三维空间就是球)，其体积是按$r^m$增长的，假设数据点是在m维球中均匀分布的，我们来看看其他数据点与$x_i$的距离随维度增大而产生的变化。<br><img src="/uploads/f1.png" srcset="/img/loading.gif" alt=""><br>从上图可以看到，随着维度的增大，大部分数据点都聚集在m维球的表面附近，与点$x_i$的距离分布极不均衡。如果直接将这种距离关系保留到低维，就会出现拥挤问题。</p>
+<blockquote>
+<p><strong>怎么解决crowding问题呢?</strong></p>
+</blockquote>
+<p><code>Cook et al.(2007)</code> 提出一种<code>slight repulsion</code>的方式，在基线概率分布(<code>uniform background</code>)中引入一个较小的混合因子$\rho$,这样$q_{ij}$就永远不会小于\frac{2 \rho}{n(n-1)}(因为一共了<code>n(n-1)</code>个<code>pairs</code>)，这样在高维空间中比较远的两个点之间的$q_{ij}$总是会比$p_{ij}$大一点。这种称之为<code>UNI-SNE</code>，效果通常比标准的<code>SNE</code>要好。优化<code>UNI-SNE</code>的方法是先让$\rho$为0，使用标准的<code>SNE</code>优化，之后用模拟退火的方法的时候，再慢慢增加$\rho$. 直接优化<code>UNI-SNE</code>是不行的(即一开始$\rho$不为0)，因为距离较远的两个点基本是一样的$q_{ij}$(等于基线分布), 即使$p_{ij}$很大，一些距离变化很难在$q_{ij}$中产生作用。也就是说优化中刚开始距离较远的两个聚类点，后续就无法再把他们拉近了。</p>
+<h3 id="2-3-t-sne"><a href="#2-3-t-sne" class="headerlink" title="2.3 t-sne"></a>2.3 t-sne</h3><p>对称<code>SNE</code>实际上在高维度下 另外一种减轻”拥挤问题”的方法：在高维空间下，在高维空间下我们使用高斯分布将距离转换为概率分布，在低维空间下，我们使用更加偏重长尾分布的方式来将距离转换为概率分布，使得高维度下中低等的距离在映射后能够有一个较大的距离。<br><img src="/uploads/f2.png" srcset="/img/loading.gif" alt=""><br>我们对比一下高斯分布和<code>t</code>分布(如上图), <code>t</code>分布受异常值影响更小，拟合结果更为合理，较好的捕获了数据的整体特征。使用了<code>t</code>分布之后的<code>q</code>变化，如下:<br>$$q_{ij} = \frac{(1 +  \mid  \mid y_i -y_j \mid  \mid ^2)^{-1}}{\sum_{k \neq l} (1 +  \mid  \mid y_i -y_j \mid  \mid ^2)^{-1}}$$<br>此外，<code>t</code>分布是无限多个高斯分布的叠加，计算上不是指数的，会方便很多。优化的梯度如下:<br>$$\frac{\delta C}{\delta y_i} = 4 \sum_j(p_{ij}-q_{ij})(y_i-y_j)(1+ \mid  \mid y_i-y_j \mid  \mid ^2)^{-1}$$<br><img src="/uploads/f3.png" srcset="/img/loading.gif" alt=""><br><code>t-sne</code>的有效性，也可以从上图中看到：横轴表示距离，纵轴表示相似度, 可以看到，对于较大相似度的点，<code>t</code>分布在低维空间中的距离需要稍小一点；而对于低相似度的点，<code>t</code>分布在低维空间中的距离需要更远。这恰好满足了我们的需求，即同一簇内的点(距离较近)聚合的更紧密，不同簇之间的点(距离较远)更加疏远。</p>
+<p>总结一下，t-SNE的梯度更新有<strong>两大优势</strong>：</p>
+<ul>
+<li>对于不相似的点，用一个较小的距离会产生较大的梯度来让这些点排斥开来。</li>
+<li>这种排斥又不会无限大(梯度中分母)，避免不相似的点距离太远。</li>
+</ul>
+<h3 id="2-4-算法过程"><a href="#2-4-算法过程" class="headerlink" title="2.4 算法过程"></a>2.4 算法过程</h3><ul>
+<li>Data: $X = {x_1, … , x_n}$</li>
+<li>计算<code>cost function</code>的参数：困惑度<code>Perp</code></li>
+<li>优化参数: 设置迭代次数<code>T</code>， 学习速率$\eta$, 动量$\alpha(t)$</li>
+<li>目标结果是低维数据表示$Y^T = {y_1, … , y_n}$</li>
+<li>开始优化<ul>
+<li>计算在给定<code>Perp</code>下的条件概率$p_{j \mid i}$(参见上面公式)</li>
+<li>令 $p_{ij} = \frac{p_{j \mid i} + p_{i \mid j}}{2n}$</li>
+<li>用N(0, 10^{-4}I)随机初始化<code>Y</code></li>
+<li>迭代，从 <code>t = 1</code> 到 <code>T</code>， 做如下操作:<ul>
+<li>计算低维度下的$q_{ij}$(参见上面的公式)</li>
+<li>计算梯度（参见上面的公式）</li>
+<li>更新$Y^{t} = Y^{t-1} + \eta \frac{dC}{dY} + \alpha(t)(Y^{t-1} - Y^{t-2})$</li>
+</ul>
+</li>
+<li>结束</li>
+</ul>
+</li>
+<li>结束</li>
+</ul>
+<p><strong>优化过程中可以尝试的两个<code>trick</code>:</strong></p>
+<ul>
+<li>提前压缩(<code>early compression</code>):开始初始化的时候，各个点要离得近一点。这样小的距离，方便各个聚类中心的移动。可以通过引入<code>L2</code>正则项(距离的平方和)来实现。</li>
+<li>提前夸大(<code>early exaggeration</code>)：在开始优化阶段，$p_{ij}$乘以一个大于1的数进行扩大，来避免因为$q_{ij}$太小导致优化太慢的问题。比如前50次迭代，$p_{ij}$乘以4</li>
+</ul>
+<h3 id="2-5-不足"><a href="#2-5-不足" class="headerlink" title="2.5 不足"></a>2.5 不足</h3><p><strong>主要不足有四个:</strong></p>
+<ul>
+<li>主要用于可视化，很难用于其他目的。比如测试集合降维，因为他没有显式的预估部分，不能在测试集合直接降维；比如降维到10维，因为t分布偏重长尾，1个自由度的t分布很难保存好局部特征，可能需要设置成更高的自由度。</li>
+<li>t-SNE倾向于保存局部特征，对于本征维数(intrinsic dimensionality)本身就很高的数据集，是不可能完整的映射到2-3维的空间</li>
+<li>t-SNE没有唯一最优解，且没有预估部分。如果想要做预估，可以考虑降维之后，再构建一个回归方程之类的模型去做。但是要注意，t-sne中距离本身是没有意义，都是概率分布问题。</li>
+<li>训练太慢。有很多基于树的算法在t-sne上做一些改进</li>
+</ul>
+<h2 id="3-变种"><a href="#3-变种" class="headerlink" title="3. 变种"></a>3. 变种</h2><ul>
+<li><code>multiple maps of t-SNE</code></li>
+<li><code>parametric t-SNE</code></li>
+<li><code>Visualizing Large-scale and High-dimensional Data</code></li>
+</ul>
+<h2 id="4-参考资料"><a href="#4-参考资料" class="headerlink" title="4. 参考资料"></a>4. 参考资料</h2><ul>
+<li><a href="http://www.datakit.cn/blog/2017/02/05/t_sne_full.html" target="_blank" rel="noopener">t-sne完整学习笔记</a></li>
+<li><a href="http://blog.csdn.net/lzl1663515011/article/details/46328337" target="_blank" rel="noopener">t-sne算法理解</a></li>
+</ul>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E7%89%B9%E5%BE%81%E8%BF%87%E7%A8%8B/">特征过程</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E9%99%8D%E7%BB%B4/">降维</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/07/08/%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">使用spark读取mysql数据库数据转化为dataframe</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2017/07/03/%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC/">
+                        <span class="hidden-mobile">用spark对时间数据进行分组求平均值</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "特征可视化和特征降维算法T-SNE模型详解&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

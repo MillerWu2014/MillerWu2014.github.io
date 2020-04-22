@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>深度学习-详解LSTM网络和TensorFlow实现 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 六月 21日 2018, 10:32 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    3.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      13 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>LSTM网络是RNN网络中的特殊网络，再RNN文章中已经提到，RNN在时间步过长时，学习不到依赖关系。主要是RNN会引起梯度消失和梯度爆炸这两个问题，因此为了解决问题，研究者们提出了很多方式，其中GRU和LSTM网络就是这样诞生的。LSTM网络在应用中也取得了非凡的成就，特别是在语音识别，语言建模，翻译等等方面。</p>
+<p>##1.长期依赖问题 </p>
+<p>RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是<code>time step</code>过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。</p>
+<h2 id="2-什么是LSTM网络"><a href="#2-什么是LSTM网络" class="headerlink" title="2.什么是LSTM网络"></a>2.什么是LSTM网络</h2><p>LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？</p>
+<p>在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。</p>
+<p>下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，<code>LSTM Cell</code>中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。</p>
+<img src="\uploads\LSTM.png" srcset="/img/loading.gif" style="zoom:30" />
+<a id="more"></a>
+
+<h2 id="3-LSTM结构详解"><a href="#3-LSTM结构详解" class="headerlink" title="3.LSTM结构详解"></a>3.LSTM结构详解</h2><p>从上面中也提出了<code>LSTM Cell</code>中主要通过gate的方式在RNN基础上进行变换的。具体<code>LSTM Cell</code>的结构如下所示，主要通过三道<code>gate</code>（门）来控制输入，输出等，这个门来选择性的控制信息的是否通过。主要是通过sigmod神经网络层和一个元素的乘积实现门的控制。</p>
+<img src="\uploads\lstm_cell.png" srcset="/img/loading.gif" style="zoom:50%" />
+
+<h3 id="3-1-LSTM分步详解"><a href="#3-1-LSTM分步详解" class="headerlink" title="3.1 LSTM分步详解"></a>3.1 LSTM分步详解</h3><p><code>LSTM Cell</code>的整体输入有：$X_t$，$h_{t-1}$，$c_{t-1}$，而整体输出和RNN的输出一致，主要是$h_t$，$z_t$；而$c_t$主要是在循环过程中使用。而<code>LSTM Cell</code>中最关键的就是<code>gate</code>实现，而<code>LSTM</code>的三道门主要作用是不一样的，分别为”遗忘门”，”输入门”，”输出门”；下面分别对这三道门进行分别详细说明。</p>
+<h4 id="3-1-1-Forget-Gate"><a href="#3-1-1-Forget-Gate" class="headerlink" title="3.1.1 Forget Gate"></a>3.1.1 Forget Gate</h4><p>遗忘门主要对$h_{t-1}$和$x_t$进行观察，对记忆单元$C_{t-1}$的元素选择性的遗忘，遗忘门输出的是0-1的数，1表示完全保留该消息，0表示遗忘该消息。遗忘门输出一个$f_t$，公式为：<br>$$<br>f_t=\sigma(W_f \cdot [x_t, h_{t-1}] + b_f)<br>$$<br>输出后的$f_t$再和$c_{t-1}$相乘，来更新记忆单元。在应用过程中的意义时，选择性的忘记一些历史信息(不是所有的历史信息都是有意义的)。</p>
+<h4 id="3-1-2-Input-Gate"><a href="#3-1-2-Input-Gate" class="headerlink" title="3.1.2 Input Gate"></a>3.1.2 Input Gate</h4><p>这一步的主要作用是将旧的记忆单元$c_{t-1}$更新到新的记忆单元$c_t$上。这一步只需要将$c_{t-1}$乘以$f_t$在加上$i_t$<em>$c_{t}^-$即可。$i_t$则为输入门，可以理解为对本次的输入更新程度。，具体公式如下：<br>$$<br>i_t = \sigma(W_i \cdot [x_t, h_{t-1}] + b_i)\<br>c_t^-=tanh(W_c \cdot [x_t, h_{t-1})] + b_c)<br>$$<br>$i_t$输出的为0-1的值，$c_{t}^-$的计算方式和RNN中的state更新方式一致，再乘以$i_t$后，表示对最新$c_t$的更新程度。这儿一步的意义是，添加了当前时间步的信息，随后添加到记忆单元中。这一步输出们计算完成后随后需要更新$C_t$：<br>$$<br>c_t = c_{t-1} * f_t + i_t</em>c_t^-<br>$$</p>
+<h4 id="3-1-3-Output-Gate"><a href="#3-1-3-Output-Gate" class="headerlink" title="3.1.3 Output Gate"></a>3.1.3 Output Gate</h4><p>最后需要决定最终的输出，输出会基于当前的信息，并且可能会进行一些过滤，并用于下一步和$C_t$的结合中，确定最终的输出值：<br>$$<br>o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o) \<br>h_t = o_t * tanh(C_t)<br>$$<br>最终的输出，结合当前的信息和记忆单元信息进行输出。</p>
+<h3 id="3-2-LSTM网络结构可视化"><a href="#3-2-LSTM网络结构可视化" class="headerlink" title="3.2 LSTM网络结构可视化"></a>3.2 LSTM网络结构可视化</h3><p>根据LSTM Cell的结构，即内部的计算公式进行内部结构可视化，从输入，到计算，再到输出的过程进行详细的结构可视化，如下图所示：<img src="%5Cuploads%5CLSTM_X.png" srcset="/img/loading.gif" alt="LSTM内部结构可视化"></p>
+<p>上面将LSTM Cell进行了划分，主要划分为三个部分，第一部分主要是三道门和输入的转换；第二部分可以看作是记忆单元$C_t$的更新；第三部分就是输出部分。</p>
+<p>在上面的结构中也给出了输入，输出的数据<code>shape</code>，明白数据在整个计算过程中是怎么流通和计算的。并可以根据输入的情况，知道参数的<code>shape</code>等。在计算过程中，三道门中的参数$W$的<code>shape</code>分为两种情况：</p>
+<ul>
+<li>当$X_t$和$H_{t-1}$进行<code>concat</code>后，参数<code>W</code>的<code>shape</code>为<code>(depth+n_hidden_units， n_hidden_units)</code>，参数$b$的<code>shape</code>为<code>(n_hidden_units)</code>。</li>
+<li>当$X_t$和$H_{t-1}$分别和参数$W$进行运算，那么参数$W$就会存在两个，$W_x$的<code>shape</code>为<code>(depth, n_hidden_units)</code>，$W_h$的$shape$为<code>(n_hidden_units, n_hidden_units)</code>；参数$b$的<code>shape</code>为<code>(n_hidden_units)</code>。</li>
+</ul>
+<p>三个gate的输出分别为$f_t$，$i_t$，$o_t$；这三个值的输出<code>shape</code>均为<code>(batch_size, n_hidden_units)</code>。</p>
+<h2 id="4-LSTM网络在TensorFlow中的实现"><a href="#4-LSTM网络在TensorFlow中的实现" class="headerlink" title="4.LSTM网络在TensorFlow中的实现"></a>4.LSTM网络在TensorFlow中的实现</h2><p>LSTM也是RNN网络中的一种，因此在TensorFlow实现时，和RNN模型实现的方式一致，唯一不同的地方在RNN中定义<code>cell</code>的地方。在TensorFlow中实现了<code>LSTM Cell</code>的基本结构，实现了两种<code>LSTM Cell</code>的结构<code>BasicLSTMCell</code>和<code>LSTMCell</code>，下面依次对两种结构进行说明。</p>
+<h3 id="4-1-BasicLSTMCell实现"><a href="#4-1-BasicLSTMCell实现" class="headerlink" title="4.1 BasicLSTMCell实现"></a>4.1 <code>BasicLSTMCell</code>实现</h3><p>这个Cell的实现是以最基本的LSTM结构为基础，在TensorFlow中实现了该结构，也是基于<code>LayerRNNCell</code>实现的，主要实现了<code>build</code>和<code>call</code>方法，下面为<code>call</code>方法的源码：</p>
+<pre><code class="python">  def call(self, inputs, state):
+    &quot;&quot;&quot;Long short-term memory cell (LSTM).
+
+    Args:
+      inputs: `2-D` tensor with shape `[batch_size, input_size]`.
+      state: An `LSTMStateTuple` of state tensors, each shaped
+        `[batch_size, self.state_size]`, if `state_is_tuple` has been set to
+        `True`.  Otherwise, a `Tensor` shaped
+        `[batch_size, 2 * self.state_size]`.
+
+    Returns:
+      A pair containing the new hidden state, and the new state (either a
+        `LSTMStateTuple` or a concatenated state, depending on
+        `state_is_tuple`).
+    &quot;&quot;&quot;
+    sigmoid = math_ops.sigmoid
+    one = constant_op.constant(1, dtype=dtypes.int32)
+    # Parameters of gates are concatenated into one multiply for efficiency.
+    if self._state_is_tuple:
+      c, h = state
+    else:
+      c, h = array_ops.split(value=state, num_or_size_splits=2, axis=one)
+
+    gate_inputs = math_ops.matmul(
+        array_ops.concat([inputs, h], 1), self._kernel)
+    gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
+
+    # i = input_gate, j = new_input, f = forget_gate, o = output_gate
+    i, j, f, o = array_ops.split(
+        value=gate_inputs, num_or_size_splits=4, axis=one)
+
+    forget_bias_tensor = constant_op.constant(self._forget_bias, dtype=f.dtype)
+    # Note that using `add` and `multiply` instead of `+` and `*` gives a
+    # performance improvement. So using those at the cost of readability.
+    add = math_ops.add
+    multiply = math_ops.multiply
+    new_c = add(multiply(c, sigmoid(add(f, forget_bias_tensor))),
+                multiply(sigmoid(i), self._activation(j)))
+    new_h = multiply(self._activation(new_c), sigmoid(o))
+
+    if self._state_is_tuple:
+      new_state = LSTMStateTuple(new_c, new_h)
+    else:
+      new_state = array_ops.concat([new_c, new_h], 1)
+    return new_h, new_state</code></pre>
+<p>源码中主要对四个<code>gate</code>进行计算，并更新<code>C</code>和<code>H</code>，并返回输出和<code>state</code>，<code>LSTM</code>中的<code>state</code>包括了<code>C</code>和<code>H</code>。上面代码中对四个<code>gate</code>的计算，是一次性生成权重变量，再和输入的$X_t$和$H_{t-1}$进行运算，再拆分为四部分，权重变量的定义如下：</p>
+<pre><code class="python">def build(self, inputs_shape):
+    if inputs_shape[1].value is None:
+        raise ValueError(&quot;Expected inputs.shape[-1] to be known, saw shape: %s&quot;
+                         % inputs_shape)
+
+        input_depth = inputs_shape[1].value
+        h_depth = self._num_units
+        self._kernel = self.add_variable(
+            _WEIGHTS_VARIABLE_NAME,
+            shape=[input_depth + h_depth, 4 * self._num_units])
+        self._bias = self.add_variable(
+            _BIAS_VARIABLE_NAME,
+            shape=[4 * self._num_units],
+            initializer=init_ops.zeros_initializer(dtype=self.dtype))
+
+    self.built = True</code></pre>
+<p>在定义<code>LSTM</code>中四道<code>gate</code>的权重变量<code>W</code>和<code>B</code>时，是一次性定义了4个，并在一个变量中。后续在计算时，做一次计算，再进行拆分成四道<code>gate</code>的输出：<code>i,j,f,o</code>。</p>
+<h3 id="4-2-LSTMCell的实现"><a href="#4-2-LSTMCell的实现" class="headerlink" title="4.2 LSTMCell的实现"></a>4.2 <code>LSTMCell</code>的实现</h3><p><code>LSTMCell</code>是<code>BasicLSTMCell</code>扩展实现，增加了窥视的窥视孔的功能，<code>LSTMCell</code>的初始化参数如下所示，先对初始化的参数进行详细说明。</p>
+<p><img src="%5Cuploads%5CLSTM-diag.png" srcset="/img/loading.gif" alt=""></p>
+<pre><code class="python">def __init__(self, num_units, use_peepholes=False, cell_clip=None, initializer=None, num_proj=None, 
+             proj_clip=None, num_unit_shards=None, num_proj_shards=None, forget_bias=1.0,
+             state_is_tuple=True, activation=None, reuse=None, name=None):
+    &quot;&quot;&quot;Initialize the parameters for an LSTM cell.
+    Args:
+      num_units: int, The number of units in the LSTM cell.
+      use_peepholes: bool, 是否使用窥视孔, 当设置为True时则使用窥视孔.
+      cell_clip: (optional) A float value, 单元(四个gate)输出的值被限制在`±cell_clip`内.
+      initializer: (optional) 用于权重和投影矩阵(projection matrices)的初始值设定.
+      num_proj: (optional) int, 投影矩阵的输出维数. 如果设置为None则不执行`投影`操作.
+      proj_clip: (optional) A float value. 如果设置了 `num_proj &gt; 0` 和 `proj_clip`, 则投影值将被限制在`[-proj_clip, proj_clip]`范围内.
+      num_unit_shards: Deprecated, 已经弃用.
+      num_proj_shards: Deprecated, 已经弃用.
+      forget_bias: Biases of the forget gate are initialized by default to 1 in order to reduce the scale of forgetting at the beginning of the training. Must set it manually to `0.0` when restoring from CudnnLSTM trained checkpoints.
+      state_is_tuple: If True, accepted and returned states are 2-tuples of the `c_state` and `m_state`.  If False, they are concatenated along the column axis.  This latter behavior will soon be deprecated.
+      activation: Activation function of the inner states.  Default: `tanh`.
+      reuse: (optional) Python boolean describing whether to reuse variables in an existing scope.  If not `True`, and the existing scope already has the given variables, an error is raised.
+      name: String, the name of the layer. Layers with the same name will share weights, but to avoid mistakes we require reuse=True in such cases.
+
+      When restoring from CudnnLSTM-trained checkpoints, use `CudnnCompatibleLSTMCell` instead.
+    &quot;&quot;&quot;</code></pre>
+<p>从上面参数说明，可以看出<code>LSTMCell</code>中主要多处了一个<code>窥视孔</code>的功能，当参数<code>use_peepholes</code>设置为<code>True</code>时，就使用了窥视孔的功能。后续的几个参数也是对窥视功能的设置参数。下面对实现的<code>call</code>方法进行简要说明：</p>
+<pre><code class="python">def call(self, inputs, state):
+    &quot;&quot;&quot;Run one step of LSTM.
+    Args:
+      inputs: input Tensor, 2D, `[batch, num_units].
+      state: if `state_is_tuple` is False, this must be a state Tensor, `2-D, [batch, state_size]`.  If `state_is_tuple` is True, this must be a tuple of state Tensors, both `2-D`, with column sizes `c_state` and `m_state`.
+
+    Returns:
+      A tuple containing:
+      - A `2-D, [batch, output_dim]`, Tensor representing the output of the LSTM after reading `inputs` when previous state was `state`.
+        Here output_dim is:
+           num_proj if num_proj was set, num_units otherwise.
+      - Tensor(s) representing the new state of LSTM after reading `inputs` when the previous state was `state`.  Same type and shape(s) as `state`.
+
+    Raises:
+      ValueError: If input size cannot be inferred from inputs via static shape inference.
+    &quot;&quot;&quot;
+    num_proj = self._num_units if self._num_proj is None else self._num_proj
+    sigmoid = math_ops.sigmoid
+
+    if self._state_is_tuple:
+      (c_prev, m_prev) = state
+    else:
+      c_prev = array_ops.slice(state, [0, 0], [-1, self._num_units])
+      m_prev = array_ops.slice(state, [0, self._num_units], [-1, num_proj])
+
+    input_size = inputs.get_shape().with_rank(2)[1]
+    if input_size.value is None:
+      raise ValueError(&quot;Could not infer input size from inputs.get_shape()[-1]&quot;)
+
+    # i = input_gate, j = new_input, f = forget_gate, o = output_gate
+    lstm_matrix = math_ops.matmul(
+        array_ops.concat([inputs, m_prev], 1), self._kernel)
+    lstm_matrix = nn_ops.bias_add(lstm_matrix, self._bias)
+
+    i, j, f, o = array_ops.split(
+        value=lstm_matrix, num_or_size_splits=4, axis=1)
+    # Diagonal connections
+    if self._use_peepholes:
+      c = (sigmoid(f + self._forget_bias + self._w_f_diag * c_prev) * c_prev +
+           sigmoid(i + self._w_i_diag * c_prev) * self._activation(j))  
+    # sigmoid(f + self._forget_bias + self._w_f_diag * c_prev)为新的forget输出,
+    # sigmoid(i + self._w_i_diag * c_prev) 为新的input_gate输出
+
+    else:
+      c = (sigmoid(f + self._forget_bias) * c_prev + sigmoid(i) *
+           self._activation(j))
+
+    if self._cell_clip is not None:
+      # pylint: disable=invalid-unary-operand-type
+      c = clip_ops.clip_by_value(c, -self._cell_clip, self._cell_clip)
+      # pylint: enable=invalid-unary-operand-type
+    if self._use_peepholes:
+      m = sigmoid(o + self._w_o_diag * c) * self._activation(c)
+    else:
+      m = sigmoid(o) * self._activation(c)
+
+    if self._num_proj is not None:
+      m = math_ops.matmul(m, self._proj_kernel)
+
+      if self._proj_clip is not None:
+        # pylint: disable=invalid-unary-operand-type
+        m = clip_ops.clip_by_value(m, -self._proj_clip, self._proj_clip)
+        # pylint: enable=invalid-unary-operand-type
+
+    new_state = (LSTMStateTuple(c, m) if self._state_is_tuple else
+                 array_ops.concat([c, m], 1))
+    return m, new_state</code></pre>
+<p>上面<code>call</code>方法实现的过程中，输出的维度为<code>num_proj</code>(如果设置了<code>num_proj</code>的值)或<code>num_units</code>。当计算<code>c</code>的时候取决于是否使用窥视孔，使用的时候计算方式会不同<code>sigmoid(f + self._forget_bias + self._w_f_diag * c_prev)</code>为新的<code>forget gate</code>输出(加入了窥视孔<code>self._w_f_diag * c_prev</code>), <code>sigmoid(i + self._w_i_diag * c_prev)</code>为新的<code>input gate</code>输出，然后会限制<code>c = clip_ops.clip_by_value(c, -self._cell_clip, self._cell_clip)</code>输出。再计算<code>m</code>的时候也会取决于是否使用窥视孔，再对<code>m</code>的值进行限定。最后输出<code>m</code>和<code>state</code>。</p>
+<p>当定义好了Cell后，后续就是动态或者静态计算时间步，或者多层的LSTM模型，和RNN网络中的使用就是一样的。这里就不再详细说明。</p>
+<h2 id="5-Refrence"><a href="#5-Refrence" class="headerlink" title="5.Refrence"></a>5.Refrence</h2><p>(1).<a href="https://www.jiqizhixin.com/articles/2017-07-24-2" target="_blank" rel="noopener">LSTM入门必读：从入门基础到工作方式详解</a></p>
+<p>(2).<a href="http://blog.gdf.name/lstm-with-tensorflow/" target="_blank" rel="noopener">从Tensorflow代码中理解LSTM网络</a></p>
+<p>(3).<a href="https://yugnaynehc.github.io/2017/01/03/understanding-lstm-networks/" target="_blank" rel="noopener">[译]理解LSTM网络</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/deep-learning/">deep learning</a>
+                    
+                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/RNN/">RNN</a>
+                    
+                      <a class="hover-with-bg" href="/tags/LSTM/">LSTM</a>
+                    
+                      <a class="hover-with-bg" href="/tags/gate/">gate</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/07/03/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">深度学习-详解CNN网络和TensorFlow实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2018/05/01/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+                        <span class="hidden-mobile">深度学习-详解RNN网络及TensorFlow实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "深度学习-详解LSTM网络和TensorFlow实现&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

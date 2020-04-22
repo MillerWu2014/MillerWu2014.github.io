@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>多级网络优化的规划问题简化-Python预演 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期四, 四月 11日 2019, 9:40 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    2k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      9 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h2 id="背景和目标"><a href="#背景和目标" class="headerlink" title="背景和目标"></a>背景和目标</h2><p>在物流网络中，经常存在需要优化的网络结构，比如从生产中心到一级仓库 ，到二级仓库再到配送中心，这样形成一个多级的分仓体系。在实际执行过程中会遇到DC层或TC层的选址问题，一般会遇到优化问题，优化的目标主要考虑多个方面的成本，如运输成本，仓库成本，转运成本等等。如果按照多级网络的模式进行考虑，一般规划问题会成为非线性的整数规划问题，在求解上是非常难且建模也比较难。</p>
+<p>现在对于这样的其中选址的问题进行思考：假设我们只是考虑运输成本或距离上的成本，DC层的仓库可以向周边的仓库进行供货，而且保证TC层的一个仓库只能唯一的DC层仓库供货。从常规的建模一般都是在DC层设置一个变量X， TC层设置一个变量Y，来计算目标，并设置约束，最终来进行求解，那么这个问题能简化么？</p>
+<p>如果能简化那么这个问题就能推广到多层的选址问题，不需要非线性整数规划的方式进行求解。能大大的简化整个求解，可能不是最优的解，但是能得到较优的解。经过仔细的实验和思考，是能进行简化的。将DC层和TC层的地址看为一个变量，这样就减少一个变量，转化为了线性规划的问题（LP）。DC层对TC层为1对N的方式，但是TC只能属于一个DC。而且可以控制DC层的地点或TC层的地点的个数。解决了选址中遇到的所有问题。<br><img src="/uploads/wuliufencangtixi.jpg" srcset="/img/loading.gif" alt="物流的多级分仓体系"> </p>
+<h2 id="数据的准备"><a href="#数据的准备" class="headerlink" title="数据的准备"></a>数据的准备</h2><p>这里我们准备了一些城市的数据，其中有DC，TC层和最终的地点。数据存储于mysql数据库中，下面定义一个数据抽取的class，来进行数据查询，并生成需要的距离矩阵。便于后续使用该矩阵来进行优化目标值的计算。</p>
+<a id="more"></a>
+<pre><code class="python"># import packages
+import pymprog
+import pymysql
+import pandas as pd
+import numpy as np
+from collections import defaultdict
+
+class MysqlClient(object):
+    &quot;&quot;&quot;
+    create mysql connect client
+    &quot;&quot;&quot;
+    def __init__(self, host, user, password, database=&quot;glc_lpp_dev&quot;, port=3306):
+        self.host = host or &quot;127.0.0.1&quot;
+        self.user = user
+        self.passwd = password
+        self.database = database
+        self.port = port
+        self.connection = self._get_connection()
+
+    def _get_connection(self):
+        &quot;&quot;&quot;get mysql connection client&quot;&quot;&quot;
+        try:
+            _connection = pymysql.connect(host=self.host, user=self.user, password=self.passwd, port=self.port,
+                                          database=self.database, charset=&quot;utf8&quot;)
+        except Exception as error:
+            print(&quot;Connect mysql server:%s has error, the error is: %s&quot; % (self.host, error))
+            _connection = None
+        return _connection
+
+    def query(self, sql_scripts):
+        &quot;&quot;&quot;
+        :param sql_scripts: string, use this sql scripts get data.
+        :return: tuple
+        &quot;&quot;&quot;
+        if self.connection is None:
+            raise Exception(&quot;Get mysql connection failed. The connection is NoneType object.&quot;)
+        cursor = self.connection.cursor()
+        cursor.execute(sql_scripts)
+        fetch_data = cursor.fetchall()
+        cursor.close()
+        return fetch_data
+
+    def close(self):
+        if self.connection is not None:
+            self.connection.commit()
+            self.connection.close()
+</code></pre>
+<h2 id="规划问题的简化方案"><a href="#规划问题的简化方案" class="headerlink" title="规划问题的简化方案"></a>规划问题的简化方案</h2><p>在本次的实验过程中使用pymprog来进行LP求解，并定义整个网络模型，通过距离矩阵来定义目标和约束，具体如下面代码中的说明，先定义决策变量（这里定义为了0-1整数变量），再定义目标函数（本示例中主要定义了一个距离相关的优化目标），再定义约束条件，最终求解，并格式化输出。其中约束条件定义非常灵活：</p>
+<ol>
+<li>一个TC只能属于一个DC</li>
+<li>一个DC可以有多个TC，这儿并定义了输入的DC都必须被选到</li>
+</ol>
+<p>示例代码如下：</p>
+<pre><code class="python">def solve_link(distance_matrix_frame, flag=1):
+    &quot;&quot;&quot;Find the link matrix by linear programming slove
+    parameters
+    ----------
+    distance_matrix_frame: 
+        pandas.DataFrame, src positions to dst positions, index is src position.
+
+    return
+    ------
+        DataFrame, the link dataframe, the index is src positions and the columns is dst positions.
+    &quot;&quot;&quot;
+    t_frame = distance_matrix_frame.T.to_dict()
+    src_pos_, dst_pos_ = distance_matrix_frame.index, distance_matrix_frame.columns
+    constant = []
+    for s in src_pos_:
+        s_list = []
+        for d_ in dst_pos_:
+            s_list.append(t_frame[s][d_])
+        constant.append(s_list) 
+
+    pymprog.begin(&#39;link&#39;)
+
+    index, columns = range(len(src_pos_)), range(len(dst_pos_))  # the number of variable
+    x = pymprog.var(&#39;x&#39;, pymprog.iprod(index, columns), bool)  # defined variable
+
+    min_value = sum([x[(i, j)] * constant[i][j] for i in index  for j in columns])
+    pymprog.minimize(min_value, &quot;min_distance&quot;)  # optimizer target: minimize
+
+    # ------------  defined constraints -------------- #
+    # defined next layer map one city
+    for j in columns:
+        st_init = 0
+        for i in index:
+            st_init += x[(i, j)]
+        pymprog.st(1 &lt;= st_init &lt;= 2)
+    # defined current layer at least one
+    if flag:
+        for i in index:
+            ct_init = 0
+            for j in columns:
+                ct_init += x[(i, j)]
+            pymprog.st(1 &lt;= ct_init)
+    # ------------  defined constraints -------------- #
+
+    # soleve linear programing
+    pymprog.solve()
+    # build up result by dataframe
+    output_dict = defaultdict(dict)
+    for i in index:
+        for j in columns:
+            output_dict[dst_pos_[j]][src_pos_[i]] = x[(i, j)].primal
+    # pymprog.sensitivity()
+    pymprog.end()
+    return pd.DataFrame(data=output_dict)</code></pre>
+<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>通过一些数据进行试验上面的思路，下面生产中心选取了两个：天津和重庆，DC层有4个点，TC层 有7个点，配送中心有很多个城市，如下设置所示。通过sql查询得到数据库中的距离矩阵。后面将所有的中文地址转换为英文，主要便于后面的可视化。</p>
+<pre><code class="python"># built the network struct, src position, depot and dst position
+dst_position = [&quot;宜昌&quot;, &quot;长沙&quot;, &quot;岳阳&quot;, &quot;无锡&quot;, &quot;合肥&quot;, &quot;徐州&quot;, &quot;常州&quot;,&quot;哈尔滨&quot;, &quot;长春&quot;, &quot;秦皇岛&quot;, &quot;呼和浩特&quot;, &quot;银川&quot;, &quot;西宁&quot;, 
+                &quot;酒泉&quot;, &quot;庆阳&quot;, &quot;许昌&quot;, &quot;吴忠&quot;, &quot;鄂尔多斯&quot;, &quot;广元&quot;, &quot;巴中&quot;, &quot;都江堰&quot;, &quot;南充&quot;, &quot;广安&quot;, &quot;乐山&quot;, &quot;宜宾&quot;, &quot;南阳&quot;,
+                &quot;衡阳&quot;, &quot;大同&quot;, &quot;丽江&quot;, &quot;攀枝花&quot;, &quot;玉林&quot;, &quot;柳州&quot;, &quot;桂林&quot;, &quot;中山&quot;, &quot;南平&quot;, &quot;泉州&quot;, &quot;雅安&quot;, &quot;怀化&quot;, &quot;荆州&quot;, &quot;黄山&quot;
+               ]
+src_position = [&quot;重庆&quot;, &quot;天津&quot;]
+depot_position = {
+    &quot;level_1&quot;: [&quot;北京&quot;, &quot;成都&quot;, &quot;西安&quot;, &quot;武汉&quot;], 
+    &quot;level_2&quot;: [&quot;绵阳&quot;, &quot;沈阳&quot;, &quot;兰州&quot;, &quot;南昌&quot;, &quot;杭州&quot;, &quot;南宁&quot;, &quot;昆明&quot;]
+}</code></pre>
+<pre><code class="python">middle_layer = []
+for k, v in depot_position.items():
+    middle_layer.extend(v)
+
+node_list = dst_position + src_position
+
+import pickle
+
+with open(&quot;/opt/notebook/distance.pkl&quot;, &quot;rb&quot;) as picker:
+    data = pickle.load(picker)
+
+with open(&quot;/opt/notebook/layer_distance.pkl&quot;, &quot;rb&quot;) as layer:
+    layer_dist = pickle.load(layer)
+
+layer_dist</code></pre>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="right">绵阳</th>
+<th align="right">沈阳</th>
+<th align="right">兰州</th>
+<th align="right">南昌</th>
+<th align="right">杭州</th>
+<th align="right">南宁</th>
+<th align="right">昆明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">北京</td>
+<td align="right">1691</td>
+<td align="right">685</td>
+<td align="right">1617</td>
+<td align="right">1470</td>
+<td align="right">1329</td>
+<td align="right">2426</td>
+<td align="right">2834</td>
+</tr>
+<tr>
+<td align="left">成都</td>
+<td align="right">120</td>
+<td align="right">2474</td>
+<td align="right">1039</td>
+<td align="right">1496</td>
+<td align="right">1857</td>
+<td align="right">1325</td>
+<td align="right">1068</td>
+</tr>
+<tr>
+<td align="left">西安</td>
+<td align="right">606</td>
+<td align="right">1775</td>
+<td align="right">647</td>
+<td align="right">1197</td>
+<td align="right">1417</td>
+<td align="right">1932</td>
+<td align="right">1561</td>
+</tr>
+<tr>
+<td align="left">武汉</td>
+<td align="right">921</td>
+<td align="right">1845</td>
+<td align="right">1368</td>
+<td align="right">370</td>
+<td align="right">859</td>
+<td align="right">1294</td>
+<td align="right">1815</td>
+</tr>
+</tbody></table>
+<p>通过线性规划求解得到了连接矩阵如下面结果所示，可以看出DC层下有多个TC层，但是TC只属于一个DC。<strong>本文中没有控制DC和TC的数量。实际是可以加入进去的</strong>。后续对得到结果通过networkx进行可视化。</p>
+<pre><code class="python">nodes_res = solve_link(data, flag=0)
+layer_res = solve_link(layer_dist)
+
+
+def cn2pingyin(s: str)-&gt;str:
+    from pypinyin import lazy_pinyin
+    return &quot;&quot;.join(lazy_pinyin(s))
+
+
+nodes_res.index = nodes_res.index.map(cn2pingyin)
+nodes_res.columns = nodes_res.columns.map(cn2pingyin)
+layer_res.index = layer_res.index.map(cn2pingyin)
+layer_res.columns = layer_res.columns.map(cn2pingyin)
+layer_res</code></pre>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="right">lanzhou</th>
+<th align="right">nanning</th>
+<th align="right">nanchang</th>
+<th align="right">kunming</th>
+<th align="right">hangzhou</th>
+<th align="right">shenyang</th>
+<th align="right">mianyang</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">beijing</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">1.0</td>
+<td align="right">0.0</td>
+</tr>
+<tr>
+<td align="left">chengdu</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">1.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">1.0</td>
+</tr>
+<tr>
+<td align="left">wuhan</td>
+<td align="right">0.0</td>
+<td align="right">1.0</td>
+<td align="right">1.0</td>
+<td align="right">0.0</td>
+<td align="right">1.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+</tr>
+<tr>
+<td align="left">xian</td>
+<td align="right">1.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+</tr>
+</tbody></table>
+<pre><code class="python"># !pip install matplotlib netowrkx
+%matplotlib inline
+
+import networkx as nx
+from matplotlib import pyplot as plt
+import matplotlib.font_manager as fm
+
+fp1 = fm.FontProperties(fname=&quot;/usr/share/fonts/adobe-source-han-sans-cn/SourceHanSansCN-Medium.otf&quot;)
+# nx.setitem(fp1)
+
+plt.figure(figsize=(16, 9))
+G = nx.Graph()
+
+colors = [&quot;blue&quot;, &quot;gray&quot;]
+i = 0
+for res in [layer_res, nodes_res]:
+    c = np.where(res==1)
+    index = res.index
+    columns = res.columns
+
+    pos1_list, pos2_list = [], []
+    for x, y in zip(c[0], c[1]):
+        G.add_edge(index[x], columns[y], weight=0.1)
+        pos1_list.append(index[x])
+        pos2_list.append(columns[y])
+
+    esmall = [(u, v) for (u, v, d) in G.edges(data=True) if d[&#39;weight&#39;] &gt;= 0.0]
+
+    if i &gt;= 1:
+        pos = nx.spring_layout(G)
+        nx.draw_networkx_nodes(G, pos, node_size=100)
+        nx.draw_networkx_edges(G, pos, edgelist=esmall, width=6, alpha=0.5, edge_color=&#39;b&#39;, style=&#39;solid&#39;)
+        nx.draw_networkx_nodes(G, pos,
+                               nodelist=set(pos1_list),
+                               node_color=colors[i],
+                               node_size=500,
+                               alpha=0.8)
+        nx.draw_networkx_labels(G, pos, font_size=12, font_family=&#39;DejaVu Sans&#39;)
+    if i &gt;= 1:
+        nx.draw_networkx_nodes(G, pos,
+                               nodelist2=set(pos1_list),
+                               node_color=colors[i],
+                               node_size=100,
+                               alpha=0.8)
+    i += 1
+plt.axis(&#39;off&#39;)
+plt.show()</code></pre>
+<p><img src="/uploads/output_6_0.png" srcset="/img/loading.gif" alt="结果可视化"></p>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%80%9D%E8%80%83/">思考</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Python3/">Python3</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%80%9D%E8%80%83/">思考</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/04/18/%E5%9C%A8python%E4%B8%8B%E7%9A%84c%E6%88%96c++%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">python下的c/c++扩展方式详解</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2019/04/09/python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3/">
+                        <span class="hidden-mobile">python中的元类编程详解</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "多级网络优化的规划问题简化-Python预演&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

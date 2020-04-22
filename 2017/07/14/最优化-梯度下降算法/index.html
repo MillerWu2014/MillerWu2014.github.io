@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>最优化-梯度下降算法 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 七月 14日 2017, 12:59 凌晨
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.3k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>梯度下降算法是最优化算法之一，在大量的机器学习算法和深度学习中都会被用到。优化是指当改变$x$以最小化或最大化某个函数$f(x)$，该函数一般为算法中的目标函数或损失函数，或者称为代价函数、误差函数等。在优化过程中需要通过导数$f’(x)$或$\frac{dy}{dx}$来描述缩放$x$对输出$f(x)$的变化:$f(x+\theta) \approx f(x)+\theta f’(x)$。对于任意小的$\eta$使得$f(x-\eta sign(f’(x))) \lt f(x)$，因此可以将$x$往导数的相反方向移动一小步来减小$f(x)$，这个过程就是梯度下降。<br><img src="/uploads/grad.jpg" srcset="/img/loading.gif" alt=""></p>
+<a id="more"></a>
+<h3 id="梯度下降"><a href="#梯度下降" class="headerlink" title="梯度下降"></a>梯度下降</h3><p>在最小化多维输入的函数：$f: R^n \rightarrow R^n$，为了使得$f$最小化，在一维情况下需要使用导数，如果是多维的情况下需要使用偏导数(<code>partial derivative</code>)，偏导数$\frac {\partial} {\partial x} f(x)$衡量点$x$在$x_i$增加或减小是$f(x)$的变化。梯度是相对一个向量求导的导数：$f$的导数是包含所有偏导数的向量，可以记作${\nabla}_x f(x)$。梯度的第<code>i</code>个元素是$f$关于$x_i$的偏导数。在$u$(单位向量)方向上的方向导数是函数$f$在$u$方向的斜率。换句话说，方向导数是函数$f(x+\alpha u)$关于$\alpha$的导数。可以根据链式法则，当$\alpha=0$时，$\frac{\partial}{\partial_{\alpha}}f(x+\alpha u)=u^T \nabla_{x}f(x)$。为了最小化$f$希望找到下降最快的方向，计算方向导数<br>$$<br>Min_{u,u^T u}{u^T {\nabla}_{x}{f(x)}} = Min_{u,u^T u}{||u||_2 ||{\nabla}_x f(x)||_2 cos{\theta}}<br>$$<br>其中$\theta$是$u$与梯度的夹角。将$||u||_2 = 1$代入，并会略和$u$无关的项，能简化得到${min}_{u}cos{\theta}$。这在$u$ 与梯度方向相反时取得最小。换句话说，梯度向量指向上坡，<br>负梯度向量指向下坡。我们在负梯度方向上移动可以减小$f$。这被称为最速下降法(<code>method of steepest descent</code>) 或梯度下降(<code>gradient descent</code>)。快速下降并更新的公式为<br>$$<br>x’=x-{\epsilon}{\nabla}_x f(x)<br>$$<br>其中$\epsilon$为学习率，描述更新的步长大小的量。当梯度的每个元素为0或者接近0的地方收敛。</p>
+<p>借用维基百科上的说明：</p>
+<blockquote>
+<p>梯度下降算法是基于观察：如果$f(x)$在$a$点处可导且有定义，那么函数$f(x)$在$a$沿着梯度的反向$-\nabla{f(a)}$，如果：<br>$$b = a - {\gamma}{\nabla}f(a)$$<br>其中每次$\gamma$的步长更新，且可以改变。对于$\gamma&gt;0$为一个任意小的数成立，那么$f(a) \gt f(b)$。因此可以通过最初的估计到后续过程中进行推断得到$x_{n+1}=x_{n}-\gamma_{n}\nabla{f(x_{n})}, n \ge 0$，因此可以得到$f(x_{0} \ge f(x_1) \ge f(x_2) \ge … \ge f(x_{n+1})$，可以得到下图的形式：</p>
+</blockquote>
+<p><img src="/uploads/Gradient_descent.png" srcset="/img/loading.gif" alt=""></p>
+<p>可以根据线性模型来使用梯度下降算法来求解。其中$h(x)$为拟合的函数，$J(\theta)$为误差函数或损失函数，用来衡量训练数据集用$h(x)$来拟合的效果程度，$\theta$为需要求得参数。假设：<br>$$<br>h(x) = \sum{i=1}^{n}{\theta{i}x_{i}}<br>$$</p>
+<p>$$<br>J(\theta) = \frac {1} {2m} \sum_{i=1}^{m} {(y^i - h_{\theta}(x^i))^2}<br>$$</p>
+<p>下面是通过梯度下降来进行参数迭代：</p>
+<ol>
+<li>计算$J(\theta)$关于$\theta$的偏导数，也就是计算向量中每一个$\theta$的梯度：</li>
+</ol>
+<p>$$<br>\begin{align}<br>\frac{\partial J(\theta)}{\partial\theta_j}\\<br>&amp; = -\frac1m\sum_{i=0}^m(y^i-h_\theta(x^i)) \frac{\partial}{\partial\theta_j}(y^i-h_\theta(x^i)) \\<br>&amp; = -\frac1m\sum_{i=0}^m(y^i-h_\theta(x^i)) \frac{\partial}{\partial\theta_j}(\sum_{j=0}^n\theta_jx_j^i-y^i) \\<br>&amp; = -\frac1m\sum_{i=0}^m(y^i-h_\theta(x^i))x^i_j<br>\end{align}<br>$$</p>
+<ol start="2">
+<li>沿着梯度的方向更新参数</li>
+</ol>
+<p>$$<br>\theta_j := \theta_j + \alpha\frac{\partial J(\theta)}{\partial\theta_j}<br>:=\theta_j - \alpha\frac1m\sum_{i=0}^m(y^i-h_\theta(x^i))x^i_j<br>$$</p>
+<ol start="3">
+<li>迭代直到收敛</li>
+</ol>
+<p>$$<br>\theta_{j} := \theta_{j} + \alpha \sum_{i=1}^{m} (y^{(i)}-h_{\theta}(x^{(i)}))x_{j}^{(i)}<br>$$</p>
+<p>上面的梯度下降是使用了所有的样本。因此在数据量很大的时候，每次迭代都会将训练集遍历一次，内存的开销会很大，因此后续对这种批量梯度下降的方式进行了优化，出现了随机梯度下降等算法。</p>
+<h3 id="通过示例实现批量梯度下降"><a href="#通过示例实现批量梯度下降" class="headerlink" title="通过示例实现批量梯度下降"></a>通过示例实现批量梯度下降</h3><pre><code class="python"># coding:utf-8
+import numpy as np
+
+# 数据
+x = np.array([[2.1, 1.5], [2.5, 2.3], [3.3, 3.9], [3.9, 5.1], [2.7, 2.7]])
+y = np.array([2.5, 3.9, 6.7, 8.8, 4.6])
+
+# 拟合的函数：f(x) = w1*x1 + w2*x2
+# 损失函数：J(w) = (sum((f(x) - y)^2))/2m
+# 初始化权重
+w = np.random.rand(2)
+
+# 初始化 阈值eps, 学习率(学习步长)
+eps = 0.00001
+alpha = 0.1
+loss = 1
+max_iter = 500
+iter = 1
+while loss &gt; eps and iter &lt; 500:
+    # 初始化 损失函数差值
+    loss = 0
+    sigma = np.array([0, 0])
+    # 更新权重
+    for i in range(x.shape[0]):
+        h = y[i] - sum(w * x[i, :])
+        sigma = sigma + h * x[i, :] / 5
+    w = w + alpha * sigma
+    for i in range(x.shape[0]):
+        loss += (sum(w * x[i, :]) - y[i]) ** 2
+    print loss, w
+    iter += 1
+</code></pre>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E4%BC%98%E5%8C%96/">优化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D/">梯度下降</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/07/20/abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">abc中的元类和six模块配合使用</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2017/07/09/numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C/">
+                        <span class="hidden-mobile">numba加速python程序运行</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "最优化-梯度下降算法&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
