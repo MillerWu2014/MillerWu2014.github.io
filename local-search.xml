@@ -378,9 +378,9 @@
       
       <tag>GNN</tag>
       
-      <tag>KL散度</tag>
-      
       <tag>deep learning</tag>
+      
+      <tag>KL散度</tag>
       
       <tag>JS散度</tag>
       
@@ -411,11 +411,11 @@
       
       <tag>GNN</tag>
       
+      <tag>generator</tag>
+      
       <tag>deep learning</tag>
       
       <tag>tensorflow</tag>
-      
-      <tag>generator</tag>
       
       <tag>discriminator</tag>
       
@@ -939,9 +939,9 @@
     
     <tags>
       
-      <tag>six</tag>
-      
       <tag>metaclass</tag>
+      
+      <tag>six</tag>
       
       <tag>abc</tag>
       
