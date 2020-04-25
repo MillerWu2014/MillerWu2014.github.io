@@ -146,7 +146,7 @@
     
     <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2020/04/17/Tour%20of%20Evaluation%20Metrics%20for%20Imbalanced%20Classification/">
-        <p class="h4 index-header">机器学习中样本失衡下的分类评估指标选取指南</p>
+        <p class="h4 index-header">【转载】机器学习中样本失衡下的分类评估指标选取指南</p>
       </a>
 
       <a href="/2020/04/17/Tour%20of%20Evaluation%20Metrics%20for%20Imbalanced%20Classification/">
@@ -333,6 +333,68 @@ Let’s get started....</div>
             <a href="/tags/%E9%9D%99/">静</a>&nbsp;
           
             <a href="/tags/%E7%94%9F%E6%B4%BB/">生活</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/08/04/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">boosting系列之CatBoost算法详解</p>
+      </a>
+
+      <a href="/2019/08/04/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">CatBoost是由俄罗斯的搜索公司Yandex提出的一类boosting集成学习算法，该算法主要是解决类别型特征的学习，可以直接对字符型类别特征进行处理和学习，使用非常简单，实用。因此算法名称也叫做CatBoost（categorical和boosting两者的结合）,该算法支持GPU，以及训练过程可视化等，支持Python，R等建模，也支持其他语言的部署。官方的论文结构如下，本文主要对3，4两个部分进行说明。
+---- 1.Introduction
+---- 2.Background
+---- 3.Categorical feature
+--------Target statistics: Greedy TS, Holdout TS, Leave-one-out TS, Ordered TS
+---- 4.Prediction shift and ordered boosting
+--------Prediction shift
+--------Ordered boosting
+---- 5.Practical implementation of ordered boosting
+
+Categorical features(类别特征)这部分主要是对类别特征转化为数值型特征，一般类别特征的最简单的方式就是通过对应标签的平均值来代替，而CatBoost则使用了自己设定的方式来进行转换，而且会进行特征组合，生成新的特征。
+Greedy TS类别特征不能直接在boosting中使用，因此需要将类别特征转换为数值型特征，CatBoost处理Categorical features的方式有别于其他方式，首先会计算TS(target statistics)，而传统的方式是：
+
+\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right] \cdot Y_{i}}{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right]}CatBoost对该方法进行了优化，采用Greedy TS，添加先验分布项，这样可以减少噪声和低频率数据对于数据分布的影响（这个公式写的很奇怪，可能是俄罗斯人思维方式和我们的差异）：
+
+\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right] Y_{\sigma, j}+a \cdot P}{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right]}其中，$a$为大于0的参数，$P$一般是target值得均值(添加的先验项)。其中方括弧中即满足条件为1，否则为0。但是上面得式子会出现一个问题就是greedy导致target leakage，$\hat{x}_{k}^{i}$的计算需要使用$y_k$和$x_k$，这样会出现target leakage，即$E\left(\hat{x}^{i} | y=v\right)=E\left(\hat{x}_{k}^{i} | y_{k}=v\right)$不成立。解决办法就是去掉$x_k$：D\_{k} \subset D-\left\{x\_{k}\right\}的样本来估计$\hat{x}_{k}^{i}$的值，不使用全部数据集合$D$。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-08-04&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/boosting/">boosting</a>&nbsp;
+          
+            <a href="/tags/target-statistics/">target-statistics</a>&nbsp;
+          
+            <a href="/tags/catboost/">catboost</a>&nbsp;
+          
+            <a href="/tags/categorical/">categorical</a>&nbsp;
+          
+            <a href="/tags/feature/">feature</a>&nbsp;
           
         
       </div>
@@ -634,50 +696,6 @@ if *__name__ == &quot;__main__&quot;:
             <a href="/tags/%E4%BC%98%E5%8C%96/">优化</a>&nbsp;
           
             <a href="/tags/compile/">compile</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2019/04/11/%E5%A4%9A%E7%BA%A7%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E4%B8%AD%E7%9A%84%E8%A7%84%E5%88%92%E9%97%AE%E9%A2%98%E7%AE%80%E5%8C%96/">
-        <p class="h4 index-header">多级网络优化的规划问题简化-Python预演</p>
-      </a>
-
-      <a href="/2019/04/11/%E5%A4%9A%E7%BA%A7%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E4%B8%AD%E7%9A%84%E8%A7%84%E5%88%92%E9%97%AE%E9%A2%98%E7%AE%80%E5%8C%96/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">背景和目标在物流网络中，经常存在需要优化的网络结构，比如从生产中心到一级仓库 ，到二级仓库再到配送中心，这样形成一个多级的分仓体系。在实际执行过程中会遇到DC层或TC层的选址问题，一般会遇到优化问题，优化的目标主要考虑多个方面的成本，如运输成本，仓库成本，转运成本等等。如果按照多级网络的模式进行考虑，一般规划问题会成为非线性的整数规划问题，在求解上是非常难且建模也比较难。
-现在对于这样的其中选址的问题进行思考：假设我们只是考虑运输成本或距离上的成本，DC层的仓库可以向周边的仓库进行供货，而且保证TC层的一个仓库只能唯一的DC层仓库供货。从常规的建模一般都是在DC层设置一个变量X， TC层设置一个变量Y，来计算目标，并设置约束，最终来进行求解，那么这个问题能简化么？
-如果能简化那么这个问题就能推广到多层的选址问题，不需要非线性整数规划的方式进行求解。能大大的简化整个求解，可能不是最优的解，但是能得到较优的解。经过仔细的实验和思考，是能进行简化的。将DC层和TC层的地址看为一个变量，这样就减少一个变量，转化为了线性规划的问题（LP）。DC层对TC层为1对N的方式，但是TC只能属于一个DC。而且可以控制DC层的地点或TC层的地点的个数。解决了选址中遇到的所有问题。 
-数据的准备这里我们准备了一些城市的数据，其中有DC，TC层和最终的地点。数据存储于mysql数据库中，下面定义一个数据抽取的class，来进行数据查询，并生成需要的距离矩阵。便于后续使用该矩阵来进行优化目标值的计算。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2019-04-11&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/%E6%80%9D%E8%80%83/">思考</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/Python3/">Python3</a>&nbsp;
-          
-            <a href="/tags/%E6%80%9D%E8%80%83/">思考</a>&nbsp;
           
         
       </div>
