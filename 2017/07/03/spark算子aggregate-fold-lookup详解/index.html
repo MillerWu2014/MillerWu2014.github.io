@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -133,7 +133,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    585 字
+                    586 字
                   </span>
                 
 
@@ -141,7 +141,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      2 分钟
+                      3 分钟
                   </span>
                 
 
@@ -189,39 +189,45 @@ rdd1.mapPartitionsWithIndex {
 
         }
       }.collect
-res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,List(10, 9, 8, 7, 6)))</code></pre><a id="more"></a> 
+res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,List(10, 9, 8, 7, 6)))
+</code></pre><a id="more"></a> 
 <p>第一个分区中包含5,4,3,2,1<br>第二个分区中包含10,9,8,7,6</p>
-<pre><code class="scala">scala&gt; rdd1.aggregate(1)(
+<pre><code class="lang-scala">scala&gt; rdd1.aggregate(1)(
      |           {(x : Int,y : Int) =&gt; x + y}, 
      |           {(a : Int,b : Int) =&gt; a + b}
      |     )
-res17: Int = 58</code></pre>
+res17: Int = 58
+</code></pre>
 <p>结果为什么是58，看下面的计算过程：</p>
 <p>先在每个分区中迭代执行<code>(x : Int,y : Int) =&gt; x + y</code>并且使用<code>zeroValue</code>的值<code>1</code><br>即：<code>part_0</code>中<code>zeroValue+5+4+3+2+1 = 1+5+4+3+2+1 = 16</code><br><code>part_1</code>中 <code>zeroValue+10+9+8+7+6 = 1+10+9+8+7+6 = 41</code><br>再将两个分区的结果合并<code>(a : Int,b : Int) =&gt; a + b</code>，并且使用<code>zeroValue</code>的值<code>1</code><br>即：<code>zeroValue+part_0+part_1 = 1 + 16 + 41 = 58</code><br>再比如：</p>
 <pre><code>scala&gt; rdd1.aggregate(2)(
      |           {(x : Int,y : Int) =&gt; x + y}, 
      |           {(a : Int,b : Int) =&gt; a * b}
      |     )
-res18: Int = 1428</code></pre><p>这次<code>zeroValue=2</code><br><code>part_0</code>中 <code>zeroValue+5+4+3+2+1 = 2+5+4+3+2+1 = 17</code><br><code>part_1</code>中 <code>zeroValue+10+9+8+7+6 = 2+10+9+8+7+6 = 42</code><br>最后：<code>zeroValue*part_0*part_1 = 2 * 17 * 42 = 1428</code><br>因此，<code>zeroValue</code>即确定了<code>U</code>的类型，也会对结果产生至关重要的影响，使用时候要特别注意。</p>
-<h3 id="fold"><a href="#fold" class="headerlink" title="fold"></a>fold</h3><pre><code class="scala">def fold(zeroValue: T)(op: (T, T) ⇒ T): T
+res18: Int = 1428
+</code></pre><p>这次<code>zeroValue=2</code><br><code>part_0</code>中 <code>zeroValue+5+4+3+2+1 = 2+5+4+3+2+1 = 17</code><br><code>part_1</code>中 <code>zeroValue+10+9+8+7+6 = 2+10+9+8+7+6 = 42</code><br>最后：<code>zeroValue*part_0*part_1 = 2 * 17 * 42 = 1428</code><br>因此，<code>zeroValue</code>即确定了<code>U</code>的类型，也会对结果产生至关重要的影响，使用时候要特别注意。</p>
+<h3 id="fold"><a href="#fold" class="headerlink" title="fold"></a>fold</h3><pre><code class="lang-scala">def fold(zeroValue: T)(op: (T, T) ⇒ T): T
 // fold是aggregate的简化，将aggregate中的seqOp和combOp使用同一个函数op。
 scala&gt; rdd1.fold(1)(
      |       (x,y) =&gt; x + y    
      |     )
-res19: Int = 58</code></pre>
+res19: Int = 58
+</code></pre>
 <p>结果同上面使用aggregate的第一个例子一样，即：</p>
-<pre><code class="scala">scala&gt; rdd1.aggregate(1)(
+<pre><code class="lang-scala">scala&gt; rdd1.aggregate(1)(
      |           {(x,y) =&gt; x + y}, 
      |           {(a,b) =&gt; a + b}
      |     )
-res20: Int = 58</code></pre>
+res20: Int = 58
+</code></pre>
 <h3 id="lookup"><a href="#lookup" class="headerlink" title="lookup"></a>lookup</h3><p><code>def lookup(key: K): Seq[V]</code><br>lookup用于(K,V)类型的RDD,指定K值，返回RDD中该K对应的所有V值。</p>
 <pre><code>scala&gt; var rdd1 = sc.makeRDD(Array((&quot;A&quot;,0),(&quot;A&quot;,2),(&quot;B&quot;,1),(&quot;B&quot;,2),(&quot;C&quot;,1)))
 rdd1: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[0] at makeRDD at :21
 scala&gt; rdd1.lookup(&quot;A&quot;)
 res0: Seq[Int] = WrappedArray(0, 2)
 scala&gt; rdd1.lookup(&quot;B&quot;)
-res1: Seq[Int] = WrappedArray(1, 2)</code></pre>
+res1: Seq[Int] = WrappedArray(1, 2)
+</code></pre>
             </div>
             <hr>
             <div>
@@ -499,6 +505,37 @@ res1: Seq[Int] = WrappedArray(1, 2)</code></pre>
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

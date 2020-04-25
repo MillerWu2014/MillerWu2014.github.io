@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 100vh;">
+  <header style="height: 50vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -124,10 +124,6 @@
           </div>
 
           
-            <div class="scroll-down-bar">
-              <i class="fas fa-angle-down scroll-down-arrow"></i>
-            </div>
-          
         </div>
       </div>
     </div>
@@ -137,7 +133,7 @@
     
       <div class="container nopadding-md">
         <div class="py-5 z-depth-3" id="board"
-          style=margin-top:0>
+          >
           
           <div class="container">
             <div class="row">
@@ -161,7 +157,9 @@
         
         <div class="index-excerpt" style="max-height: none;">
           <div class="index-text mb-1">首先用telnet来看下本地的端口是否开启：telnet ip 7711，如果是正常的那么需要对该端口进行开放。首先需要对本地的防火墙端口进行开放。其他需要对AWS上的安全组进行设置，设置为对应的端口或所有端口开放权限。本文中不对AWS安全组的设置说明，自行google即可。
-iptables-save &gt; /${DIR_PATH)}/iptables.rules...</div>
+iptables-save &gt; /${DIR_PATH)}/iptables.rules
+
+...</div>
         </div>
       </a>
 
@@ -297,6 +295,7 @@ Refrence
 ThriftServer介绍客户端对hive数据库进行操作可以通过Cli进行，在本地这种方式较好，但是在远程操作时会很麻烦，因此提供了hiveserver和hiveserver2，在不启动cli的情况下对hive进行操作，可以在远程通过其他语言(java, python, php等)向hive请求并返回结果。也就是利用thrift进行整个过程操作。
 hiveserver2主要是向远程调用提供了接口，通过thrift rpc实现，进行远程的操作。可以实现远程并行操作hive数据库。启动hiveserver2如下：
 nohup hive --service hiveserver2 &amp;
+
 在启动后hiveserver2默认监听的端口为10000，可以在hive的配置文件(hive-site.xml)中查看或者修改该端口。可以通过命令查看该端口是否被监听：netstat -antp | grep 10000...</div>
         </div>
       </a>
@@ -516,10 +515,12 @@ nohup hive --service hiveserver2 &amp;
           
         
         <div class="index-excerpt" >
-          <div class="index-text mb-1">梯度下降算法是最优化理论中的最常用方法，目前在深度学习以及机器学习算法中广泛应用，主要为了求目标函数极值的最优解。其中原理很简单沿着目标函数梯度下降的方向搜索极小值。参数按照梯度更新的公式如下：$$\theta := \theta - {\alpha} \cdot {\nabla}_{\theta} {J(\theta)}$$其中$\alpha$为学习率或者衰减因子，每次在更新时都会用$\alpha$为步长来更新参数。因此$\alpha$的取值比较讲究。
+          <div class="index-text mb-1">梯度下降算法是最优化理论中的最常用方法，目前在深度学习以及机器学习算法中广泛应用，主要为了求目标函数极值的最优解。其中原理很简单沿着目标函数梯度下降的方向搜索极小值。参数按照梯度更新的公式如下：
+
+\theta := \theta - {\alpha} \cdot {\nabla}\_{\theta} {J(\theta)}其中$\alpha$为学习率或者衰减因子，每次在更新时都会用$\alpha$为步长来更新参数。因此$\alpha$的取值比较讲究。
 
 学习率较小时，收敛到极值的速度较慢。
-学习率较大时，容易在搜索过程中发生震荡。如下图所示：上图中，当lr过大时就会出现来回震荡，主要是因为</div>
+学习率较大时，容易在搜索过程中发生震荡。如下图所示：上图中，当lr过大时就会出现来回震荡，主要是因为l</div>
         </div>
       </a>
 
@@ -536,9 +537,9 @@ nohup hive --service hiveserver2 &amp;
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/SGD/">SGD</a>&nbsp;
-          
             <a href="/tags/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D/">梯度下降</a>&nbsp;
+          
+            <a href="/tags/SGD/">SGD</a>&nbsp;
           
         
       </div>
@@ -561,7 +562,9 @@ nohup hive --service hiveserver2 &amp;
         
         <div class="index-excerpt" style="max-height: none;">
           <div class="index-text mb-1">在信息论中，对信息的度量主要是通过香农熵，自信息等。而本文中的KL散度(Kullback-Leible散度)则是对信息之间的度量或者两个分布之间的距离的度量，又称为交叉熵，相对熵。
-1. KL散度的定义设$p(x)$和$q(x)$是$x$取值的两个概率分布，一般$p(x)$和$q(x)$为密度函数则$p$对$q$的相对熵为：$$DL(p||q)=\sum{_{i=1}^{n}} p(x) \log{\frac{p(x)}{q(x)}}$$在一定程度上，KL散度可以度量两个随机变量的距离。KL散度是两个概率分布P和Q差别的非对称性的度量。KL散度是用来度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。...</div>
+1. KL散度的定义设$p(x)$和$q(x)$是$x$取值的两个概率分布，一般$p(x)$和$q(x)$为密度函数则$p$对$q$的相对熵为：
+
+DL(p||q)=\sum{_{i=1}^{n}} p(x) \log{\frac{p(x)}{q(x)}}在一定程度上，KL散度可以度量两个随机变量的距离。KL散度是两个概率分布P和Q差别的非对称性的度量。KL散度是用来度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。...</div>
         </div>
       </a>
 
@@ -762,6 +765,37 @@ nohup hive --service hiveserver2 &amp;
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

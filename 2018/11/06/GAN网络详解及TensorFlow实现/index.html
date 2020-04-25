@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -172,10 +172,13 @@
               <h2 id="GAN的基本介绍"><a href="#GAN的基本介绍" class="headerlink" title="GAN的基本介绍"></a>GAN的基本介绍</h2><p>2014 年，Ian Goodfellow 及其蒙特利尔大学的同事引入了生成对抗网络（GAN）。这是一种学习数据的基本分布的全新方法，让生成出的人工对象可以和真实对象之间达到惊人的相似度。</p>
 <h3 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h3><p>GAN（Generative Adversarial Networks），是一种生成式的，对抗网络。再具体一点，就是通过对抗的方式，去学习数据分布的生成式模型。所谓的对抗，指的是生成网络和判别网络的互相对抗。生成网络尽可能生成逼真样本，判别网络则尽可能去判别该样本是真实样本，还是生成的假样本。示意图如下：</p>
 <p><img src="/uploads/640.png" srcset="/img/loading.gif" alt="img"></p>
-<h3 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h3><p>生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器$G$的目标是基于噪声变量$z$生成一个对象$x^{‘}$，并使其看起来和真的$x$一样。而判别器$D$的目标就是找到生成出的结果和真实$x$之间的差异，差异越小越好。如上图所示。隐变量$ z $（通常为服从高斯分布的随机噪声）通过 Generator 生成 $X_{fake}$, 判别器负责判别输入的 data 是生成的样本 $X_{fake}$还是真实样本 $X_{real}$。通过公式描述如下所示：<br>$$<br>\min <em>{G} \max _{D} V(D, G)=\mathbb{E}</em>{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}<em>{\boldsymbol{z} \sim p</em>{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]<br>$$<br>对于判别器 $D$ 来说，这是一个二分类问题，$V(D,G)$ 为二分类问题中常见的交叉熵损失。对于生成器 $G$ 来说，为了尽可能欺骗 $D$，所以需要最大化生成样本的判别概率 $D(G(z))$，即最小化 $log(1-D(G(z)))$，注意：$log(D(x))$ 一项与生成器 $G$ 无关，所以可以忽略。</p>
-<p>实际训练时，生成器和判别器采取交替训练，即先训练 $D$，然后训练 $G$，不断往复。值得注意的是，对于生成器，其最小化的是$\max _{D} V(D, G)$，即最小化$V(D,G)$ 的最大值，这样形成一个对抗的过程。<a id="more"></a></p>
-<h3 id="目标函数"><a href="#目标函数" class="headerlink" title="目标函数"></a>目标函数</h3><p>GAN网络的提出者Ian Goodfellow证明了，当经典GAN在最优化时就是最小化两个分布的JS散度。但在实际使用中，衡量两个分布的相似性有很多方式，如KL散度，JS散度，F散度，Bregman散度，Wasserstein距离等。因此可以定义不同的距离度量方式来定义目标函数。Wasserstein距离如下：<br>$$<br>W(p, q)=\inf <em>{\gamma \sim \Pi(p, q)} \mathbb{E}</em>{(x, y) \sim \gamma}[|x-y|]<br>$$</p>
-<h2 id="GAN的训练过程"><a href="#GAN的训练过程" class="headerlink" title="GAN的训练过程"></a>GAN的训练过程</h2><p>前面说过GAN包含了生成器和判别器，实际上是两个网络：生成网络和判别网络。那么在整个网络中，怎么来对网络进行训练呢？</p>
+<h3 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h3><p>生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器$G$的目标是基于噪声变量$z$生成一个对象$x^{‘}$，并使其看起来和真的$x$一样。而判别器$D$的目标就是找到生成出的结果和真实$x$之间的差异，差异越小越好。如上图所示。隐变量$ z $（通常为服从高斯分布的随机噪声）通过 Generator 生成 $X_{fake}$, 判别器负责判别输入的 data 是生成的样本 $X<em>{fake}$还是真实样本 $X\</em>{real}$。通过公式描述如下所示：</p>
+<script type="math/tex; mode=display">
+\min _{G} \max _{D} V(D, G)=\mathbb{E}_{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}_{\boldsymbol{z} \sim p_{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]</script><p>对于判别器 $D$ 来说，这是一个二分类问题，$V(D,G)$ 为二分类问题中常见的交叉熵损失。对于生成器 $G$ 来说，为了尽可能欺骗 $D$，所以需要最大化生成样本的判别概率 $D(G(z))$，即最小化 $log(1-D(G(z)))$，注意：$log(D(x))$ 一项与生成器 $G$ 无关，所以可以忽略。</p>
+<p>实际训练时，生成器和判别器采取交替训练，即先训练 $D$，然后训练 $G$，不断往复。值得注意的是，对于生成器，其最小化的是$\max\ _{D} V(D, G)$，即最小化$V(D,G)$ 的最大值，这样形成一个对抗的过程。<a id="more"></a></p>
+<h3 id="目标函数"><a href="#目标函数" class="headerlink" title="目标函数"></a>目标函数</h3><p>GAN网络的提出者Ian Goodfellow证明了，当经典GAN在最优化时就是最小化两个分布的JS散度。但在实际使用中，衡量两个分布的相似性有很多方式，如KL散度，JS散度，F散度，Bregman散度，Wasserstein距离等。因此可以定义不同的距离度量方式来定义目标函数。Wasserstein距离如下：</p>
+<script type="math/tex; mode=display">
+W(p, q)=\inf _{\gamma \sim \Pi(p, q)} \mathbb{E}_{(x, y) \sim \gamma}[\|x-y\|]</script><h2 id="GAN的训练过程"><a href="#GAN的训练过程" class="headerlink" title="GAN的训练过程"></a>GAN的训练过程</h2><p>前面说过GAN包含了生成器和判别器，实际上是两个网络：生成网络和判别网络。那么在整个网络中，怎么来对网络进行训练呢？</p>
 <h3 id="生成器"><a href="#生成器" class="headerlink" title="生成器"></a>生成器</h3><p>对于生成器（生成网络）来说，输入一个$n$维向量，输出目标大小的样本，因此首先需要得到一个输入向量。以图片为例，可以输入一个分布的向量，输出图片像素大小的图片。</p>
 <blockquote>
 <p>这里的生成器可以是任意可以输出图片的模型，比如最简单的全连接神经网络，又或者是反卷积网络等。</p>
@@ -187,7 +190,7 @@
 <li>初始化判别器的参数$\theta_{D}$和生成器$G$的参数$\theta_{G}$</li>
 <li>从真实样本中采样 $m$个样本$\left{x^{1}, x^{2}, \ldots x^{m}\right}$，从先验分布噪声中采样$m$个噪声样本${z^{1}, z^{2}, \ldots, z^{m}}$并通过生成器获取 $m$个生成样本$\left{\tilde{x}^{1}, \tilde{x}^{2}, \ldots, \tilde{x}^{m}\right}$固定生成器$G$，训练判别器$D$尽可能好地准确判别真实样本和生成样本，尽可能大地区分正确样本和生成的样本。</li>
 <li><strong>循环$k$次更新判别器之后，使用较小的学习率来更新一次生成器的参数</strong>，训练生成器使其尽可能能够减小生成样本与真实样本之间的差距，也相当于尽量使得判别器判别错误。</li>
-<li>多次更新迭代之后，最终理想情况是使得判别器判别不出样本来自于生成器的输出还是真实的输出。亦即最终样本判别概率均为0.5。使得生成器和判别器之间达到平衡（这点也被Ian Goodfellow证明会达到<a href="[https://zh.wikipedia.org/zh-hans/%E7%B4%8D%E4%BB%80%E5%9D%87%E8%A1%A1%E9%BB%9E](https://zh.wikipedia.org/zh-hans/納什均衡點)">纳什均衡</a>）。</li>
+<li>多次更新迭代之后，最终理想情况是使得判别器判别不出样本来自于生成器的输出还是真实的输出。亦即最终样本判别概率均为0.5。使得生成器和判别器之间达到平衡（这点也被Ian Goodfellow证明会达到<a href="[https://zh.wikipedia.org/zh-hans/%E7%B4%8D%E4%BB%80%E5%9D%87%E8%A1%A1%E9%BB%9E](https://zh.wikipedia.org/zh-hans/納什均衡點">纳什均衡</a>)）。</li>
 </ul>
 <blockquote>
 <p>之所以要训练k次判别器，再训练生成器，是因为要先拥有一个好的判别器，使得能够教好地区分出真实样本和生成样本之后，才好更为准确地对生成器进行更新。下面是GAN的论文中对训练过程的描述，如下图所示。</p>
@@ -204,8 +207,9 @@
 </li>
 <li><p>不收敛（non-convergence）的问题，所有的理论都认为 GAN 应该在纳什均衡（Nash equilibrium）上有卓越的表现，但梯度下降只有在凸函数的情况下才能保证实现纳什均衡。当博弈双方都由神经网络表示时，在没有实际达到均衡的情况下，让它们永远保持对自己策略的调整是可能的。</p>
 </li>
-<li><p>GAN 的优化目标是一个极小极大（minmax）问题，即$\min _{G} \max _{D} V(G, D)$，也就是说，优化生成器的时候，最小化的是$\max _{D} V(G, D)$。可是我们是迭代优化的，要保证 $V(G,D)$ 最大化，就需要迭代非常多次，这就导致训练时间很长。如果我们只迭代一次判别器，然后迭代一次生成器，不断循环迭代。这样原先的极小极大问题，就容易变成极大极小（maxmin）问题，可二者是不一样的，会出现mode collapse（模型崩溃）。即：<br>$$<br>\min _{G} \max _{D} V(G, D) \neq \max _{D} \min _{G} V(G, D)<br>$$</p>
-</li>
+<li><p>GAN 的优化目标是一个极小极大（minmax）问题，即$\min <em>{G} \max </em>{D} V(G, D)$，也就是说，优化生成器的时候，最小化的是$\max _{D} V(G, D)$。可是我们是迭代优化的，要保证 $V(G,D)$ 最大化，就需要迭代非常多次，这就导致训练时间很长。如果我们只迭代一次判别器，然后迭代一次生成器，不断循环迭代。这样原先的极小极大问题，就容易变成极大极小（maxmin）问题，可二者是不一样的，会出现mode collapse（模型崩溃）。即：</p>
+<script type="math/tex; mode=display">
+\min_{G} \max_{D} V(G, D) \neq \max_{D} \min_{G} V(G, D)</script></li>
 </ol>
 <p>针对上面的主要问题，很多其他GAN网络对经典的GAN网络进行了优化，如WGAN，StackGAN等，都是在GAN的基础上进行优化，扩展，时期应用更广泛。</p>
 <h2 id="GAN常见的模型结构"><a href="#GAN常见的模型结构" class="headerlink" title="GAN常见的模型结构"></a>GAN常见的模型结构</h2><h3 id="DCGAN"><a href="#DCGAN" class="headerlink" title="DCGAN"></a>DCGAN</h3><p>DCGAN 提出使用 CNN 结构来稳定 GAN 的训练，并使用了以下一些 trick： </p>
@@ -222,7 +226,7 @@
 <p>在图像领域，在图像翻译，超分辨率，目标监测，图像联合分布学习，视频生成等。也可以做序列生成，音乐生成；语言和语音转换等。下面对各个领域的应用进行了总结：</p>
 <p><img src="/uploads/1558418520398.png" srcset="/img/loading.gif" alt="1558418520398"></p>
 <h2 id="GAN的TensorFlow实现"><a href="#GAN的TensorFlow实现" class="headerlink" title="GAN的TensorFlow实现"></a>GAN的TensorFlow实现</h2><p>下面时对GAN网络的基础实现，生成器和判别器均是使用2层全连接的网络结构，在训练过程中先训练判别器再训练生成器，1-1的训练（即训练一次判别器后训练一次生成器），在每迭代10000步就生成一批图片。损失函数也是使用原始论文中的形式。具体代码参考如下：</p>
-<pre><code class="python">import tensorflow as tf
+<pre><code class="lang-python">import tensorflow as tf
 import numpy as np
 import matplotlib.gridspec as gridspec
 
@@ -359,13 +363,13 @@ with tf.Session() as sess:
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/GNN/">GNN</a>
+                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
                     
-                      <a class="hover-with-bg" href="/tags/generator/">generator</a>
+                      <a class="hover-with-bg" href="/tags/GNN/">GNN</a>
                     
                       <a class="hover-with-bg" href="/tags/deep-learning/">deep learning</a>
                     
-                      <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                      <a class="hover-with-bg" href="/tags/generator/">generator</a>
                     
                       <a class="hover-with-bg" href="/tags/discriminator/">discriminator</a>
                     
@@ -627,6 +631,37 @@ with tf.Session() as sess:
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 100vh;">
+  <header style="height: 50vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -124,10 +124,6 @@
           </div>
 
           
-            <div class="scroll-down-bar">
-              <i class="fas fa-angle-down scroll-down-arrow"></i>
-            </div>
-          
         </div>
       </div>
     </div>
@@ -137,7 +133,7 @@
     
       <div class="container nopadding-md">
         <div class="py-5 z-depth-3" id="board"
-          style=margin-top:0>
+          >
           
           <div class="container">
             <div class="row">
@@ -468,6 +464,7 @@ def f(a):
 if __name__ == &#39;__main__&#39;:
     pool = ThreadPoolExecutor()
     pool.map(f, range(100))
+
 CPU的情况如下,乐意看出只有其中一个CPU的使用率为100%以上，其他没有使用，而且每次只运行一个线程，所以可以确定Python的多线程并没有利用多核运行。    ...</div>
         </div>
       </a>
@@ -519,16 +516,18 @@ CPU的情况如下,乐意看出只有其中一个CPU的使用率为100%以上，
 
 下面主要对高斯过程从几个方面进行详细的讲解，首先我们对高斯过程有一个大概的认知，通过一种通俗易懂的方式来进行说明，再从理论的角度来对高斯过程进行详细的理论讲解，最后会对高斯过程种使用的协方差函数（核函数）进行列举说明。另外会对使用高斯过程应该考虑的问题进行说明。
 1. 高斯过程的通俗理解（总体认知）在本文中通过高斯过程回归（GPR）来帮助高斯过程的理解。下面我们从回归的角度，从解决问题的角度看GPR是怎么一步一步解决我们的问题。
-对于回归我们是给出$X和Y$，再给出测试的$X_{test}$，要求预测得到$Y_{test}$。高斯过程的出发点就是：如果两个$x$比较接近，那么它们对应的$y$一定比较接近。对于给定的新$X_{test}$与之前给出的$X$有多近，从而就知道了要预测$Y$的$Y_{test}$有多近，来预测$Y_{test}$。那么如何度量Y之间有多近呢？高斯过程是通过协方差矩阵（相关系数矩阵），而这个协方差矩阵怎么计算呢？这儿将多维高斯分布作为先验，认为所有的y，服从一个多维的联合高斯分布，只需要根据$X和Y$来将协方差矩阵计算好，最后按照公式计算$Y_{test}$的边缘分布就可以了。
+对于回归我们是给出$X$和$Y$，再给出测试的$X_{test}$，要求预测得到$Y_{test}$。高斯过程的出发点就是：如果两个$x$比较接近，那么它们对应的$y$一定比较接近。对于给定的新$X_{test}$与之前给出的$X$有多近，从而就知道了要预测$Y$的$Y_{test}$有多近，来预测$Y_{test}$。那么如何度量Y之间有多近呢？高斯过程是通过协方差矩阵（相关系数矩阵），而这个协方差矩阵怎么计算呢？这儿将多维高斯分布作为先验，认为所有的y，服从一个多维的联合高斯分布，只需要根据$X$和$Y$来将协方差矩阵计算好，最后按照公式计算$Y_{test}$的边缘分布就可以了。
 上面解决了$Y$之间“近”的度量，那么$X$之间近怎么度量呢？那么核（kernel）就应该出现了，核不仅能刻画线性，而且能刻画非线性。目前整个问题就解决了：用$X$之间加kernel，来填充$Y$之间的协方差矩阵，然后计算$Y_{test}$的边缘分布。通过$X$和$Y$，给定$X_{test}$计算$Y_{test}$。
 上面我们对高斯过程有了一个总体认识后，下面我们就结合理论来进行理解，知道理论种每一步的具体作用，帮助我们理解高斯过程。
 2. 多元高斯分布在理解高斯过程之前需要对多元高斯分布有初步的认识，高斯分布是高斯过程的基础部件，而多元高斯分布是高斯分布的基础。多元高斯分布定义：
 
-多变量正态分布亦称为多元高斯分布。它是单维高斯分布向多维的推广。它同矩阵正态分布有紧密的联系。 一般形式：$$X = N(\mu, \Sigma) \tag{1}$$其中，$\mu$为向量，$\Sigma$为协方差矩阵，该分布为向量$\mu$为中心，协方差矩阵$\Sigma$决定其形状。N维随机向量 $X=[X_{1},\dots ,X_{N}]^{T}$如果服从多变量正态分布，必须满足下面的三个等价条件： 
+多变量正态分布亦称为多元高斯分布。它是单维高斯分布向多维的推广。它同矩阵正态分布有紧密的联系。 一般形式：
+
+X = N(\mu, \Sigma) \tag{1}其中，$\mu$为向量，$\Sigma$为协方差矩阵，该分布为向量$\mu$为中心，协方差矩阵$\Sigma$决定其形状。N维随机向量 $X=[X_{1},\dots ,X_{N}]^{T}$如果服从多变量正态分布，必须满足下面的三个等价条件： 
 
 任何线性组合$Y=a_{1}X_{1}+\cdots +a_{N}X_{N}$服从正态分布。 
-存在随机向量 $Z=[Z_{1},\dots ,Z_{M}]^{T}$( 它的每个元素服从独立标准正态分布），向量 $\mu =[\mu _{1},\dots ,\mu _{N}]^{T}$及$N\times M$矩阵$A$满足$X=AZ+\mu $. 
-存在$\mu$ 和一个对称正定阵 $\Sigma$，满足$X$的特征函数$\phi {X}\left(u;\mu ,\Sigma \right)=\exp \left(i\mu ^{T}u-{\frac  {1}{2}}u^{T}\Sigma u\right)$，如果$\Sigma$是非奇异的，那么该分布可以由以下的PDF来描述：$f{\mathbf {x} }(x_{1},\ldots ,x_{k})={\frac {1}{\sqrt {(2\pi )^{k}|{\boldsymbol {\Sigma }}|}}}\exp \left(-{\frac {1}{2}}({\mathbf {x} }-{\boldsymbol {\mu }})^{\mathrm {T} }{\boldsymbol {\Sigma }}^{-1}({\mathbf {x} }-{\boldsymbol {\mu }})\right)$，注意这里的$|\Sigma |$是协方差矩阵的行列式。...</div>
+存在随机向量 $Z=[Z_{1},\dots ,Z_{M}]^{T}$( 它的每个元素服从独立标准正态分布），向量 $\mu =[\mu_{1},\dots ,\mu_{N}]^{T}$及$N\times M$矩阵$A$满足$X=AZ+\mu $. 
+存在$\mu$ 和一个对称正定阵 $\Sigma$，满足$X$的特征函数$\phi_{X}\left(u;\mu ,\Sigma \right)=\exp \left(i\mu^{T}u-{\frac  {1}{2}}u^{T}\Sigma u\right)$，如果$\Sigma$是非奇异的，那么该分布可以由以下的PDF来描述：$f_{\mathbf {x} }(x_{1},\ldots ,x_{k})={\frac {1}{\sqrt {(2\pi )^{k}|{\boldsymbol {\Sigma }}|}}}\exp \left(-{\frac {1}{2}}({\mathbf {x} }-{\boldsymbol {\mu }})^{\mathrm {T} }{\boldsymbol {\Sigma }}^{-1}({\mathbf {x} }-{\boldsymbol {\mu }})\right)$，注意这里的$|\Sigma |$是协方差矩阵的行列式。...</div>
         </div>
       </a>
 
@@ -586,10 +585,12 @@ cffi来进行c扩展cffi是连接c和python的桥梁，是在pypy中分离出来
 #define C_EXTEND_PYTHON_PI_H
 
 float pi_approx(float n);#endif *//C_EXTEND_PYTHON_PI_H*
+
 // file: pi.c
 float pi_approx(float n){
     return 3.1415926 * n * n;
 }
+
 使用cffi模块来对这两个文件进行编译，会生成一个c source文件和.so或.pyd文件，可以在python下直接引用，进行使用，编译文件如下：
 from cffi import FFI
 
@@ -606,6 +607,7 @@ ffi_builder.set_source(&quot;_pi_cffi&quot;,
 
 if *__name__ == &quot;__main__&quot;:
     ffi_builder.compile(verbose=True )
+
 直接运行该编译文件则可创建python的c扩展库：.so或.pyd文件；另外也会生成_pi_cffi.c的源码。将.so或.pyd文件放如对应的目录即可实现引用。这种方式比较方便，能迅速构建c扩展。...</div>
         </div>
       </a>
@@ -855,6 +857,37 @@ if *__name__ == &quot;__main__&quot;:
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

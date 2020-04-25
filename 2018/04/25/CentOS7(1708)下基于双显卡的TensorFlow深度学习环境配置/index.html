@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -141,7 +141,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      18 分钟
+                      19 分钟
                   </span>
                 
 
@@ -175,25 +175,27 @@
 <p>再重启计算机，进入到U盘启动后的界面，选择<code>Install CentOS7</code>，然后按<code>tab</code>进入到编辑模式，修改其中的命令行：<code>Linuxefi /images/pxeboot/vmlinuzinst.stage22=hd:LABEL=CentOS\x207\x20x\86_64 quiet</code>，将修改为：<code>Linuxefi /images/pxeboot/vmlinuzinst.stage22=hd:/dev/sdb4 quiet</code>，再通过<code>Enter</code>快捷键执行安装。然后进入到图形安装界面。如果还是不能进入到图形界面，安装出错，请参考下面。</p>
 <h3 id="1-2-图形界面出错问题解决"><a href="#1-2-图形界面出错问题解决" class="headerlink" title="1.2 图形界面出错问题解决"></a>1.2 图形界面出错问题解决</h3><p>如果图形界面安装出现问题(<code>x startup failed falling back to text mod</code>)，一般是安装基础的图形界面出问题。解决方法是重启计算机，U盘启动，不选择<code>Install CentOS7</code>，选择<code>Troubleshooting --&gt;</code>，进入到选项，并选择第一项，修改镜像地址(tab或e修改，修改的地方和1.1中的一样)。</p>
 <h3 id="1-3-配置SSH服务"><a href="#1-3-配置SSH服务" class="headerlink" title="1.3 配置SSH服务"></a>1.3 配置SSH服务</h3><p>安装完系统后配置ssh服务，本文中将ssh端口修改为22222，需要开放22222端口。ssh具体配置就不详细说明。</p>
-<h2 id="2-Linux查看显卡的相关命令"><a href="#2-Linux查看显卡的相关命令" class="headerlink" title="2.Linux查看显卡的相关命令"></a>2.Linux查看显卡的相关命令</h2><p><code>lspci</code>命令查看硬件接口信息，可以通过<code>lspci |grep -i vga</code>来查询显卡，可以看出电脑的所有显卡，显示显卡型号。也可以显示显卡比较详细的信息：<code>lspci -vnn | grep VGA -A 12</code></p>
-<a id="more"></a>
-<h2 id="3-安装nvidia显卡驱动"><a href="#3-安装nvidia显卡驱动" class="headerlink" title="3.安装nvidia显卡驱动"></a>3.安装nvidia显卡驱动</h2><pre><code class="shell">rpm -Uvh &lt;http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm&gt;  # 添加源
+<h2 id="2-Linux查看显卡的相关命令"><a href="#2-Linux查看显卡的相关命令" class="headerlink" title="2.Linux查看显卡的相关命令"></a>2.Linux查看显卡的相关命令</h2><p><code>lspci</code>命令查看硬件接口信息，可以通过<code>lspci |grep -i vga</code>来查询显卡，可以看出电脑的所有显卡，显示显卡型号。也可以显示显卡比较详细的信息：<code>lspci -vnn | grep VGA -A 12</code><br><a id="more"></a></p>
+<h2 id="3-安装nvidia显卡驱动"><a href="#3-安装nvidia显卡驱动" class="headerlink" title="3.安装nvidia显卡驱动"></a>3.安装nvidia显卡驱动</h2><pre><code class="lang-shell">rpm -Uvh &lt;http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm&gt;  # 添加源
 yum install nvidia-detect  # 安装nvidia-detect命令
 nvidia-detect -v  # 检测显卡型号
 yum update  # 更新yum
 yum update kernel kernel-devel  # 更新核
-lsmod|grep nouveau</code></pre>
+lsmod|grep nouveau
+</code></pre>
 <p>修改<code>/lib/modprobe.d/dist-blacklist.conf</code>文件，在文件中加入：<code>blacklist nouveau options nouveau modeset=0</code></p>
 <h3 id="3-1-更改并重新生成grub2"><a href="#3-1-更改并重新生成grub2" class="headerlink" title="3.1 更改并重新生成grub2"></a>3.1 更改并重新生成grub2</h3><p>打开 <code>/etc/default/grub</code>文件，在其中的：<code>GRUB_CMDLINE_LINUX=”rd.lvm.lv=vg_centos/lv_root rd.lvm.lv=vg_centos/lv_swap rhgb quiet”</code> quiet后面加入<code>rdblacklist=nouveau</code>，保存。</p>
-<pre><code class="shell">grub2-mkconfig -o /boot/grub2/grub.cfg</code></pre>
+<pre><code class="lang-shell">grub2-mkconfig -o /boot/grub2/grub.cfg
+</code></pre>
 <p>我们首先把现有的移动到其它路径下以作为留手备份，打开终端执行：</p>
 <p><code>sudo mv /boot/initramfs-$(uname -r).img /你喜欢的路径，</code>然后重建它，执行：<code>sudo dracut /boot/initramfs-$(uname -r).img $(uname -r)</code>即可。</p>
 <h3 id="3-2-安装NVIDIA驱动"><a href="#3-2-安装NVIDIA驱动" class="headerlink" title="3.2 安装NVIDIA驱动"></a>3.2 安装NVIDIA驱动</h3><p>官网<a href="http://www.nvidia.com/Download/index.aspx?lang=en-us" target="_blank" rel="noopener">下载</a>驱动，下载下来时.run的文件，然后运行<code>sh *.run</code>即可。然后遇到提示什么的直接<code>yes</code>即可。在安装了驱动后提供了驱动自动更新的命令：<code>nvidia-installer --update</code>。安装完后查看<code>/etc/X11/xorg.conf</code>的内容，会发现 Device 的 Driver 设置会成为NVidia。</p>
 <p>再通过<code>lspci |grep -i vga</code>查看显卡，发现intel的集成显卡不见了，因为前面将集成显卡禁用掉了。因此只能看现在的独立显卡。</p>
-<h3 id="3-3-安装Bumblebee"><a href="#3-3-安装Bumblebee" class="headerlink" title="3.3 安装Bumblebee"></a>3.3 安装Bumblebee</h3><pre><code class="shell"> yum -y install bumblebee</code></pre>
+<h3 id="3-3-安装Bumblebee"><a href="#3-3-安装Bumblebee" class="headerlink" title="3.3 安装Bumblebee"></a>3.3 安装Bumblebee</h3><pre><code class="lang-shell"> yum -y install bumblebee
+</code></pre>
 <p>在Bumblebee官方wiki上对cuda使用进行了说明，如果使用cuda可以不用Bumblebee，因此也可以不用安装Bumblebee，不用配置切换。</p>
-<h2 id="4-安装CUDA-toolkit"><a href="#4-安装CUDA-toolkit" class="headerlink" title="4.安装CUDA-toolkit"></a>4.安装CUDA-toolkit</h2><p>下载地址在<a href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=CentOS&target_version=7&target_type=runfilelocal" target="_blank" rel="noopener">这里</a>选择合适的版本，本次选用的cuda9.1的最新版本安装，下载后放入某个目录下面，并运行<code>sh ./cuda_9.1.85_387.26_linux.run</code>进行安装，安装过程中一定要注意某些选项：</p>
-<pre><code class="tex">Do you accept the previously read EULA?
+<h2 id="4-安装CUDA-toolkit"><a href="#4-安装CUDA-toolkit" class="headerlink" title="4.安装CUDA-toolkit"></a>4.安装CUDA-toolkit</h2><p>下载地址在<a href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;target_distro=CentOS&amp;target_version=7&amp;target_type=runfilelocal" target="_blank" rel="noopener">这里</a>选择合适的版本，本次选用的cuda9.1的最新版本安装，下载后放入某个目录下面，并运行<code>sh ./cuda_9.1.85_387.26_linux.run</code>进行安装，安装过程中一定要注意某些选项：</p>
+<pre><code class="lang-tex">Do you accept the previously read EULA?
 accept/decline/quit: accept
 Install NVIDIA Accelerated Graphics Driver for Linux-x86_64 387.26?
 (y)es/(n)o/(q)uit: n
@@ -212,19 +214,22 @@ Install the CUDA 9.1 Samples?
 (y)es/(n)o/(q)uit: y
 
 Enter CUDA Samples Location
- [ default is /root ]: /usr/local/cuda-9.1/examples</code></pre>
+ [ default is /root ]: /usr/local/cuda-9.1/examples
+</code></pre>
 <p>如果出现部分lib缺失的情况，那么就需要安装相应的依赖库，主要出现以下的情况</p>
-<pre><code class="tex">Installing the CUDA Toolkit in /usr/local/cuda-9.1 ...
+<pre><code class="lang-tex">Installing the CUDA Toolkit in /usr/local/cuda-9.1 ...
 Missing recommended library: libGLU.so
 Missing recommended library: libX11.so
 Missing recommended library: libXi.so
-Missing recommended library: libXmu.so</code></pre>
+Missing recommended library: libXmu.so
+</code></pre>
 <p>在通过命令<code>yum install mesa-libGLU-devel libXi-devel libXmu-devel</code>来安装依赖库并重新安装cuda-toolkit。并按照上面的过程进行安装。安装完后会提示：</p>
 <pre><code>lease make sure that
  -   PATH includes /usr/local/cuda-9.1/bin
  -   LD_LIBRARY_PATH includes /usr/local/cuda-9.1/lib64, or, add /usr/local/cuda-9.1/lib64 to /etc/ld.so.conf and run ldconfig as root
 
-To uninstall the CUDA Toolkit, run the uninstall script in /usr/local/cuda-9.1/bin</code></pre><p>配置cuda，将cuda/bin和cuda/lib分布添加到PATH和LD_LIBRARY_PATH。如将环境变量添加到<code>/etc/profile</code>中：<code>export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda-9.1/lib64:/usr/local/cuda/lib64</code>，<code>export PATH=$PATH:/usr/local/cuda-9.1/bin:/usr/local/cuda/bin</code>，<code>export CUDA_HOME=/usr/local/cuda-9.1</code>并<code>source /etc/profile</code>。如果要对cuda进行测试，进入到examples目录下的对NVIDIA_CUDA-9.1_Samples下的文件进行编译。编译后运行某个example进行测试。如下：</p>
+To uninstall the CUDA Toolkit, run the uninstall script in /usr/local/cuda-9.1/bin
+</code></pre><p>配置cuda，将cuda/bin和cuda/lib分布添加到PATH和LD_LIBRARY_PATH。如将环境变量添加到<code>/etc/profile</code>中：<code>export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda-9.1/lib64:/usr/local/cuda/lib64</code>，<code>export PATH=$PATH:/usr/local/cuda-9.1/bin:/usr/local/cuda/bin</code>，<code>export CUDA_HOME=/usr/local/cuda-9.1</code>并<code>source /etc/profile</code>。如果要对cuda进行测试，进入到examples目录下的对NVIDIA_CUDA-9.1_Samples下的文件进行编译。编译后运行某个example进行测试。如下：</p>
 <pre><code>[root@localhost deviceQuery]# ./deviceQuery
 ./deviceQuery Starting...
 
@@ -305,7 +310,8 @@ Device 1: &quot;GeForce GTX 1050 Ti&quot;
 &gt; Peer access from GeForce GTX 1050 Ti (GPU1) -&gt; GeForce GTX 1060 6GB (GPU0) : No
 
 deviceQuery, CUDA Driver = CUDART, CUDA Driver Version = 9.1, CUDA Runtime Version = 9.1, NumDevs = 2
-Result = PASS</code></pre><p>上面<code>Result = PASS</code>说明校验通过。</p>
+Result = PASS
+</code></pre><p>上面<code>Result = PASS</code>说明校验通过。</p>
 <pre><code>[root@localhost bandwidthTest]# ./bandwidthTest
 [CUDA Bandwidth Test] - Starting...
 Running on...
@@ -330,27 +336,31 @@ Running on...
 
 Result = PASS
 
-NOTE: The CUDA Samples are not meant for performance measurements. Results may vary when GPU Boost is enabled.</code></pre><p><code>Result = PASS</code>说明通信正常。</p>
+NOTE: The CUDA Samples are not meant for performance measurements. Results may vary when GPU Boost is enabled.
+</code></pre><p><code>Result = PASS</code>说明通信正常。</p>
 <h2 id="5-安装cuDNN"><a href="#5-安装cuDNN" class="headerlink" title="5.安装cuDNN"></a>5.安装cuDNN</h2><p>首先下载和CUDA对应版本的cuDNN的版本。下载地址在<a href="https://developer.nvidia.com/rdp/cudnn-download" target="_blank" rel="noopener">这里</a>，再上传到服务器上某个目录，进行操作。首先下载的文件为压缩格式的，主要操作过程如下：</p>
-<pre><code class="shell"># 切换到压缩包位置
+<pre><code class="lang-shell"># 切换到压缩包位置
 cp cudnn-9.1-linux-x64-v7.1.solitairetheme8 cudnn-9.1-linux-x64-v7.1.tgz
 tar -xvf cudnn-9.1-linux-x64-v7.1.tgz
 
 cp ./lib64/* /usr/local/cuda-9.1/lib64/
 cp ./include/* /usr/local/cuda-9.1/include/
-chmod a+r /usr/local/cuda-9.1/include/cudnn.h /usr/local/cuda-9.1/lib64/libcudnn*</code></pre>
+chmod a+r /usr/local/cuda-9.1/include/cudnn.h /usr/local/cuda-9.1/lib64/libcudnn*
+</code></pre>
 <p>通过上面的过程就安装配置完成了。</p>
 <h2 id="6-安装tensorflow-gpu"><a href="#6-安装tensorflow-gpu" class="headerlink" title="6.安装tensorflow-gpu"></a>6.安装tensorflow-gpu</h2><h3 id="6-1-Anaconda安装"><a href="#6-1-Anaconda安装" class="headerlink" title="6.1 Anaconda安装"></a>6.1 Anaconda安装</h3><p>在清华大学的镜像网站（<a href="https://mirrors.tuna.tsinghua.edu.cn/）上下载最新的Anaconda版本，我们下载的是5.1.0版本，python版本为3.6.4，然后进行安装：" target="_blank" rel="noopener">https://mirrors.tuna.tsinghua.edu.cn/）上下载最新的Anaconda版本，我们下载的是5.1.0版本，python版本为3.6.4，然后进行安装：</a></p>
-<pre><code class="shell">sh Anaconda3-5.1.0-Linux-x86_64.sh
+<pre><code class="lang-shell">sh Anaconda3-5.1.0-Linux-x86_64.sh
 # prefix处输入/opt/anaconda3，将anaconda安装到/opt/anaconda目录下
-# 并将python和anaconda的bin目录加入到.bashrc下</code></pre>
+# 并将python和anaconda的bin目录加入到.bashrc下
+</code></pre>
 <p>安装了anaconda后，将pip，numpy，scipy，matplotlib，pandas，jupyter-notebook等都集成了，再安装一个查看gpu状态的工具：</p>
-<pre><code class="shell">pip install gpustat</code></pre>
+<pre><code class="lang-shell">pip install gpustat
+</code></pre>
 <h3 id="6-2-安装Tensorflow的GPU版本"><a href="#6-2-安装Tensorflow的GPU版本" class="headerlink" title="6.2 安装Tensorflow的GPU版本"></a>6.2 安装Tensorflow的GPU版本</h3><p>在安装了anaconda后，可以安装一个查看GPU状态的工具，通过pip进行安装即可：<code>pip install gpustat</code>。安装tensorflow直接执行<code>conda install tensorflow-gpu</code>，会自动安装tensorflow的GPU版本并将cuda的相关动态链接库安装好，cuda相关的动态库都已经安装在了<code>${CONDA_HOME}/anaconda3/lib</code>。</p>
 <p>由于conda上面支持的<code>tensorflow-gpu</code>版本，因此conda安装<code>tensorflow-gpu</code>会将cudnn，cuda以及mkl一起安装，版本会自动对应，因此相对来说比较容易，且不容易出错。</p>
 <p>还可以通过pip来安装最新的<code>tensorflow</code>版本：<code>pip install tensorflow-gpu</code>，pip会找到相应的版本安装。安装后可能会出现GPU不可用的情况，这种情况基本是tensorflow安装的版本问题。</p>
 <p>安装完成后进行测试：</p>
-<pre><code class="shell">&gt;&gt;&gt; hello = tf.constant(&#39;Hello, Tensorflow&#39;)
+<pre><code class="lang-shell">&gt;&gt;&gt; hello = tf.constant(&#39;Hello, Tensorflow&#39;)
 &gt;&gt;&gt; sess = tf.Session()
 2018-04-16 02:26:55.745130: I tensorflow/core/platform/cpu_feature_guard.cc:140] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
 2018-04-16 02:26:56.924933: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:898] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
@@ -371,36 +381,42 @@ totalMemory: 3.94GiB freeMemory: 3.89GiB
 2018-04-16 02:26:57.159245: I tensorflow/core/common_runtime/gpu/gpu_device.cc:930] 1:   N N
 2018-04-16 02:26:57.159377: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1041] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 5649 MB memory) -&gt; physical GPU (device: 0, name: GeForce GTX 1060 6GB, pci bus id: 0000:02:00.0, compute capability: 6.1)
 &gt;&gt;&gt; print(sess.run(hello))
-b&#39;Hello, Tensorflow&#39;</code></pre>
+b&#39;Hello, Tensorflow&#39;
+</code></pre>
 <h3 id="6-3-安装keras"><a href="#6-3-安装keras" class="headerlink" title="6.3 安装keras"></a>6.3 安装keras</h3><p>安装keras较简单，直接用pip安装即可：<code>pip install keras</code>，会自动安装到site-packages，进入到/root/.keras/keras.json文件修改backed为tensorflow：</p>
-<pre><code class="json">{
+<pre><code class="lang-json">{
     &quot;floatx&quot;: &quot;float32&quot;,
     &quot;epsilon&quot;: 1e-07,
     &quot;backend&quot;: &quot;tensorflow&quot;,
     &quot;image_data_format&quot;: &quot;channels_last&quot;
-}</code></pre>
+}
+</code></pre>
 <h2 id="7-配置jupyter-notebook或jupyter-lab"><a href="#7-配置jupyter-notebook或jupyter-lab" class="headerlink" title="7.配置jupyter-notebook或jupyter-lab"></a>7.配置jupyter-notebook或jupyter-lab</h2><p>jupyter配置好后，可以远程连接服务器上的jupyter-server，方便多人使用anaconda的环境。首先，需要对jupyter的cnfig进行配置，先生成一个配置文件：</p>
-<pre><code class="shell">jupyter notebook --generate-config
-# Writing default config to: /root/.jupyter/jupyter_notebook_config.py</code></pre>
+<pre><code class="lang-shell">jupyter notebook --generate-config
+# Writing default config to: /root/.jupyter/jupyter_notebook_config.py
+</code></pre>
 <p>在设置服务器登陆的密码：</p>
-<pre><code class="python">In [1]: from notebook.auth import passwd
+<pre><code class="lang-python">In [1]: from notebook.auth import passwd
 
 In [2]: passwd()
 Enter password:
 Verify password:
-Out[2]: &#39;sha1:1c5cf71ad9a3:dad7ae0af719426816841d239f5e8247176dd0adsf&#39;</code></pre>
+Out[2]: &#39;sha1:1c5cf71ad9a3:dad7ae0af719426816841d239f5e8247176dd0adsf&#39;
+</code></pre>
 <p>将生成的<code>sha1:...</code>复制下来在配置文件中进行配置(<code>vim ~/.jupyter/jupyter_notebook_config.py</code>)，配置项主要有：</p>
-<pre><code class="shell">c.NotebookApp.password =
+<pre><code class="lang-shell">c.NotebookApp.password =
 c.NotebookApp.port = 8888
 c.NotebookApp.allow_root = True
 c.NotebookApp.open_browser = False
-c.NotebookApp.notebook_dir = &#39;/opt/workspace&#39;</code></pre>
+c.NotebookApp.notebook_dir = &#39;/opt/workspace&#39;
+</code></pre>
 <p>开放相应的端口：</p>
-<pre><code class="shell">[root@localhost cuda]# firewall-cmd --zone=public --add-port=8888/tcp --permanent
+<pre><code class="lang-shell">[root@localhost cuda]# firewall-cmd --zone=public --add-port=8888/tcp --permanent
 [root@localhost cuda]# firewall-cmd --zone=public --add-port=8889/tcp --permanent
-[root@localhost cuda]# firewall-cmd --reload</code></pre>
+[root@localhost cuda]# firewall-cmd --reload
+</code></pre>
 <h2 id="8-可能出现的错误及解决办法"><a href="#8-可能出现的错误及解决办法" class="headerlink" title="8.可能出现的错误及解决办法"></a>8.可能出现的错误及解决办法</h2><h3 id="8-1-出现错误-39-GLIBC-2-23-39-not-fund"><a href="#8-1-出现错误-39-GLIBC-2-23-39-not-fund" class="headerlink" title="8.1 出现错误&#39;GLIBC_2.23&#39; not fund"></a>8.1 出现错误<code>&#39;GLIBC_2.23&#39; not fund</code></h3><p><code>ImportError: /lib64/libm.so.6: version GLIBC_2.23&#39; not found (required by /opt/anaconda3/lib/python3.6/site-packages/tensorflow/python/_pywrap_tensorflow_internal.so)</code></p>
-<pre><code class="shell">mkdir ~/glibc
+<pre><code class="lang-shell">mkdir ~/glibc
 cd ~/glibc 
 
 wget http://ftp.gnu.org/gnu/glibc/glibc-2.23.tar.gz
@@ -413,17 +429,20 @@ cd build
 make -j4
 sudo make install
 
-export LD_LIBRARY_PATH=/opt/glibc-2.23/lib</code></pre>
+export LD_LIBRARY_PATH=/opt/glibc-2.23/lib
+</code></pre>
 <p>这个错误修复后可能会出现python无法使用的情况。python最初是根据glibc-2.17安装的，因此python会出现问题。但是这种放肆能解决上面的错误。在其他场景能通过这种方式。</p>
 <h3 id="8-2出现错误：InvalidArgumentError"><a href="#8-2出现错误：InvalidArgumentError" class="headerlink" title="8.2出现错误：InvalidArgumentError"></a>8.2出现错误：<code>InvalidArgumentError</code></h3><p>出现错误如下，只检测到了CPU但是没有检测到GPU。基本是tensorflow的版本和cuda和cudnn的版本未匹配。如果可以通过conda来安装就通过conda安装，会自动匹配对应的版本。</p>
-<pre><code class="tex">(see above for traceback): Cannot assign a device for operation &#39;matmul/bias&#39;: Operation was illuminated assigned to /device:GPU:1 but available devices are [/job:localhost/replica:0/task:0/device :CPU:0 ]. Make sure the device specification refers to a valid device`</code></pre>
+<pre><code class="lang-tex">(see above for traceback): Cannot assign a device for operation &#39;matmul/bias&#39;: Operation was illuminated assigned to /device:GPU:1 but available devices are [/job:localhost/replica:0/task:0/device :CPU:0 ]. Make sure the device specification refers to a valid device`
+</code></pre>
 <p>还有另外一个问题，只能检测到一个CPU，另外一个CPU不在GPU列表中，这种情况下主要是因为tensorflow单机默认只是用一个GPU，因此需要进行指定某个GPU，但是需要设置一个环境变量<code>TF_MIN_GPU_MULTIPROCESSOR_COUNT</code>。在系统种可以设置一个环境变量<code>export TF_MIN_GPU_MULTIPROCESSOR_COUNT=2</code>；在工程种应用时需要通过代码设置下环境变量，如下：</p>
-<pre><code class="python">import os
-os.environ[&#39;TF_MIN_GPU_MULTIPROCESSOR_COUNT&#39;] = &#39;2&#39;</code></pre>
-<h3 id="8-3-出现FutureWarning警告"><a href="#8-3-出现FutureWarning警告" class="headerlink" title="8.3 出现FutureWarning警告"></a>8.3 出现FutureWarning警告</h3><p>出现这个警告<code>FutureWarning: Conversion of the second argument of issubdtype from float to np.floating is deprecated. In future, it will be treated as np.float64 == np.dtype(float).type</code>.解决办法：更新_h5py_的版本到_2.8.0rc1_，通过<code>pip install h5py==2.8.0rc1</code>命令来更新。</p>
+<pre><code class="lang-python">import os
+os.environ[&#39;TF_MIN_GPU_MULTIPROCESSOR_COUNT&#39;] = &#39;2&#39;
+</code></pre>
+<h3 id="8-3-出现FutureWarning警告"><a href="#8-3-出现FutureWarning警告" class="headerlink" title="8.3 出现FutureWarning警告"></a>8.3 出现FutureWarning警告</h3><p>出现这个警告<code>FutureWarning: Conversion of the second argument of issubdtype from float to np.floating is deprecated. In future, it will be treated as np.float64 == np.dtype(float).type</code>.解决办法：更新<em>h5py</em>的版本到<em>2.8.0rc1</em>，通过<code>pip install h5py==2.8.0rc1</code>命令来更新。</p>
 <h2 id="9-Refrence"><a href="#9-Refrence" class="headerlink" title="9.Refrence"></a>9.Refrence</h2><p>1.<a href="https://wizardforcel.gitbooks.io/vbird-linux-basic-4e/content/204.html" target="_blank" rel="noopener">Linux驱动程序安装范例</a></p>
 <p>2.<a href="http://infonook.org/centos-bumblebee-nvidia/" target="_blank" rel="noopener">CentOS 7(1708) Intel+Nvidia双显卡笔记本安装Nvidia驱动并用Bumblebee控制独显</a></p>
-<p>3.<a href="https://wiki.archlinux.org/index.php/Bumblebee_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)" target="_blank" rel="noopener">Bumblebee wiki</a></p>
+<p>3.<a href="https://wiki.archlinux.org/index.php/Bumblebee_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87" target="_blank" rel="noopener">Bumblebee wiki</a>)</p>
 <p>4.<a href="http://notes.maxwi.com/2017/02/26/ubuntu-cuda8-env-set/" target="_blank" rel="noopener">CUDA的安装配置</a></p>
 <p>5.<a href="http://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html#installlinux" target="_blank" rel="noopener">cuDNN官方配置</a></p>
 <p>6.<a href="https://ying-zhang.github.io/cloud/2017/setup-tensorflow-gpu-centos7/" target="_blank" rel="noopener">Centos7安装tensorflow深度学习环境</a></p>
@@ -709,6 +728,37 @@ os.environ[&#39;TF_MIN_GPU_MULTIPROCESSOR_COUNT&#39;] = &#39;2&#39;</code></pre>
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

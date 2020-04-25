@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,7 +170,7 @@
             
             <div class="markdown-body">
               <p>由于在工作中使用<code>docker</code>部署一个科学计算的环境<code>anaconda</code>，如：<code>docker run -d -p 50001:22 anaconda2:ssh /usr/sbin/sshd -D</code>，可以简单的用脚本启动一个指定本地端口映射到容器<code>22</code>端口的一个容器环境，特别是在生成多个容器时。因此使用<code>python</code>写一个脚本能够实现该功能。避免在工作中重复使用<code>docker run</code>的命令来生成容器。该脚本还可以扩展一些功能，如获取容器的虚拟<code>IP</code>，获取容器的名称和容器<code>ID</code>，对容器的操作等等。<a id="more"></a>下面为实现的脚本：</p>
-<pre><code class="python">#!/usr/bin/python
+<pre><code class="lang-python">#!/usr/bin/python
 
 from __future__ import print_function
 import commands
@@ -222,7 +222,8 @@ elif option.container_id:
         sys.exit(1)
 else:
     print(&quot;This script use error. Reference: \n Usage: file.py [options]&quot;)
-    sys.exit(1)</code></pre>
+    sys.exit(1)
+</code></pre>
 
             </div>
             <hr>
@@ -503,6 +504,37 @@ else:
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

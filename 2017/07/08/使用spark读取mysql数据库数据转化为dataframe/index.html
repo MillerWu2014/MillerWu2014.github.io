@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,7 +170,7 @@
             
             <div class="markdown-body">
               <p>使用<code>spark</code>中的接口连接<code>mysql</code>数据库并读取并查询出数据库中的数据并转化为<code>spark</code>中的<code>dataframe</code>格式的<code>RDD</code>。其中实现了两种方式查询数据，一种单表查询和另外一种的多表关联查询数据。其中使用的方式在下面代码的<code>main</code>函数中。<a id="more"></a></p>
-<pre><code class="java">import org.apache.spark.SparkConf
+<pre><code class="lang-java">import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 
@@ -238,7 +238,8 @@ object sparkConnectTest{
         dataframe.collect().take(10).foreach(println)
         frame.collect().take(10).foreach(println)
     }
-}</code></pre>
+}
+</code></pre>
 
             </div>
             <hr>
@@ -519,6 +520,37 @@ object sparkConnectTest{
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,10 +170,15 @@
             
             <div class="markdown-body">
               <p>在信息论中，对信息的度量主要是通过香农熵，自信息等。而本文中的KL散度(<code>Kullback-Leible</code>散度)则是对信息之间的度量或者两个分布之间的距离的度量，又称为交叉熵，相对熵。</p>
-<h3 id="1-KL散度的定义"><a href="#1-KL散度的定义" class="headerlink" title="1. KL散度的定义"></a>1. KL散度的定义</h3><p>设$p(x)$和$q(x)$是$x$取值的两个概率分布，一般$p(x)$和$q(x)$为密度函数则$p$对$q$的相对熵为：<br>$$<br>DL(p||q)=\sum{_{i=1}^{n}} p(x) \log{\frac{p(x)}{q(x)}}<br>$$<br>在一定程度上，KL散度可以度量两个随机变量的距离。KL散度是两个概率分布P和Q差别的非对称性的度量。KL散度是用来度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。<a id="more"></a></p>
+<h3 id="1-KL散度的定义"><a href="#1-KL散度的定义" class="headerlink" title="1. KL散度的定义"></a>1. KL散度的定义</h3><p>设$p(x)$和$q(x)$是$x$取值的两个概率分布，一般$p(x)$和$q(x)$为密度函数则$p$对$q$的相对熵为：</p>
+<script type="math/tex; mode=display">
+DL(p||q)=\sum{_{i=1}^{n}} p(x) \log{\frac{p(x)}{q(x)}}</script><p>在一定程度上，KL散度可以度量两个随机变量的距离。KL散度是两个概率分布P和Q差别的非对称性的度量。KL散度是用来度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。<a id="more"></a></p>
 <h3 id="2-KL散度的性质"><a href="#2-KL散度的性质" class="headerlink" title="2. KL散度的性质"></a>2. KL散度的性质</h3><ul>
-<li>虽然KL散度似乎是一个距离或者度量，但是在严格的意义上讲又不是距离的度量，因为他们是不对称的，因此第一个性质就是不对称性，但是可以将公式转换为对称的公式，如下：<br>$$<br>DL(p||q) \ne DL(q||p)<br>$$<br>$$<br>D(p, q) = \frac {DL(p||q + DL(q||p} {2}<br>$$</li>
-<li>KL散度的值始终是非负的:<br>$$<br>DL(p||q) \ge 0<br>$$</li>
+<li>虽然KL散度似乎是一个距离或者度量，但是在严格的意义上讲又不是距离的度量，因为他们是不对称的，因此第一个性质就是不对称性，但是可以将公式转换为对称的公式，如下：<script type="math/tex; mode=display">
+DL(p||q) \ne DL(q||p)</script><script type="math/tex; mode=display">
+D(p, q) = \frac {DL(p||q + DL(q||p} {2}</script></li>
+<li>KL散度的值始终是非负的:<script type="math/tex; mode=display">
+DL(p||q) \ge 0</script></li>
 </ul>
 <h3 id="3-KL散度的应用"><a href="#3-KL散度的应用" class="headerlink" title="3. KL散度的应用"></a>3. KL散度的应用</h3><ol>
 <li>相对熵可以衡量两个随机分布之间的距离，当两个随机分布相同时，它们的相对熵为零，当两个随机分布的差别增大时，它们的相对熵也会增大。所以相对熵（KL散度）可以用于比较文本的相似度，先统计出词的频率，然后计算KL散度就行了。</li>
@@ -465,6 +470,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

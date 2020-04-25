@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -174,7 +174,7 @@
 <li>视频讲义，介绍boosting算法，主要介绍<a href="http://videolectures.net/mlss05us_schapire_b/" target="_blank" rel="noopener">AdaBoosing</a></li>
 <li>在这个网站的资源项里列出了对于boosting算法来源介绍的几篇文章，可以<a href="http://www.boosting.org/tutorials" target="_blank" rel="noopener">下载</a></li>
 <li>一个博客介绍了许多视觉中常用算法，作者的实验和理解，这里附录的链接是关于使用<a href="http://www.cnblogs.com/tornadomeet/archive/2012/03/28/2420936.html" target="_blank" rel="noopener">opencv进行人脸检测</a>的过程和代码，可以帮助理解训练过程是如何完成的</li>
-<li>这里是一个台湾的电子期刊上关于<a href="http://140.113.87.114/cvrc/edm/vol_6/tech1.htm" target="_blank" rel="noopener">AdaBoost的介绍</a> — <code>Jackknife，Bootstraping, bagging, boosting, AdaBoosting, Rand forest</code> 和 <code>gradient boosting</code>这些术语，我经常搞混淆，现在把它们放在一起，以示区别。(部分文字来自网络，由于是之前记的笔记，忘记来源了，特此向作者抱歉） </li>
+<li>这里是一个台湾的电子期刊上关于<a href="http://140.113.87.114/cvrc/edm/vol_6/tech1.htm" target="_blank" rel="noopener">AdaBoost的介绍</a> —- <code>Jackknife，Bootstraping, bagging, boosting, AdaBoosting, Rand forest</code> 和 <code>gradient boosting</code>这些术语，我经常搞混淆，现在把它们放在一起，以示区别。(部分文字来自网络，由于是之前记的笔记，忘记来源了，特此向作者抱歉） </li>
 </ol>
 <p><code>Bootstraping</code>: 名字来自成语<code>pull up by your own bootstraps</code>，意思是依靠你自己的资源，称为自助法，它是一种有放回的抽样方法，它是非参数统计中一种重要的估计统计量方差进而进行区间估计的统计方法。其核心思想和基本步骤如下： </p>
 <ol>
@@ -183,9 +183,7 @@
 <li>重复上述N次（一般大于1000），得到N个统计量T。 </li>
 <li>计算上述N个统计量T的样本方差，得到统计量的方差。 </li>
 </ol>
-<p>应该说Bootstrap是现代统计学较为流行的一种统计方法，在小样本时效果很好。通过方差的估计可以构造置信区间等，其运用范围得到进一步延伸。Jackknife： 和上面要介绍的Bootstrap功能类似，只是有一点细节不一样，即每次从样本中抽样时候只是去除几个样本（而不是抽样），就像小刀一样割去一部分。</p>
-<a id="more"></a>
-
+<p>应该说Bootstrap是现代统计学较为流行的一种统计方法，在小样本时效果很好。通过方差的估计可以构造置信区间等，其运用范围得到进一步延伸。Jackknife： 和上面要介绍的Bootstrap功能类似，只是有一点细节不一样，即每次从样本中抽样时候只是去除几个样本（而不是抽样），就像小刀一样割去一部分。<br><a id="more"></a></p>
 <h3 id="下列方法都是上述Bootstraping思想的一种应用。"><a href="#下列方法都是上述Bootstraping思想的一种应用。" class="headerlink" title="下列方法都是上述Bootstraping思想的一种应用。"></a>下列方法都是上述Bootstraping思想的一种应用。</h3><h4 id="bagging算法"><a href="#bagging算法" class="headerlink" title="bagging算法"></a>bagging算法</h4><p><code>bagging：bootstrap aggregating</code>的缩写。让该学习算法训练多轮，每轮的训练集由从初始的训练集中随机取出的n个训练样本组成，某个初始训练样本在某轮训练集中可以出现多次或根本不出现，训练之后可得到一个预测函数序列<code>h_1，⋯ ⋯h_n</code> ，最终的预测函数H对分类问题采用投票方式，对回归问题采用简单平均方法对新示例进行判别。<br>训练R个分类器<code>f_i</code>，分类器之间其他相同就是参数不同。其中<code>f_i</code>是通过从训练集合中(N篇文档)随机取(取后放回)N次文档构成的训练集合训练得到的。对于新文档d，用这R个分类器去分类，得到的最多的那个类别作为d的最终类别。</p>
 <h4 id="boosting算法"><a href="#boosting算法" class="headerlink" title="boosting算法"></a>boosting算法</h4><p>boosting: 其中主要的是<code>AdaBoost(Adaptive Boosting)</code>。初始化时对每一个训练例赋相等的权重<code>1／n</code>，然后用该学算法对训练集训练t轮，每次训练后，对训练失败的训练例赋以较大的权重，也就是让学习算法在后续的学习中集中对比较难的训练例进行学习，从而得到一个预测函数序列<code>h_1,⋯, h_m</code>, 其中<code>h_i</code>也有一定的权重，预测效果好的预测函数权重较大，反之较小。最终的预测函数H对分类问题采用有权重的投票方式，对回归问题采用加权平均的方法对新示例进行判别。（类似<code>Bagging</code>方法，但是训练是串行进行的，第k个分类器训练时关注对前<code>k-1</code>分类器中错分的文档，即不是随机取，而是加大取这些文档的概率。) </p>
 <h4 id="boosting和bagging的区别"><a href="#boosting和bagging的区别" class="headerlink" title="boosting和bagging的区别"></a>boosting和bagging的区别</h4><p><code>Bagging</code>与<code>Boosting</code>的区别：二者的主要区别是取样方式不同。<code>Bagging</code>采用均匀取样，而<code>Boosting</code>根据错误率来取样，因此<code>Boosting</code>的分类精度要优于<code>Bagging</code>。<code>Bagging</code>的训练集的选择是随机的，各轮训练集之间相互独立，而<code>Boostlng</code>的各轮训练集的选择与前面各轮的学习结果有关；<code>Bagging</code>的各个预测函数没有权重，而<code>Boosting</code>是有权重的；<code>Bagging</code>的各个预测函数可以并行生成，而<code>Boosting</code>的各个预测函数只能顺序生成。对于象神经网络这样极为耗时的学习方法。<code>Bagging</code>可通过并行训练节省大量时间开销。<code>bagging</code>和<code>boosting</code>都可以有效地提高分类的准确性。在大多数数据集中，<code>boosting</code>的准确性比<code>bagging</code>高。在有些数据集中，<code>boosting</code>会引起退化。</p>
@@ -216,9 +214,9 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/bagging/">bagging</a>
-                    
                       <a class="hover-with-bg" href="/tags/boosting/">boosting</a>
+                    
+                      <a class="hover-with-bg" href="/tags/bagging/">bagging</a>
                     
                       <a class="hover-with-bg" href="/tags/randomforest/">randomforest</a>
                     
@@ -480,6 +478,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

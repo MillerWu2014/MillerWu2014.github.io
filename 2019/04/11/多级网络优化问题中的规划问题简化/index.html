@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -172,9 +172,8 @@
               <h2 id="背景和目标"><a href="#背景和目标" class="headerlink" title="背景和目标"></a>背景和目标</h2><p>在物流网络中，经常存在需要优化的网络结构，比如从生产中心到一级仓库 ，到二级仓库再到配送中心，这样形成一个多级的分仓体系。在实际执行过程中会遇到DC层或TC层的选址问题，一般会遇到优化问题，优化的目标主要考虑多个方面的成本，如运输成本，仓库成本，转运成本等等。如果按照多级网络的模式进行考虑，一般规划问题会成为非线性的整数规划问题，在求解上是非常难且建模也比较难。</p>
 <p>现在对于这样的其中选址的问题进行思考：假设我们只是考虑运输成本或距离上的成本，DC层的仓库可以向周边的仓库进行供货，而且保证TC层的一个仓库只能唯一的DC层仓库供货。从常规的建模一般都是在DC层设置一个变量X， TC层设置一个变量Y，来计算目标，并设置约束，最终来进行求解，那么这个问题能简化么？</p>
 <p>如果能简化那么这个问题就能推广到多层的选址问题，不需要非线性整数规划的方式进行求解。能大大的简化整个求解，可能不是最优的解，但是能得到较优的解。经过仔细的实验和思考，是能进行简化的。将DC层和TC层的地址看为一个变量，这样就减少一个变量，转化为了线性规划的问题（LP）。DC层对TC层为1对N的方式，但是TC只能属于一个DC。而且可以控制DC层的地点或TC层的地点的个数。解决了选址中遇到的所有问题。<br><img src="/uploads/wuliufencangtixi.jpg" srcset="/img/loading.gif" alt="物流的多级分仓体系"> </p>
-<h2 id="数据的准备"><a href="#数据的准备" class="headerlink" title="数据的准备"></a>数据的准备</h2><p>这里我们准备了一些城市的数据，其中有DC，TC层和最终的地点。数据存储于mysql数据库中，下面定义一个数据抽取的class，来进行数据查询，并生成需要的距离矩阵。便于后续使用该矩阵来进行优化目标值的计算。</p>
-<a id="more"></a>
-<pre><code class="python"># import packages
+<h2 id="数据的准备"><a href="#数据的准备" class="headerlink" title="数据的准备"></a>数据的准备</h2><p>这里我们准备了一些城市的数据，其中有DC，TC层和最终的地点。数据存储于mysql数据库中，下面定义一个数据抽取的class，来进行数据查询，并生成需要的距离矩阵。便于后续使用该矩阵来进行优化目标值的计算。<br><a id="more"></a></p>
+<pre><code class="lang-python"># import packages
 import pymprog
 import pymysql
 import pandas as pd
@@ -227,7 +226,7 @@ class MysqlClient(object):
 <li>一个DC可以有多个TC，这儿并定义了输入的DC都必须被选到</li>
 </ol>
 <p>示例代码如下：</p>
-<pre><code class="python">def solve_link(distance_matrix_frame, flag=1):
+<pre><code class="lang-python">def solve_link(distance_matrix_frame, flag=1):
     &quot;&quot;&quot;Find the link matrix by linear programming slove
     parameters
     ----------
@@ -280,9 +279,10 @@ class MysqlClient(object):
             output_dict[dst_pos_[j]][src_pos_[i]] = x[(i, j)].primal
     # pymprog.sensitivity()
     pymprog.end()
-    return pd.DataFrame(data=output_dict)</code></pre>
+    return pd.DataFrame(data=output_dict)
+</code></pre>
 <h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>通过一些数据进行试验上面的思路，下面生产中心选取了两个：天津和重庆，DC层有4个点，TC层 有7个点，配送中心有很多个城市，如下设置所示。通过sql查询得到数据库中的距离矩阵。后面将所有的中文地址转换为英文，主要便于后面的可视化。</p>
-<pre><code class="python"># built the network struct, src position, depot and dst position
+<pre><code class="lang-python"># built the network struct, src position, depot and dst position
 dst_position = [&quot;宜昌&quot;, &quot;长沙&quot;, &quot;岳阳&quot;, &quot;无锡&quot;, &quot;合肥&quot;, &quot;徐州&quot;, &quot;常州&quot;,&quot;哈尔滨&quot;, &quot;长春&quot;, &quot;秦皇岛&quot;, &quot;呼和浩特&quot;, &quot;银川&quot;, &quot;西宁&quot;, 
                 &quot;酒泉&quot;, &quot;庆阳&quot;, &quot;许昌&quot;, &quot;吴忠&quot;, &quot;鄂尔多斯&quot;, &quot;广元&quot;, &quot;巴中&quot;, &quot;都江堰&quot;, &quot;南充&quot;, &quot;广安&quot;, &quot;乐山&quot;, &quot;宜宾&quot;, &quot;南阳&quot;,
                 &quot;衡阳&quot;, &quot;大同&quot;, &quot;丽江&quot;, &quot;攀枝花&quot;, &quot;玉林&quot;, &quot;柳州&quot;, &quot;桂林&quot;, &quot;中山&quot;, &quot;南平&quot;, &quot;泉州&quot;, &quot;雅安&quot;, &quot;怀化&quot;, &quot;荆州&quot;, &quot;黄山&quot;
@@ -291,8 +291,9 @@ src_position = [&quot;重庆&quot;, &quot;天津&quot;]
 depot_position = {
     &quot;level_1&quot;: [&quot;北京&quot;, &quot;成都&quot;, &quot;西安&quot;, &quot;武汉&quot;], 
     &quot;level_2&quot;: [&quot;绵阳&quot;, &quot;沈阳&quot;, &quot;兰州&quot;, &quot;南昌&quot;, &quot;杭州&quot;, &quot;南宁&quot;, &quot;昆明&quot;]
-}</code></pre>
-<pre><code class="python">middle_layer = []
+}
+</code></pre>
+<pre><code class="lang-python">middle_layer = []
 for k, v in depot_position.items():
     middle_layer.extend(v)
 
@@ -306,63 +307,68 @@ with open(&quot;/opt/notebook/distance.pkl&quot;, &quot;rb&quot;) as picker:
 with open(&quot;/opt/notebook/layer_distance.pkl&quot;, &quot;rb&quot;) as layer:
     layer_dist = pickle.load(layer)
 
-layer_dist</code></pre>
+layer_dist
+</code></pre>
+<div class="table-container">
 <table>
 <thead>
 <tr>
-<th align="left"></th>
-<th align="right">绵阳</th>
-<th align="right">沈阳</th>
-<th align="right">兰州</th>
-<th align="right">南昌</th>
-<th align="right">杭州</th>
-<th align="right">南宁</th>
-<th align="right">昆明</th>
+<th style="text-align:left"></th>
+<th style="text-align:right">绵阳</th>
+<th style="text-align:right">沈阳</th>
+<th style="text-align:right">兰州</th>
+<th style="text-align:right">南昌</th>
+<th style="text-align:right">杭州</th>
+<th style="text-align:right">南宁</th>
+<th style="text-align:right">昆明</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="left">北京</td>
-<td align="right">1691</td>
-<td align="right">685</td>
-<td align="right">1617</td>
-<td align="right">1470</td>
-<td align="right">1329</td>
-<td align="right">2426</td>
-<td align="right">2834</td>
+<tbody>
+<tr>
+<td style="text-align:left">北京</td>
+<td style="text-align:right">1691</td>
+<td style="text-align:right">685</td>
+<td style="text-align:right">1617</td>
+<td style="text-align:right">1470</td>
+<td style="text-align:right">1329</td>
+<td style="text-align:right">2426</td>
+<td style="text-align:right">2834</td>
 </tr>
 <tr>
-<td align="left">成都</td>
-<td align="right">120</td>
-<td align="right">2474</td>
-<td align="right">1039</td>
-<td align="right">1496</td>
-<td align="right">1857</td>
-<td align="right">1325</td>
-<td align="right">1068</td>
+<td style="text-align:left">成都</td>
+<td style="text-align:right">120</td>
+<td style="text-align:right">2474</td>
+<td style="text-align:right">1039</td>
+<td style="text-align:right">1496</td>
+<td style="text-align:right">1857</td>
+<td style="text-align:right">1325</td>
+<td style="text-align:right">1068</td>
 </tr>
 <tr>
-<td align="left">西安</td>
-<td align="right">606</td>
-<td align="right">1775</td>
-<td align="right">647</td>
-<td align="right">1197</td>
-<td align="right">1417</td>
-<td align="right">1932</td>
-<td align="right">1561</td>
+<td style="text-align:left">西安</td>
+<td style="text-align:right">606</td>
+<td style="text-align:right">1775</td>
+<td style="text-align:right">647</td>
+<td style="text-align:right">1197</td>
+<td style="text-align:right">1417</td>
+<td style="text-align:right">1932</td>
+<td style="text-align:right">1561</td>
 </tr>
 <tr>
-<td align="left">武汉</td>
-<td align="right">921</td>
-<td align="right">1845</td>
-<td align="right">1368</td>
-<td align="right">370</td>
-<td align="right">859</td>
-<td align="right">1294</td>
-<td align="right">1815</td>
+<td style="text-align:left">武汉</td>
+<td style="text-align:right">921</td>
+<td style="text-align:right">1845</td>
+<td style="text-align:right">1368</td>
+<td style="text-align:right">370</td>
+<td style="text-align:right">859</td>
+<td style="text-align:right">1294</td>
+<td style="text-align:right">1815</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <p>通过线性规划求解得到了连接矩阵如下面结果所示，可以看出DC层下有多个TC层，但是TC只属于一个DC。<strong>本文中没有控制DC和TC的数量。实际是可以加入进去的</strong>。后续对得到结果通过networkx进行可视化。</p>
-<pre><code class="python">nodes_res = solve_link(data, flag=0)
+<pre><code class="lang-python">nodes_res = solve_link(data, flag=0)
 layer_res = solve_link(layer_dist)
 
 
@@ -375,62 +381,67 @@ nodes_res.index = nodes_res.index.map(cn2pingyin)
 nodes_res.columns = nodes_res.columns.map(cn2pingyin)
 layer_res.index = layer_res.index.map(cn2pingyin)
 layer_res.columns = layer_res.columns.map(cn2pingyin)
-layer_res</code></pre>
+layer_res
+</code></pre>
+<div class="table-container">
 <table>
 <thead>
 <tr>
-<th align="left"></th>
-<th align="right">lanzhou</th>
-<th align="right">nanning</th>
-<th align="right">nanchang</th>
-<th align="right">kunming</th>
-<th align="right">hangzhou</th>
-<th align="right">shenyang</th>
-<th align="right">mianyang</th>
+<th style="text-align:left"></th>
+<th style="text-align:right">lanzhou</th>
+<th style="text-align:right">nanning</th>
+<th style="text-align:right">nanchang</th>
+<th style="text-align:right">kunming</th>
+<th style="text-align:right">hangzhou</th>
+<th style="text-align:right">shenyang</th>
+<th style="text-align:right">mianyang</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="left">beijing</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">1.0</td>
-<td align="right">0.0</td>
+<tbody>
+<tr>
+<td style="text-align:left">beijing</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
 </tr>
 <tr>
-<td align="left">chengdu</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">1.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">1.0</td>
+<td style="text-align:left">chengdu</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
 </tr>
 <tr>
-<td align="left">wuhan</td>
-<td align="right">0.0</td>
-<td align="right">1.0</td>
-<td align="right">1.0</td>
-<td align="right">0.0</td>
-<td align="right">1.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
+<td style="text-align:left">wuhan</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
 </tr>
 <tr>
-<td align="left">xian</td>
-<td align="right">1.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
+<td style="text-align:left">xian</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
 </tr>
-</tbody></table>
-<pre><code class="python"># !pip install matplotlib netowrkx
+</tbody>
+</table>
+</div>
+<pre><code class="lang-python"># !pip install matplotlib netowrkx
 %matplotlib inline
 
 import networkx as nx
@@ -476,7 +487,8 @@ for res in [layer_res, nodes_res]:
                                alpha=0.8)
     i += 1
 plt.axis(&#39;off&#39;)
-plt.show()</code></pre>
+plt.show()
+</code></pre>
 <p><img src="/uploads/output_6_0.png" srcset="/img/loading.gif" alt="结果可视化"></p>
 
             </div>
@@ -758,6 +770,37 @@ plt.show()</code></pre>
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

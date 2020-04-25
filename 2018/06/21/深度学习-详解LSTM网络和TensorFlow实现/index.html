@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,22 +170,27 @@
             
             <div class="markdown-body">
               <p>LSTM网络是RNN网络中的特殊网络，再RNN文章中已经提到，RNN在时间步过长时，学习不到依赖关系。主要是RNN会引起梯度消失和梯度爆炸这两个问题，因此为了解决问题，研究者们提出了很多方式，其中GRU和LSTM网络就是这样诞生的。LSTM网络在应用中也取得了非凡的成就，特别是在语音识别，语言建模，翻译等等方面。</p>
-<p>##1.长期依赖问题 </p>
-<p>RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是<code>time step</code>过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。</p>
+<h2 id="1-长期依赖问题"><a href="#1-长期依赖问题" class="headerlink" title="1.长期依赖问题"></a>1.长期依赖问题</h2><p>RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是<code>time step</code>过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。</p>
 <h2 id="2-什么是LSTM网络"><a href="#2-什么是LSTM网络" class="headerlink" title="2.什么是LSTM网络"></a>2.什么是LSTM网络</h2><p>LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？</p>
 <p>在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。</p>
 <p>下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，<code>LSTM Cell</code>中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。</p>
-<img src="\uploads\LSTM.png" srcset="/img/loading.gif" style="zoom:30" />
-<a id="more"></a>
-
+<p><img src="\uploads\LSTM.png" srcset="/img/loading.gif" style="zoom:30" /><br><a id="more"></a></p>
 <h2 id="3-LSTM结构详解"><a href="#3-LSTM结构详解" class="headerlink" title="3.LSTM结构详解"></a>3.LSTM结构详解</h2><p>从上面中也提出了<code>LSTM Cell</code>中主要通过gate的方式在RNN基础上进行变换的。具体<code>LSTM Cell</code>的结构如下所示，主要通过三道<code>gate</code>（门）来控制输入，输出等，这个门来选择性的控制信息的是否通过。主要是通过sigmod神经网络层和一个元素的乘积实现门的控制。</p>
-<img src="\uploads\lstm_cell.png" srcset="/img/loading.gif" style="zoom:50%" />
-
+<p><img src="\uploads\lstm_cell.png" srcset="/img/loading.gif" style="zoom:50%" /></p>
 <h3 id="3-1-LSTM分步详解"><a href="#3-1-LSTM分步详解" class="headerlink" title="3.1 LSTM分步详解"></a>3.1 LSTM分步详解</h3><p><code>LSTM Cell</code>的整体输入有：$X_t$，$h_{t-1}$，$c_{t-1}$，而整体输出和RNN的输出一致，主要是$h_t$，$z_t$；而$c_t$主要是在循环过程中使用。而<code>LSTM Cell</code>中最关键的就是<code>gate</code>实现，而<code>LSTM</code>的三道门主要作用是不一样的，分别为”遗忘门”，”输入门”，”输出门”；下面分别对这三道门进行分别详细说明。</p>
-<h4 id="3-1-1-Forget-Gate"><a href="#3-1-1-Forget-Gate" class="headerlink" title="3.1.1 Forget Gate"></a>3.1.1 Forget Gate</h4><p>遗忘门主要对$h_{t-1}$和$x_t$进行观察，对记忆单元$C_{t-1}$的元素选择性的遗忘，遗忘门输出的是0-1的数，1表示完全保留该消息，0表示遗忘该消息。遗忘门输出一个$f_t$，公式为：<br>$$<br>f_t=\sigma(W_f \cdot [x_t, h_{t-1}] + b_f)<br>$$<br>输出后的$f_t$再和$c_{t-1}$相乘，来更新记忆单元。在应用过程中的意义时，选择性的忘记一些历史信息(不是所有的历史信息都是有意义的)。</p>
-<h4 id="3-1-2-Input-Gate"><a href="#3-1-2-Input-Gate" class="headerlink" title="3.1.2 Input Gate"></a>3.1.2 Input Gate</h4><p>这一步的主要作用是将旧的记忆单元$c_{t-1}$更新到新的记忆单元$c_t$上。这一步只需要将$c_{t-1}$乘以$f_t$在加上$i_t$<em>$c_{t}^-$即可。$i_t$则为输入门，可以理解为对本次的输入更新程度。，具体公式如下：<br>$$<br>i_t = \sigma(W_i \cdot [x_t, h_{t-1}] + b_i)\<br>c_t^-=tanh(W_c \cdot [x_t, h_{t-1})] + b_c)<br>$$<br>$i_t$输出的为0-1的值，$c_{t}^-$的计算方式和RNN中的state更新方式一致，再乘以$i_t$后，表示对最新$c_t$的更新程度。这儿一步的意义是，添加了当前时间步的信息，随后添加到记忆单元中。这一步输出们计算完成后随后需要更新$C_t$：<br>$$<br>c_t = c_{t-1} * f_t + i_t</em>c_t^-<br>$$</p>
-<h4 id="3-1-3-Output-Gate"><a href="#3-1-3-Output-Gate" class="headerlink" title="3.1.3 Output Gate"></a>3.1.3 Output Gate</h4><p>最后需要决定最终的输出，输出会基于当前的信息，并且可能会进行一些过滤，并用于下一步和$C_t$的结合中，确定最终的输出值：<br>$$<br>o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o) \<br>h_t = o_t * tanh(C_t)<br>$$<br>最终的输出，结合当前的信息和记忆单元信息进行输出。</p>
-<h3 id="3-2-LSTM网络结构可视化"><a href="#3-2-LSTM网络结构可视化" class="headerlink" title="3.2 LSTM网络结构可视化"></a>3.2 LSTM网络结构可视化</h3><p>根据LSTM Cell的结构，即内部的计算公式进行内部结构可视化，从输入，到计算，再到输出的过程进行详细的结构可视化，如下图所示：<img src="%5Cuploads%5CLSTM_X.png" srcset="/img/loading.gif" alt="LSTM内部结构可视化"></p>
+<h4 id="3-1-1-Forget-Gate"><a href="#3-1-1-Forget-Gate" class="headerlink" title="3.1.1 Forget Gate"></a>3.1.1 Forget Gate</h4><p>遗忘门主要对$h_{t-1}$和$x_t$进行观察，对记忆单元$C_{t-1}$的元素选择性的遗忘，遗忘门输出的是0-1的数，1表示完全保留该消息，0表示遗忘该消息。遗忘门输出一个$f_t$，公式为：</p>
+<script type="math/tex; mode=display">
+f_t=\sigma(W_f \cdot [x_t, h_{t-1}] + b_f)</script><p>输出后的$f_t$再和$c_{t-1}$相乘，来更新记忆单元。在应用过程中的意义时，选择性的忘记一些历史信息(不是所有的历史信息都是有意义的)。</p>
+<h4 id="3-1-2-Input-Gate"><a href="#3-1-2-Input-Gate" class="headerlink" title="3.1.2 Input Gate"></a>3.1.2 Input Gate</h4><p>这一步的主要作用是将旧的记忆单元$c_{t-1}$更新到新的记忆单元$c_t$上。这一步只需要将$c_{t-1}$乘以$f_t$在加上$i_t$*$c_{t}^-$即可。$i_t$则为输入门，可以理解为对本次的输入更新程度。，具体公式如下：</p>
+<script type="math/tex; mode=display">
+i_t = \sigma(W_i \cdot [x_t, h_{t-1}] + b_i)\\
+c_t^-=tanh(W_c \cdot [x_t, h_{t-1})] + b_c)</script><p>$i_t$输出的为0-1的值，$c_{t}^-$的计算方式和RNN中的state更新方式一致，再乘以$i_t$后，表示对最新$c_t$的更新程度。这儿一步的意义是，添加了当前时间步的信息，随后添加到记忆单元中。这一步输出们计算完成后随后需要更新$C_t$：</p>
+<script type="math/tex; mode=display">
+c_t = c_{t-1} * f_t + i_t*c_t^-</script><h4 id="3-1-3-Output-Gate"><a href="#3-1-3-Output-Gate" class="headerlink" title="3.1.3 Output Gate"></a>3.1.3 Output Gate</h4><p>最后需要决定最终的输出，输出会基于当前的信息，并且可能会进行一些过滤，并用于下一步和$C_t$的结合中，确定最终的输出值：</p>
+<script type="math/tex; mode=display">
+o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o) \\
+h_t = o_t * tanh(C_t)</script><p>最终的输出，结合当前的信息和记忆单元信息进行输出。</p>
+<h3 id="3-2-LSTM网络结构可视化"><a href="#3-2-LSTM网络结构可视化" class="headerlink" title="3.2 LSTM网络结构可视化"></a>3.2 LSTM网络结构可视化</h3><p>根据LSTM Cell的结构，即内部的计算公式进行内部结构可视化，从输入，到计算，再到输出的过程进行详细的结构可视化，如下图所示：<img src="\uploads\LSTM_X.png" srcset="/img/loading.gif" alt="LSTM内部结构可视化"></p>
 <p>上面将LSTM Cell进行了划分，主要划分为三个部分，第一部分主要是三道门和输入的转换；第二部分可以看作是记忆单元$C_t$的更新；第三部分就是输出部分。</p>
 <p>在上面的结构中也给出了输入，输出的数据<code>shape</code>，明白数据在整个计算过程中是怎么流通和计算的。并可以根据输入的情况，知道参数的<code>shape</code>等。在计算过程中，三道门中的参数$W$的<code>shape</code>分为两种情况：</p>
 <ul>
@@ -195,7 +200,7 @@
 <p>三个gate的输出分别为$f_t$，$i_t$，$o_t$；这三个值的输出<code>shape</code>均为<code>(batch_size, n_hidden_units)</code>。</p>
 <h2 id="4-LSTM网络在TensorFlow中的实现"><a href="#4-LSTM网络在TensorFlow中的实现" class="headerlink" title="4.LSTM网络在TensorFlow中的实现"></a>4.LSTM网络在TensorFlow中的实现</h2><p>LSTM也是RNN网络中的一种，因此在TensorFlow实现时，和RNN模型实现的方式一致，唯一不同的地方在RNN中定义<code>cell</code>的地方。在TensorFlow中实现了<code>LSTM Cell</code>的基本结构，实现了两种<code>LSTM Cell</code>的结构<code>BasicLSTMCell</code>和<code>LSTMCell</code>，下面依次对两种结构进行说明。</p>
 <h3 id="4-1-BasicLSTMCell实现"><a href="#4-1-BasicLSTMCell实现" class="headerlink" title="4.1 BasicLSTMCell实现"></a>4.1 <code>BasicLSTMCell</code>实现</h3><p>这个Cell的实现是以最基本的LSTM结构为基础，在TensorFlow中实现了该结构，也是基于<code>LayerRNNCell</code>实现的，主要实现了<code>build</code>和<code>call</code>方法，下面为<code>call</code>方法的源码：</p>
-<pre><code class="python">  def call(self, inputs, state):
+<pre><code class="lang-python">  def call(self, inputs, state):
     &quot;&quot;&quot;Long short-term memory cell (LSTM).
 
     Args:
@@ -239,9 +244,10 @@
       new_state = LSTMStateTuple(new_c, new_h)
     else:
       new_state = array_ops.concat([new_c, new_h], 1)
-    return new_h, new_state</code></pre>
-<p>源码中主要对四个<code>gate</code>进行计算，并更新<code>C</code>和<code>H</code>，并返回输出和<code>state</code>，<code>LSTM</code>中的<code>state</code>包括了<code>C</code>和<code>H</code>。上面代码中对四个<code>gate</code>的计算，是一次性生成权重变量，再和输入的$X_t$和$H_{t-1}$进行运算，再拆分为四部分，权重变量的定义如下：</p>
-<pre><code class="python">def build(self, inputs_shape):
+    return new_h, new_state
+</code></pre>
+<p>源码中主要对四个<code>gate</code>进行计算，并更新<code>C</code>和<code>H</code>，并返回输出和<code>state</code>，<code>LSTM</code>中的<code>state</code>包括了<code>C</code>和<code>H</code>。上面代码中对四个<code>gate</code>的计算，是一次性生成权重变量，再和输入的$X<em>t$和$H</em>{t-1}$进行运算，再拆分为四部分，权重变量的定义如下：</p>
+<pre><code class="lang-python">def build(self, inputs_shape):
     if inputs_shape[1].value is None:
         raise ValueError(&quot;Expected inputs.shape[-1] to be known, saw shape: %s&quot;
                          % inputs_shape)
@@ -256,11 +262,12 @@
             shape=[4 * self._num_units],
             initializer=init_ops.zeros_initializer(dtype=self.dtype))
 
-    self.built = True</code></pre>
+    self.built = True
+</code></pre>
 <p>在定义<code>LSTM</code>中四道<code>gate</code>的权重变量<code>W</code>和<code>B</code>时，是一次性定义了4个，并在一个变量中。后续在计算时，做一次计算，再进行拆分成四道<code>gate</code>的输出：<code>i,j,f,o</code>。</p>
 <h3 id="4-2-LSTMCell的实现"><a href="#4-2-LSTMCell的实现" class="headerlink" title="4.2 LSTMCell的实现"></a>4.2 <code>LSTMCell</code>的实现</h3><p><code>LSTMCell</code>是<code>BasicLSTMCell</code>扩展实现，增加了窥视的窥视孔的功能，<code>LSTMCell</code>的初始化参数如下所示，先对初始化的参数进行详细说明。</p>
-<p><img src="%5Cuploads%5CLSTM-diag.png" srcset="/img/loading.gif" alt=""></p>
-<pre><code class="python">def __init__(self, num_units, use_peepholes=False, cell_clip=None, initializer=None, num_proj=None, 
+<p><img src="\uploads\LSTM-diag.png" srcset="/img/loading.gif" alt=""></p>
+<pre><code class="lang-python">def __init__(self, num_units, use_peepholes=False, cell_clip=None, initializer=None, num_proj=None, 
              proj_clip=None, num_unit_shards=None, num_proj_shards=None, forget_bias=1.0,
              state_is_tuple=True, activation=None, reuse=None, name=None):
     &quot;&quot;&quot;Initialize the parameters for an LSTM cell.
@@ -280,9 +287,10 @@
       name: String, the name of the layer. Layers with the same name will share weights, but to avoid mistakes we require reuse=True in such cases.
 
       When restoring from CudnnLSTM-trained checkpoints, use `CudnnCompatibleLSTMCell` instead.
-    &quot;&quot;&quot;</code></pre>
+    &quot;&quot;&quot;
+</code></pre>
 <p>从上面参数说明，可以看出<code>LSTMCell</code>中主要多处了一个<code>窥视孔</code>的功能，当参数<code>use_peepholes</code>设置为<code>True</code>时，就使用了窥视孔的功能。后续的几个参数也是对窥视功能的设置参数。下面对实现的<code>call</code>方法进行简要说明：</p>
-<pre><code class="python">def call(self, inputs, state):
+<pre><code class="lang-python">def call(self, inputs, state):
     &quot;&quot;&quot;Run one step of LSTM.
     Args:
       inputs: input Tensor, 2D, `[batch, num_units].
@@ -348,7 +356,8 @@
 
     new_state = (LSTMStateTuple(c, m) if self._state_is_tuple else
                  array_ops.concat([c, m], 1))
-    return m, new_state</code></pre>
+    return m, new_state
+</code></pre>
 <p>上面<code>call</code>方法实现的过程中，输出的维度为<code>num_proj</code>(如果设置了<code>num_proj</code>的值)或<code>num_units</code>。当计算<code>c</code>的时候取决于是否使用窥视孔，使用的时候计算方式会不同<code>sigmoid(f + self._forget_bias + self._w_f_diag * c_prev)</code>为新的<code>forget gate</code>输出(加入了窥视孔<code>self._w_f_diag * c_prev</code>), <code>sigmoid(i + self._w_i_diag * c_prev)</code>为新的<code>input gate</code>输出，然后会限制<code>c = clip_ops.clip_by_value(c, -self._cell_clip, self._cell_clip)</code>输出。再计算<code>m</code>的时候也会取决于是否使用窥视孔，再对<code>m</code>的值进行限定。最后输出<code>m</code>和<code>state</code>。</p>
 <p>当定义好了Cell后，后续就是动态或者静态计算时间步，或者多层的LSTM模型，和RNN网络中的使用就是一样的。这里就不再详细说明。</p>
 <h2 id="5-Refrence"><a href="#5-Refrence" class="headerlink" title="5.Refrence"></a>5.Refrence</h2><p>(1).<a href="https://www.jiqizhixin.com/articles/2017-07-24-2" target="_blank" rel="noopener">LSTM入门必读：从入门基础到工作方式详解</a></p>
@@ -372,9 +381,9 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/deep-learning/">deep learning</a>
-                    
                       <a class="hover-with-bg" href="/tags/tensorflow/">tensorflow</a>
+                    
+                      <a class="hover-with-bg" href="/tags/deep-learning/">deep learning</a>
                     
                       <a class="hover-with-bg" href="/tags/RNN/">RNN</a>
                     
@@ -640,6 +649,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

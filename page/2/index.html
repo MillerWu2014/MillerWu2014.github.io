@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 100vh;">
+  <header style="height: 50vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -124,10 +124,6 @@
           </div>
 
           
-            <div class="scroll-down-bar">
-              <i class="fas fa-angle-down scroll-down-arrow"></i>
-            </div>
-          
         </div>
       </div>
     </div>
@@ -137,7 +133,7 @@
     
       <div class="container nopadding-md">
         <div class="py-5 z-depth-3" id="board"
-          style=margin-top:0>
+          >
           
           <div class="container">
             <div class="row">
@@ -165,6 +161,7 @@ class Spam(object):
     def __init__(self, name):
         self.name = name
         spam = Spam(&#39;name&#39;)
+
 上例我们定义了一个类，并调用类的构造函数创建了该类的一个实例。我们知道类也可以看作类 type 的一个实例，那么如何用 type 的构造函数来动态创建一个类呢？我们先看看type的构造函数：class type(name, bases, dict)
 
 name: 字符串类型，存放新类的名字
@@ -173,7 +170,8 @@ dict: 字典类型，存放该类的所有属性(attributes)和方法(method)
 
 &gt;&gt;&gt; class X:
         a = 1
-&gt;&gt;&gt; X = type(&#39;X&#39;, (object,), dict(a=1))...</div>
+&gt;&gt;&gt; X = type(&#39;X&#39;, (object,), dict(a=1))
+...</div>
         </div>
       </a>
 
@@ -259,13 +257,17 @@ dict: 字典类型，存放该类的所有属性(attributes)和方法(method)
         
         <div class="index-excerpt" style="max-height: none;">
           <div class="index-text mb-1">最初了解信息度量是通过熵的概念，比如信息增益，GINI等都是基于熵。而这三者也是基于信息熵，在信息论中主要对分布的相似度（距离的度量），但是三者差异性也是很强的；对这三种信息度量的方式进行详细的说明。
-1.KL散度KL散度又称为相对熵，信息散度，信息增益。KL散度是是两个概率分布P和Q 差别的非对称性的度量。 KL散度是用来 度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。在之前了解KL散度的时候也写过KL散度的博文.$$DL(p||q)=\sum_{i=1}^{n} p(x) \log{\frac{p(x)}{q(x)}}$$KL散度性质：
+1.KL散度KL散度又称为相对熵，信息散度，信息增益。KL散度是是两个概率分布P和Q 差别的非对称性的度量。 KL散度是用来 度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。在之前了解KL散度的时候也写过KL散度的博文.
+
+DL(p||q)=\sum_{i=1}^{n} p(x) \log{\frac{p(x)}{q(x)}}KL散度性质：
 
 因为对数函数是凸函数，所以KL散度的值为非负数。
 KL散度不是对称的。
 KL散度不满足三角不等式。
 
-2.JS（Jensen-Shannon）散度JS散度度量了两个概率分布的相似度，基于KL散度的变体，解决了KL散度非对称的问题。一般地，JS散度是对称的，其取值是0到1之间。定义如下：$$JS(P_1||P_2)={\frac {1} {2}} KL(P_1 || \frac {P_1+P_2} {2})+{\frac {1} {2}} KL(P_2 || \frac {P_1+P_2} {2}）$$如果P1，P2完全相同那么JS散度的值为0，否则为1. JS散度的时对称的而且是有界的[0, 1]。在深度学习中的GAN网络中会有JS散度的概念。
+2.JS（Jensen-Shannon）散度JS散度度量了两个概率分布的相似度，基于KL散度的变体，解决了KL散度非对称的问题。一般地，JS散度是对称的，其取值是0到1之间。定义如下：
+
+JS(P_1||P_2)={\frac {1} {2}} KL(P_1 || \frac {P_1+P_2} {2})+{\frac {1} {2}} KL(P_2 || \frac {P_1+P_2} {2}）如果P1，P2完全相同那么JS散度的值为0，否则为1. JS散度的时对称的而且是有界的[0, 1]。在深度学习中的GAN网络中会有JS散度的概念。
 KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得很远，完全没有重叠的时候，那么KL散度值是没有意义的，而JS散度值是一个常数。这在学习算法中是比较致命的，这就意味这这一点的梯度为0。梯度消失了。...</div>
         </div>
       </a>
@@ -285,9 +287,9 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
           
             <a href="/tags/GNN/">GNN</a>&nbsp;
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/KL%E6%95%A3%E5%BA%A6/">KL散度</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/JS%E6%95%A3%E5%BA%A6/">JS散度</a>&nbsp;
           
@@ -316,8 +318,10 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
           <div class="index-text mb-1">GAN的基本介绍2014 年，Ian Goodfellow 及其蒙特利尔大学的同事引入了生成对抗网络（GAN）。这是一种学习数据的基本分布的全新方法，让生成出的人工对象可以和真实对象之间达到惊人的相似度。
 基本概念GAN（Generative Adversarial Networks），是一种生成式的，对抗网络。再具体一点，就是通过对抗的方式，去学习数据分布的生成式模型。所谓的对抗，指的是生成网络和判别网络的互相对抗。生成网络尽可能生成逼真样本，判别网络则尽可能去判别该样本是真实样本，还是生成的假样本。示意图如下：
 
-基本原理生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器$G$的目标是基于噪声变量$z$生成一个对象$x^{‘}$，并使其看起来和真的$x$一样。而判别器$D$的目标就是找到生成出的结果和真实$x$之间的差异，差异越小越好。如上图所示。隐变量$ z $（通常为服从高斯分布的随机噪声）通过 Generator 生成 $X_{fake}$, 判别器负责判别输入的 data 是生成的样本 $X_{fake}$还是真实样本 $X_{real}$。通过公式描述如下所示：$$\min {G} \max _{D} V(D, G)=\mathbb{E}{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}{\boldsymbol{z} \sim p{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]$$对于判别器 $D$ 来说，这是一个二分类问题，$V(D,G)$ 为二分类问题中常见的交叉熵损失。对于生成器 $G$ 来说，为了尽可能欺骗 $D$，所以需要最大化生成样本的判别概率 $D(G(z))$，即最小化 $log(1-D(G(z)))$，注意：$log(D(x))$ 一项与生成器 $G$ 无关，所以可以忽略。
-实际训练时，生成器和判别器采取交替训练，即先训练 $D$，然后训练 $G$，不断往复。值得注意的是，对于生成器，其最小化的是$\max _{D} V(D, G)$，即最小化$V(D,G)$ 的最大值，这样形成一个对抗的过程。...</div>
+基本原理生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器$G$的目标是基于噪声变量$z$生成一个对象$x^{‘}$，并使其看起来和真的$x$一样。而判别器$D$的目标就是找到生成出的结果和真实$x$之间的差异，差异越小越好。如上图所示。隐变量$ z $（通常为服从高斯分布的随机噪声）通过 Generator 生成 $X_{fake}$, 判别器负责判别输入的 data 是生成的样本 $X{fake}$还是真实样本 $X\{real}$。通过公式描述如下所示：
+
+\min _{G} \max _{D} V(D, G)=\mathbb{E}_{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}_{\boldsymbol{z} \sim p_{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]对于判别器 $D$ 来说，这是一个二分类问题，$V(D,G)$ 为二分类问题中常见的交叉熵损失。对于生成器 $G$ 来说，为了尽可能欺骗 $D$，所以需要最大化生成样本的判别概率 $D(G(z))$，即最小化 $log(1-D(G(z)))$，注意：$log(D(x))$ 一项与生成器 $G$ 无关，所以可以忽略。
+实际训练时，生成器和判别器采取交替训练，即先训练 $D$，然后训练 $G$，不断往复。值得注意的是，对于生成器，其最小化的是$\max\ _{D} V(D, G)$，即最小化$V(D,G)$ 的最大值，这样形成一个对抗的过程。...</div>
         </div>
       </a>
 
@@ -334,13 +338,13 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/GNN/">GNN</a>&nbsp;
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
           
-            <a href="/tags/generator/">generator</a>&nbsp;
+            <a href="/tags/GNN/">GNN</a>&nbsp;
           
             <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+            <a href="/tags/generator/">generator</a>&nbsp;
           
             <a href="/tags/discriminator/">discriminator</a>&nbsp;
           
@@ -401,6 +405,7 @@ for t in threads:
     t.start()
 
 coord_object.join()
+
 Coordinator还支持捕获和报告异常，如try:.......except Exception as error: coord.request_stop(errr) finally: coord.request_stop()。...</div>
         </div>
       </a>
@@ -458,8 +463,9 @@ Coordinator还支持捕获和报告异常，如try:.......except Exception as er
 灰度图像，仅仅只有一个通道。在本篇文章中，我们仅考虑灰度图像，这样我们就只有一个二维的矩阵来表示图像。矩阵中各个像素的值在 0 到 255 的范围内——零表示黑色，255 表示白色。 
 
 2.卷积层2.1 卷积的数学定义卷积神经网络中很重要的就是卷积的概念，卷积本身是在泛函分析中的定义：卷积、旋积或摺积(Convolution)是通过两个函数f 和g 生成第三个函数的一种数学算子，表征函数f 与g经过翻转和平移的重叠部分的面积。 
-从定义可以看出，卷积是一种运算，因为从定义上得出的面积，基本可以看出可以通过积分来定义，这个积分就定义 了一个新的函数,如下，就不用数学公式来详细展开了，具体可以参考维基百科上的定义（如：连续定义(积分)和离散定义(求和)）。$$h(x)=f(x)g(x)=(fg)(x)$$
-2.2 卷积的物理意义从卷积的定义上可以看出，卷积主要是进行反转，平移，加权求和(积分)；从定义上比较抽象，不易理解，从物理意义上进行解释便于理解，那么卷积计算的意义是什么呢？
+从定义可以看出，卷积是一种运算，因为从定义上得出的面积，基本可以看出可以通过积分来定义，这个积分就定义 了一个新的函数,如下，就不用数学公式来详细展开了，具体可以参考维基百科上的定义（如：连续定义(积分)和离散定义(求和)）。
+
+h(x)=f(x)*g(x)=(f*g)(x)2.2 卷积的物理意义从卷积的定义上可以看出，卷积主要是进行反转，平移，加权求和(积分)；从定义上比较抽象，不易理解，从物理意义上进行解释便于理解，那么卷积计算的意义是什么呢？
 
 平滑：卷积运算是一种线性运算，比如在图像中，将某个像素点用周围所有点进行加权求和值代替。
 消除”噪声”：在1中的平滑和噪声消除相似，因为卷积本身就是进行加权求和，因此卷积后的值会过滤部分”噪声”。
@@ -483,9 +489,9 @@ Coordinator还支持捕获和报告异常，如try:.......except Exception as er
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/CNN/">CNN</a>&nbsp;
           
@@ -518,8 +524,7 @@ Coordinator还支持捕获和报告异常，如try:.......except Exception as er
         
         <div class="index-excerpt" style="max-height: none;">
           <div class="index-text mb-1">LSTM网络是RNN网络中的特殊网络，再RNN文章中已经提到，RNN在时间步过长时，学习不到依赖关系。主要是RNN会引起梯度消失和梯度爆炸这两个问题，因此为了解决问题，研究者们提出了很多方式，其中GRU和LSTM网络就是这样诞生的。LSTM网络在应用中也取得了非凡的成就，特别是在语音识别，语言建模，翻译等等方面。
-##1.长期依赖问题 
-RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是time step过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。
+1.长期依赖问题RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是time step过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。
 2.什么是LSTM网络LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？
 在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。
 下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，LSTM Cell中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。
@@ -540,9 +545,9 @@ RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/RNN/">RNN</a>&nbsp;
           
@@ -572,6 +577,7 @@ RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对�
         <div class="index-excerpt" style="max-height: none;">
           <div class="index-text mb-1">1.RNN是什么RNN在维基上面有两种定义，但是一般默认的为时间递归神经网络，全称为(Recurrent Neural Network，简称为RNN)。RNN主要解决序列数据的处理，如文本，语音，视频等。典型应用在语言模型中，比如下面的示例：
 我昨天上学迟到了，老师批评了____。
+
 让机器在空的地方填词，这儿填写的词最有可能是”我”，但对于这样的模型通过什么来实现呢？RNN就是很好的选择，它很擅长处理序列数据。
 传统的神经网络是层与层之间进行连接，但是每层之间的神经元是没有连接的（假设各个数据之间是相互独立的）。而RNN的结构就是当前层的数据和之前的输出也有关系，即每层之间的神经元不再是无连接，而是有连接的。基本结构可以通过下面表示：
  
@@ -598,13 +604,13 @@ RNN中，每输入一步，每一层都共享参数$U,V,W$，RNN中主要在于�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
           
-            <a href="/tags/SGD/">SGD</a>&nbsp;
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/RNN/">RNN</a>&nbsp;
+          
+            <a href="/tags/SGD/">SGD</a>&nbsp;
           
         
       </div>
@@ -636,7 +642,8 @@ parameters
 ----------
 tensor: 想要在TensorBoard中观察的节点
 name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以name命名
-&quot;&quot;&quot;...</div>
+&quot;&quot;&quot;
+...</div>
         </div>
       </a>
 
@@ -884,6 +891,37 @@ name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -169,23 +169,55 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <p>主要介绍逻辑回归（<code>Logistic Regression</code>）和最大似然估计。逻辑回归是机器学习算法中最常用的算法，用于分类，属于有监督学习。在有监督学习中，如果因变量为有限个离散值，则预测问题就转变成分类问题，从这个角度也可以说分类问题是预测问题的一个特例。此时，通过样本集训练获得的有监督学习模型，即逻辑回归模型就称为分类模型或分类决策函数，也称为分类器（<code>Classifier</code>）。</p>
-<a id="more"></a>
+              <p>主要介绍逻辑回归（<code>Logistic Regression</code>）和最大似然估计。逻辑回归是机器学习算法中最常用的算法，用于分类，属于有监督学习。在有监督学习中，如果因变量为有限个离散值，则预测问题就转变成分类问题，从这个角度也可以说分类问题是预测问题的一个特例。此时，通过样本集训练获得的有监督学习模型，即逻辑回归模型就称为分类模型或分类决策函数，也称为分类器（<code>Classifier</code>）。<br><a id="more"></a></p>
 <h2 id="1-逻辑回归"><a href="#1-逻辑回归" class="headerlink" title="1. 逻辑回归"></a>1. 逻辑回归</h2><p>拟合决策边界(这里的决策边界不局限于线性，还可以是多项式，平面，曲面等)，再建立这个边界与分类的概率联系，从而得到了二分类情况下的概率。对于某个分类任务，如判定一封邮件是否为垃圾邮件，我们需要通过分类器预测分类结果：是（记为1）or不是（记为0）。如果我们考虑0就是“不发生”，1就是“发生”，那么我们可以将分类任务理解成估计事件发生的概率p，通过事件发生概率的大小来达到分类目的。因此，我们需要使得预测结果即概率值限定在0～1之间，很明显，如果我们仍然采用线性回归$p=f(x,\theta)=\theta^T x$作为分类器，其预测值可能会远远大于1或者远远小于0，不符合我们预期想法。所以，逻辑回归引入logistic函数，将分类器输出界定在［0，1］之间，其一般形式可表示为$f(x, \theta)=g(\theta^T x)$。那么问题来了，我们到底需要选择什么样形式的logistic函数g(z)？</p>
 <h3 id="logistic函数的由来"><a href="#logistic函数的由来" class="headerlink" title="logistic函数的由来"></a>logistic函数的由来</h3><p>需要强调的是，我们不选用线性回归的原因是线性回归不能保证预测值的范围位于［0，1］之间。所以，针对该问题最简单的方法是移除因变量值域的限制，这样，我们就需要对概率形式做某种变换。</p>
 <p>首先，选用发生比(the odds of experiencing an event)代替概率，发生比是事件发生概率和不发生概率之间的比值，记为$odds = \frac{p}{1-p}$，通过该变换，我们可以将［0，1］之间的任意数映射到$[0,\infty]$之间的任意实数。但是，线性回归的输出还可以是负数，我们还需要另一步变换将$[0,\infty]$的实数域映射到这个实数域R空间；</p>
 <p>然后，在众多非线性函数中，log函数的值域为整个实数域且单调，因此，我们可以计算优势比的对数，另$\eta = log(odds)=log \frac{p}{1-p}=logit(p)$。</p>
 <p>经过以上两步，我们可以去除分类问题对因变量值域的限制，如果概率等于0，那么优势比则为0，logit值为$-\infty$；相反，如果概率等于1，优势比为$\infty$，logit值为$\infty$。因此，logit函数可以将范围为［0，1］的概率值映射到整个实域空间，当概率值小于0.5时，logit值为负数，反之，logit值为正数。</p>
-<h3 id="逻辑回归"><a href="#逻辑回归" class="headerlink" title="逻辑回归"></a>逻辑回归</h3><p>解决了分类问题对分类器预测的因变量值域的限制，我们就可以采用线性回归对一一映射后的概率值进行线性拟合，即$logit(p)=log(\frac{p}{1-p})=\eta=f_{\theta}(x)=\theta^T \cdot x$。因为logit变换是一一映射，所以存在logit的反变换（antilogit），我们可以求得p值的解析表达式：<br>$$<br>p=antilogit(x)=logit^{\eta}=\frac{e^{\eta}}{1+e^{\eta}}=\frac{e^{\theta^T \cdot x}}{1+e^{\theta^T \cdot x}}<br>$$<br>$$<br>1-p=1-antilogit(x)=1-logit^{\eta}=1-\frac{e^{\eta}}{1+e^{\eta}}=1-\frac{e^{\theta^T \cdot x}}{1+e^{\theta^T \cdot x}}＝\frac{1}{1+e^{\theta^T \cdot x}}<br>$$<br>众所周知，上式即为logistic回归的一般表达式，其采用的logit变换一般记为sigmoid函数：<br>$$<br>g(x)=\frac{e^{\theta^T x}}{1+e^{\theta^T x}}<br>$$<br>讲到这里，还有一个问题是<strong>为什么要选用sigmoid函数</strong>呢？为什么不选用其他函数，如probit函数？</p>
+<h3 id="逻辑回归"><a href="#逻辑回归" class="headerlink" title="逻辑回归"></a>逻辑回归</h3><p>解决了分类问题对分类器预测的因变量值域的限制，我们就可以采用线性回归对一一映射后的概率值进行线性拟合，即$logit(p)=log(\frac{p}{1-p})=\eta=f_{\theta}(x)=\theta^T \cdot x$。因为logit变换是一一映射，所以存在logit的反变换（antilogit），我们可以求得p值的解析表达式：</p>
+<script type="math/tex; mode=display">
+p=antilogit(x)=logit^{\eta}=\frac{e^{\eta}}{1+e^{\eta}}=\frac{e^{\theta^T \cdot x}}{1+e^{\theta^T \cdot x}}</script><script type="math/tex; mode=display">
+1-p=1-antilogit(x)=1-logit^{\eta}=1-\frac{e^{\eta}}{1+e^{\eta}}=1-\frac{e^{\theta^T \cdot x}}{1+e^{\theta^T \cdot x}}＝\frac{1}{1+e^{\theta^T \cdot x}}</script><p>众所周知，上式即为logistic回归的一般表达式，其采用的logit变换一般记为sigmoid函数：</p>
+<script type="math/tex; mode=display">
+g(x)=\frac{e^{\theta^T x}}{1+e^{\theta^T x}}</script><p>讲到这里，还有一个问题是<strong>为什么要选用sigmoid函数</strong>呢？为什么不选用其他函数，如probit函数？</p>
 <p>其实，无论是sigmoid函数还是probit函数都是广义线性模型的连接函数（link function）中的一种。选用联接函数是因为，从统计学角度而言，普通线性回归模型是基于响应变量和误差项均服从正态分布的假设，且误差项具有零均值，同方差的特性。但是，例如分类任务（判断肿瘤是否为良性、判断邮件是否为垃圾邮件），其响应变量一般不服从于正态分布，其服从于二项分布，所以选用普通线性回归模型来拟合是不准确的，因为不符合假设，所以，我们需要选用广义线性模型来拟合数据，通过标准联接函数(canonical link or standard link function)来映射响应变量，如：正态分布对应于恒等式，泊松分布对应于自然对数函数，二项分布对应于logit函数（二项分布是特殊的泊松分布）。</p>
-<h2 id="2-最大似然估计"><a href="#2-最大似然估计" class="headerlink" title="2. 最大似然估计"></a>2. 最大似然估计</h2><p>通过上述分析，我们可以获得logistic回归的表达式：<br>$$P(y=1|X)=\frac{exp(\theta^T \cdot x)}{1+exp(\theta^T \cdot x)}$$<br>以及$$P(y=0|X)=\frac{1}{1+exp(\theta^T \cdot x)}$$<br>其中$\theta$是未知参数。假设有一组观测样本，那么现在的任务就变成给定一组数据和一个参数待定的模型下，如何估计模型参数的问题。而这里想要讲述的最大似然估计就是估计未知参数的一种方法，最大似然估计（Maximum Likelihood Method）是建立在各样本间相互独立且样本满足随机抽样（可代表总体分布）下的估计方法，它的核心思想是如果现有样本可以代表总体，那么最大似然估计就是找到一组参数使得出现现有样本的可能性最大，即从统计学角度需要使得所有观测样本的联合概率最大化，又因为样本间是相互独立的，所以所有观测样本的联合概率可以写成各样本出现概率的连乘积，如下式：<br>$$<br>\begin{aligned}<br>\prod^m_{i=1}\underbrace{P(y^{(i)}=1|x^{(i)})}_{where , i\in m , and , y^{(i)}=1} \cdot \underbrace{P(y^{(i)}=0|x^{(i)})}_{where , i \in m ,<br>and , y^{(i)}=0}\\<br>&amp; = \prod^m_{i=1} P(y^{(i)}=1|x^{(i)})^{y(i)} \cdot P(y^{(i)}=0|x^{(i)})^{1-y(i)}<br>\end{aligned}<br>$$<br>上面为什么是这样呢？当y=1的时候，后面那一项是不是没有了，那就只剩下x属于1类的概率，当y=0的时候，第一项是不是没有了，那就只剩下后面那个x属于0的概率（1减去x属于1的概率）。所以不管y是0还是1，上面得到的数，都是(x, y)出现的概率。那我们的整个样本集，也就是n个独立的样本出现的似然函数为（因为每个样本都是独立的，所以n个样本出现的概率就是他们各自出现的概率相乘）。</p>
+<h2 id="2-最大似然估计"><a href="#2-最大似然估计" class="headerlink" title="2. 最大似然估计"></a>2. 最大似然估计</h2><p>通过上述分析，我们可以获得logistic回归的表达式：</p>
+<script type="math/tex; mode=display">P(y=1|X)=\frac{exp(\theta^T \cdot x)}{1+exp(\theta^T \cdot x)}</script><p>以及<script type="math/tex">P(y=0|X)=\frac{1}{1+exp(\theta^T \cdot x)}</script><br>其中$\theta$是未知参数。假设有一组观测样本，那么现在的任务就变成给定一组数据和一个参数待定的模型下，如何估计模型参数的问题。而这里想要讲述的最大似然估计就是估计未知参数的一种方法，最大似然估计（Maximum Likelihood Method）是建立在各样本间相互独立且样本满足随机抽样（可代表总体分布）下的估计方法，它的核心思想是如果现有样本可以代表总体，那么最大似然估计就是找到一组参数使得出现现有样本的可能性最大，即从统计学角度需要使得所有观测样本的联合概率最大化，又因为样本间是相互独立的，所以所有观测样本的联合概率可以写成各样本出现概率的连乘积，如下式：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\prod^m\_{i=1}\underbrace{P(y^{(i)}=1|x^{(i)})}\_{where \, i\in m , and , y^{(i)}=1} \cdot \underbrace{P(y^{(i)}=0|x^{(i)})}\_{where \, i \in m \, 
+and \, y^{(i)}=0}\\\\
+& = \prod^m\_{i=1} P(y^{(i)}=1|x^{(i)})^{y(i)} \cdot P(y^{(i)}=0|x^{(i)})^{1-y(i)}
+\end{aligned}</script><p>上面为什么是这样呢？当y=1的时候，后面那一项是不是没有了，那就只剩下x属于1类的概率，当y=0的时候，第一项是不是没有了，那就只剩下后面那个x属于0的概率（1减去x属于1的概率）。所以不管y是0还是1，上面得到的数，都是(x, y)出现的概率。那我们的整个样本集，也就是n个独立的样本出现的似然函数为（因为每个样本都是独立的，所以n个样本出现的概率就是他们各自出现的概率相乘）。</p>
 <p>通过观察我们可以看出，当样本响应变量为1时，上式等于$P(y^{(i)}=1｜x^{(i)})$；当样本响应变量为0时，上式等于$P(y^{(i)}=0｜x^{(i)})$，是所有样本边际分布概率的连乘积，通常被称之为似然函数$\ell(\theta)$。</p>
 <p>最大似然估计的目标是求得使得似然函数$\ell(\theta)$最大的参数$\theta$的组合，理论上讲我们就可以采用梯度上升算法求解该目标函数（似然函数）的极大值。</p>
-<h3 id="为什么采用最大似然？—非凸函数"><a href="#为什么采用最大似然？—非凸函数" class="headerlink" title="为什么采用最大似然？—非凸函数"></a>为什么采用最大似然？—非凸函数</h3><p>我们知道之前线性回归可以采用梯度下降算法求解是因为线性回归的代价函数（均方误差函数）是凸函数，为碗状，而凸函数具有良好的性质（对于凸函数来说局部最小值点即为全局最小值点）使得我们一般会将非凸函数转换为凸函数进行求解。因此，最大似然估计采用自然对数变换，将似然函数转换为对数似然函数，其具体形式为：<br>$$<br>\begin{aligned}<br>log(\ell(\theta)) &amp; = log(\prod_{i=1}^m P(y^{(i)}=1｜x^{(i)})^{y(i)} \cdot P(y^{(i)}=0｜x^{(i)})^{1-y(i)}) \\<br>&amp; = \sum^m \lgroup y^{(i)} log(g(x)) + (1-y^{(i)})log(1-g(x)) \rgroup<br>\end{aligned}<br>$$</p>
-<p>相对于求解对数似然函数的最大值，我们当然可以将该目标转换为对偶问题，即求解代价函数$J(\theta)=-log(\ell(\theta))$的最小值。因此，我们定义logistic回归的代价函数为：<br>$$<br>cost=J(\theta)=-log(\ell(\theta))＝－\frac{1}{m} \sum^m_{i=1} \lgroup y^{(i)} log(g(x)) + (1-y^{(i)})log(1-g(x)) \rgroup<br>$$<br>从代价函数的直观表达上来看，当$y^{(i)}=1, g(x)=1$时(预测类别和真实类别相同)，$J(\theta｜x^{(i)})=0$；当$y^{(i)}=1, g(x) \rightarrow 0$时(预测类别和真实类别相反)，$J(\theta｜x^{(i)}) \rightarrow \infty$（注意对数函数前有个负号）。这意味着，当预测结果和真实结果越接近时，预测产生的代价越小，当预测结果和真实结果完全相反时，预测会产生很大的惩罚。该理论同样适用于$y^{(i)}=0$的情况。</p>
+<h3 id="为什么采用最大似然？—非凸函数"><a href="#为什么采用最大似然？—非凸函数" class="headerlink" title="为什么采用最大似然？—非凸函数"></a>为什么采用最大似然？—非凸函数</h3><p>我们知道之前线性回归可以采用梯度下降算法求解是因为线性回归的代价函数（均方误差函数）是凸函数，为碗状，而凸函数具有良好的性质（对于凸函数来说局部最小值点即为全局最小值点）使得我们一般会将非凸函数转换为凸函数进行求解。因此，最大似然估计采用自然对数变换，将似然函数转换为对数似然函数，其具体形式为：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+log(\ell(\theta)) & = log(\prod\_{i=1}^m P(y^{(i)}=1｜x^{(i)})^{y(i)} \cdot P(y^{(i)}=0｜x^{(i)})^{1-y(i)}) \\\\
+& = \sum^m \lgroup y^{(i)} log(g(x)) + (1-y^{(i)})log(1-g(x)) \rgroup
+\end{aligned}</script><p>相对于求解对数似然函数的最大值，我们当然可以将该目标转换为对偶问题，即求解代价函数$J(\theta)=-log(\ell(\theta))$的最小值。因此，我们定义logistic回归的代价函数为：</p>
+<script type="math/tex; mode=display">
+cost=J(\theta)=-log(\ell(\theta))＝－\frac{1}{m} \sum^m\_{i=1} \lgroup y^{(i)} log(g(x)) + (1-y^{(i)})log(1-g(x)) \rgroup</script><p>从代价函数的直观表达上来看，当$y^{(i)}=1, g(x)=1$时(预测类别和真实类别相同)，$J(\theta｜x^{(i)})=0$；当$y^{(i)}=1, g(x) \rightarrow 0$时(预测类别和真实类别相反)，$J(\theta｜x^{(i)}) \rightarrow \infty$（注意对数函数前有个负号）。这意味着，当预测结果和真实结果越接近时，预测产生的代价越小，当预测结果和真实结果完全相反时，预测会产生很大的惩罚。该理论同样适用于$y^{(i)}=0$的情况。</p>
 <p>实际上，最小二乘估计是最大似然估计的一种，有心的人还记得上面提到过的线性回归必须满足的条件，即误差项均服从正态分布的假设，如果线性回归记为$y=\theta x + \epsilon$的话，对于误差函数ϵϵ，其服从正态分布，$\epsilon \sim N(0, \sigma^2)$，因此利用正态分布的性质，我们可以得到$y-\theta x \sim N(0, \sigma^2) \Rightarrow y \sim N(\theta x, \sigma^2)$。</p>
-<p>因此，根据极大似然估计的定义，我们要获得产生样本yy可能性最大的一组参数θθ，因此，似然函数可写为：<br>$$<br>\ell(\theta)=\prod^m_{i=1} \frac{1}{\sqrt{2\pi}\sigma} exp(- \frac{(y^{(i)}-\theta x)^2}{2 \sigma})<br>$$<br>与logistic回归类似，我们仍然将似然函数变换为对数似然函数求解极值，此时，<br>$$<br>log(\ell(\theta))=mlog(\frac{1}{\sqrt{2\pi}}) + \sum^m_{i=1} -\frac{(y^{(i)}-\theta x)^2}{2 \sigma}<br>$$<br>综上所述，要让$log(\ell(\theta))$最大，我们需要让$\sum^m_{i=1}(y^{(i)}-\theta x)^2$最小，该式即为我们经常提及的线性回归的代价函数，所以，当线性回归的求解过程也利用最大似然估计的思想。</p>
-<h2 id="3-最大似然估计求解"><a href="#3-最大似然估计求解" class="headerlink" title="3. 最大似然估计求解"></a>3. 最大似然估计求解</h2><p>有了代价函数，我们自然可以选用梯度下降算法或者其他优化算法对目标函数进行求解。在R中，我们也可采用optim函数，利用模拟退火算法或者单纯形算法求解。对于梯度下降算法，我们可以通过求解目标函数的一阶偏导数获得梯度，为：<br>$$<br>\begin{aligned}<br>\frac{\partial J}{\partial \theta} &amp; = -\sum_{i=1}^m ( \frac{y}{g(x)} \cdot g’(x) - \frac{1-y}{1-g(x)}\cdot g’(x)) \\<br>&amp; = -\sum^m( \frac{y-yg(x)-g(x)+yg(x)}{g(x)(1-g(x))} \cdot g’(x) )  \\<br>&amp; = -\sum^m \frac{y-g(x)}{g(x)(1-g(x))} \cdot (-\frac{x e^{\theta x}}{(1+e^{\theta x})^2}) \\<br>&amp; = -\sum^m \frac{g(x)-y}{g(x)(1-g(x))} \cdot \frac{e^{\theta x}}{1+e^{\theta x}} \cdot \frac{1}{1+e^{\theta x}} \cdot x \\<br>&amp; = -\sum^m \frac{g(x)-y}{g(x)(1-g(x))} \cdot g(x) \cdot (1-g(x)) \cdot x \\<br>&amp; = -\sum^m (g(x)-y) \cdot x \\<br>\end{aligned}<br>$$<br>因此，梯度更新的表达式为：<br>$$<br>\theta := \alpha \sum^m_{i=1} (g(x)-y) \ cdot x<br>$$<br>至此，logistic回归和最大似然估计原理部分就over。</p>
+<p>因此，根据极大似然估计的定义，我们要获得产生样本yy可能性最大的一组参数θθ，因此，似然函数可写为：</p>
+<script type="math/tex; mode=display">
+\ell(\theta)=\prod^m\_{i=1} \frac{1}{\sqrt{2\pi}\sigma} exp(- \frac{(y^{(i)}-\theta x)^2}{2 \sigma})</script><p>与logistic回归类似，我们仍然将似然函数变换为对数似然函数求解极值，此时，</p>
+<script type="math/tex; mode=display">
+log(\ell(\theta))=mlog(\frac{1}{\sqrt{2\pi}}) + \sum^m\_{i=1} -\frac{(y^{(i)}-\theta x)^2}{2 \sigma}</script><p>综上所述，要让$log(\ell(\theta))$最大，我们需要让$\sum^m_{i=1}(y^{(i)}-\theta x)^2$最小，该式即为我们经常提及的线性回归的代价函数，所以，当线性回归的求解过程也利用最大似然估计的思想。</p>
+<h2 id="3-最大似然估计求解"><a href="#3-最大似然估计求解" class="headerlink" title="3. 最大似然估计求解"></a>3. 最大似然估计求解</h2><p>有了代价函数，我们自然可以选用梯度下降算法或者其他优化算法对目标函数进行求解。在R中，我们也可采用optim函数，利用模拟退火算法或者单纯形算法求解。对于梯度下降算法，我们可以通过求解目标函数的一阶偏导数获得梯度，为：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\frac{\partial J}{\partial \theta} & = -\sum\_{i=1}^m ( \frac{y}{g(x)} \cdot g’(x) - \frac{1-y}{1-g(x)}\cdot g’(x)) \\\\
+& = -\sum^m( \frac{y-yg(x)-g(x)+yg(x)}{g(x)(1-g(x))} \cdot g’(x) )  \\\\
+& = -\sum^m \frac{y-g(x)}{g(x)(1-g(x))} \cdot (-\frac{x e^{\theta x}}{(1+e^{\theta x})^2}) \\\\
+& = -\sum^m \frac{g(x)-y}{g(x)(1-g(x))} \cdot \frac{e^{\theta x}}{1+e^{\theta x}} \cdot \frac{1}{1+e^{\theta x}} \cdot x \\\\
+& = -\sum^m \frac{g(x)-y}{g(x)(1-g(x))} \cdot g(x) \cdot (1-g(x)) \cdot x \\\\
+& = -\sum^m (g(x)-y) \cdot x \\\\
+\end{aligned}</script><p>因此，梯度更新的表达式为：</p>
+<script type="math/tex; mode=display">
+\theta := \alpha \sum^m\_{i=1} (g(x)-y) \ cdot x</script><p>至此，logistic回归和最大似然估计原理部分就over。</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
 <li><a href="http://blog.csdn.net/han_xiaoyang/article/details/49332321" target="_blank" rel="noopener">机器学习系列(2)_从初等数学视角解读逻辑回归</a></li>
 <li><a href="https://chenrudan.github.io/blog/2016/01/09/logisticregression.html" target="_blank" rel="noopener">浅析Logistic Regression</a></li>
@@ -472,6 +504,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

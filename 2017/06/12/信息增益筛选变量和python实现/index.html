@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -174,11 +174,8 @@
 
 <p>这里的b为对数使用的底数，通常为2，或者自然常熟e, p(i)为X中第i个取值在所在样本中的概率。</p>
 <h3 id="信息增益IG-Y-X"><a href="#信息增益IG-Y-X" class="headerlink" title="信息增益IG(Y|X)"></a>信息增益IG(Y|X)</h3><p>衡量每个属性X区分目标样本Y的能力，当新增一个属性或特征X时，信息熵的变化大小即为信息增益。IG(Y|X)的值越大那么X对于Y越重要。 条件熵：H(Y|X)，当X条件下Y的信息熵。</p>
-<center> IG(Y|X)=H(Y)-H(Y|X) </center>
-<a id="more"></a>
-下面是通过python实现计算样本特征的信息增益：
-
-<pre><code class="python"># -*-coding:utf-8-*-
+<p><center> IG(Y|X)=H(Y)-H(Y|X) </center><br><a id="more"></a><br>下面是通过python实现计算样本特征的信息增益：</p>
+<pre><code class="lang-python"># -*-coding:utf-8-*-
 
 import numpy as np
 from collections import Counter
@@ -265,7 +262,8 @@ class EntropyGain(object):
 
         if isinstance(self.alpha, float) and 0.0 &lt; self.alpha &lt;= 1:
             index_num = int(col_num * self.alpha)
-            return sorted(index_map_entropy.iteritems(), key=lambda d: d[1], reverse=True)[:index_num]</code></pre>
+            return sorted(index_map_entropy.iteritems(), key=lambda d: d[1], reverse=True)[:index_num]
+</code></pre>
 
             </div>
             <hr>
@@ -546,6 +544,37 @@ class EntropyGain(object):
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

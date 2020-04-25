@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -133,7 +133,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    3.6k 字
+                    3.7k 字
                   </span>
                 
 
@@ -170,20 +170,26 @@
             
             <div class="markdown-body">
               <blockquote>
-<p>T-SNE(<code>t-distributed stochastic neighbor embedding</code>)是用于降维的一种机器学习算法，是由 Laurens van der Maaten 和 Geoffrey Hinton在08年提出来。此外，<code>t-SNE</code> 是一种非线性降维算法，非常适用于高维数据降维到2维或者3维，进行可视化。t-SNE是由SNE(<code>Stochastic Neighbor Embedding, SNE; Hinton and Roweis</code>, 2002)发展而来。我们先介绍SNE的基本原理，之后再扩展到t-SNE。最后再看一下t-SNE的实现以及一些优化。</p>
-</blockquote>
-<a id="more"></a>
+<p>T-SNE(<code>t-distributed stochastic neighbor embedding</code>)是用于降维的一种机器学习算法，是由 Laurens van der Maaten 和 Geoffrey Hinton在08年提出来。此外，<code>t-SNE</code> 是一种非线性降维算法，非常适用于高维数据降维到2维或者3维，进行可视化。t-SNE是由SNE(<code>Stochastic Neighbor Embedding, SNE; Hinton and Roweis</code>, 2002)发展而来。我们先介绍SNE的基本原理，之后再扩展到t-SNE。最后再看一下t-SNE的实现以及一些优化。<br><a id="more"></a></p>
 <h2 id="1-SNE"><a href="#1-SNE" class="headerlink" title="1. SNE"></a>1. SNE</h2><h3 id="1-1-基本原理"><a href="#1-1-基本原理" class="headerlink" title="1.1 基本原理"></a>1.1 基本原理</h3><p>SNE是通过仿射(<code>affinitie</code>)变换将数据点映射到概率分布上，主要包括两个步骤：</p>
 <ul>
 <li>SNE构建一个高维对象之间的概率分布，使得相似的对象有更高的概率被选择，而不相似的对象有较低的概率被选择。</li>
 <li>SNE在低维空间里在构建这些点的概率分布，使得这两个概率分布之间尽可能的相似。</li>
 </ul>
+</blockquote>
 <p>我们看到<code>t-SNE</code>模型是非监督的降维，他跟<code>kmeans</code>等不同，他不能通过训练得到一些东西之后再用于其它数据（比如<code>kmeans</code>可以通过训练得到k个点，再用于其它数据集，而<code>t-SNE</code>只能单独的对数据做操作，也就是说他只有<code>fit\_transform</code>，而没有<code>fit</code>操作）</p>
-<h3 id="1-2-SNE原理推导"><a href="#1-2-SNE原理推导" class="headerlink" title="1.2 SNE原理推导"></a>1.2 SNE原理推导</h3><p><code>SNE</code>是先将欧几里得距离转换为条件概率来表达点与点之间的相似度。具体来说，给定一个N个高维的数据$x_1,…,x_n$注（意N不是维度）, <code>t-SNE</code>首先是计算概率$p_{ij}$)，正比于$x_i$和$x_j$之间的相似度（这种概率是我们自主构建的），即：<br>$${p_ {j \mid i} = \frac{\exp(- \mid  \mid  x_i -x_j  \mid  \mid  ^2 / (2 \sigma^2_i ))} {\sum_{k \neq i} \exp(- \mid  \mid  x_i - x_k  \mid  \mid  ^2 / (2 \sigma^2_i))}}$$<br>这里的有一个参数是$\sigma_i$，对于不同的点$x_i$取值不一样，后续会讨论如何设置。此外设置$p_{x|x}=0$,因为我们关注的是两两之间的相似度。那对于低维度下的$y_i$，我们可以指定高斯分布为方差为$\frac{1}{\sqrt{2}}$，因此它们之间的相似度如下:<br>$${q_ {j \mid i} = \frac{\exp(- \mid  \mid  x_i -x_j  \mid  \mid  ^2)} {\sum_{k \neq i} \exp(- \mid  \mid  x_i - x_k  \mid  \mid  ^2)}}$$<br>同样，设定$q_{i|i}=0$。如果降维的效果比较好，局部特征保留完整，那么$p_{i \mid j} = q_{i \mid j}$, 因此我们优化两个分布之间的距离-KL散度(<code>Kullback-Leibler divergences</code>)，那么目标函数(<code>cost function</code>)如下:<br>$$C = \sum_i KL(P_i  \mid  \mid  Q_i) = \sum_i \sum_j p_{j \mid i} \log \frac{p_{j \mid i}}{q_{j \mid i}}$$<br>这里的$p_i$表示了给定点$x_i$下，其他所有数据点的条件概率分布。需要注意的是<strong>KL散度具有不对称性</strong>，在低维映射中不同的距离对应的惩罚权重是不同的，具体来说：距离较远的两个点来表达距离较近的两个点会产生更大的<code>cost</code>，相反，用较近的两个点来表达较远的两个点产生的<code>cost</code>相对较小(注意：类似于回归容易受异常值影响，但效果相反)。即用较小的 $q_{j \mid i}=0.2$来建模较大的 $p_{j \mid i}=0.8$，$cost=p \log(\frac{p}{q})=1.11$,同样用较大的$q_{j \mid i}=0.8$来建模较小的$p_{j \mid i}=0.2$, $cost=-0.277$, 因此，<strong><code>SNE</code>会倾向于保留数据中的局部特征</strong>。</p>
+<h3 id="1-2-SNE原理推导"><a href="#1-2-SNE原理推导" class="headerlink" title="1.2 SNE原理推导"></a>1.2 SNE原理推导</h3><p><code>SNE</code>是先将欧几里得距离转换为条件概率来表达点与点之间的相似度。具体来说，给定一个N个高维的数据$x_1,…,x_n$注（意N不是维度）, <code>t-SNE</code>首先是计算概率$p_{ij}$)，正比于$x_i$和$x_j$之间的相似度（这种概率是我们自主构建的），即：</p>
+<script type="math/tex; mode=display">{p\_ {j \mid i} = \frac{\exp(- \mid  \mid  x\_i -x\_j  \mid  \mid  ^2 / (2 \sigma^2\_i ))} {\sum\_{k \neq i} \exp(- \mid  \mid  x\_i - x\_k  \mid  \mid  ^2 / (2 \sigma^2\_i))}}</script><p>这里的有一个参数是$\sigma_i$，对于不同的点$x_i$取值不一样，后续会讨论如何设置。此外设置$p_{x|x}=0$,因为我们关注的是两两之间的相似度。那对于低维度下的$y_i$，我们可以指定高斯分布为方差为$\frac{1}{\sqrt{2}}$，因此它们之间的相似度如下:</p>
+<script type="math/tex; mode=display">{q\_ {j \mid i} = \frac{\exp(- \mid  \mid  x\_i -x\_j  \mid  \mid  ^2)} {\sum\_{k \neq i} \exp(- \mid  \mid  x\_i - x\_k  \mid  \mid  ^2)}}</script><p>同样，设定$q_{i|i}=0$。如果降维的效果比较好，局部特征保留完整，那么$p_{i \mid j} = q_{i \mid j}$, 因此我们优化两个分布之间的距离-KL散度(<code>Kullback-Leibler divergences</code>)，那么目标函数(<code>cost function</code>)如下:</p>
+<script type="math/tex; mode=display">C = \sum\_i KL(P\_i  \mid  \mid  Q\_i) = \sum\_i \sum\_j p\_{j \mid i} \log \frac{p\_{j \mid i}}{q\_{j \mid i}}</script><p>这里的$p_i$表示了给定点$x_i$下，其他所有数据点的条件概率分布。需要注意的是<strong>KL散度具有不对称性</strong>，在低维映射中不同的距离对应的惩罚权重是不同的，具体来说：距离较远的两个点来表达距离较近的两个点会产生更大的<code>cost</code>，相反，用较近的两个点来表达较远的两个点产生的<code>cost</code>相对较小(注意：类似于回归容易受异常值影响，但效果相反)。即用较小的 $q_{j \mid i}=0.2$来建模较大的 $p_{j \mid i}=0.8$，$cost=p \log(\frac{p}{q})=1.11$,同样用较大的$q_{j \mid i}=0.8$来建模较小的$p_{j \mid i}=0.2$, $cost=-0.277$, 因此，<strong><code>SNE</code>会倾向于保留数据中的局部特征</strong>。</p>
 <blockquote>
 <p><strong>思考:了解了基本思路之后，你会怎么选择$\sigma$，固定初始化?</strong></p>
 </blockquote>
-<p>下面我们开始正式的推导SNE。首先不同的点具有不同的$\sigma_i$，$P_i$的熵(<code>entropy</code>)会随着$\sigma_i$的增加而增加。<code>SNE</code>使用困惑度(<code>perplexity</code>)的概念，用二分搜索的方式来寻找一个最佳的$\sigma$。其中困惑度指:<br>$$Perp(P_i) = 2^{H(P_i)}$$<br>这里的$H(P_i)$是$P_i$的熵，即:<br>$$H(P_i) = -\sum_j p_{j \mid i} \log_2 p_{j \mid i}$$<br>困惑度可以解释为一个点附近的有效近邻点个数。<code>SNE</code>对困惑度的调整比较有鲁棒性，通常选择<code>5-50</code>之间，给定之后，使用二分搜索的方式寻找合适的$\sigma$。<br>那么核心问题是如何求解梯度了,目标函数等价于$\sum \sum - p log(q)$这个式子与<code>softmax</code>非常的类似，我们知道<code>softmax</code>的目标函数是$\sum -y \log p$，对应的梯度是$y - p$(注：这里的<code>softmax</code>中<code>y</code>表示<code>label</code>，<code>p</code>表示预估值)。 同样我们可以推导<code>SNE</code>的目标函数中的<code>i</code>在<code>j</code>下的条件概率情况的梯度是$2(p_{j \mid i}-q_{j \mid i})(y_i-y_j)$， 同样<code>j</code>在<code>i</code>下的条件概率的梯度是$2(p_{j \mid i}-q_{j \mid i})(y_i-y_j)$, 最后得到完整的梯度公式如下:<br>$$\frac{\delta C}{\delta y_i} = 2 \sum_j (p_{j \mid i} - q_{j \mid i} + p_{i \mid j} - q_{i \mid j})(y_i - y_j)$$<br>在初始化中，可以用较小的$\sigma$下的高斯分布来进行初始化。为了加速优化过程和避免陷入局部最优解，梯度中需要使用一个相对较大的动量(<code>momentum</code>)。即参数更新中除了当前的梯度，还要引入之前的梯度累加的指数衰减项，如下:<br>$$Y^{(t)} = Y^{(t-1)} + \eta \frac{\delta C}{\delta Y} + \alpha(t)(Y^{(t-1)} - Y^{(t-2)})$$<br>这里的$Y^{(t)}$表示迭代<code>t</code>次的解，$\eta$表示学习速率,$\alpha(t)$表示迭代<code>t</code>次的动量。此外，在初始优化的阶段，每次迭代中可以引入一些高斯噪声，之后像模拟退火一样逐渐减小该噪声，可以用来避免陷入局部最优解。因此，<code>SNE</code>在选择高斯噪声，以及学习速率，什么时候开始衰减，动量选择等等超参数上，需要跑多次优化才可以。</p>
+<p>下面我们开始正式的推导SNE。首先不同的点具有不同的$\sigma_i$，$P_i$的熵(<code>entropy</code>)会随着$\sigma_i$的增加而增加。<code>SNE</code>使用困惑度(<code>perplexity</code>)的概念，用二分搜索的方式来寻找一个最佳的$\sigma$。其中困惑度指:</p>
+<script type="math/tex; mode=display">Perp(P\_i) = 2^{H(P\_i)}</script><p>这里的$H(P_i)$是$P_i$的熵，即:</p>
+<script type="math/tex; mode=display">H(P\_i) = -\sum\_j p\_{j \mid i} \log\_2 p\_{j \mid i}</script><p>困惑度可以解释为一个点附近的有效近邻点个数。<code>SNE</code>对困惑度的调整比较有鲁棒性，通常选择<code>5-50</code>之间，给定之后，使用二分搜索的方式寻找合适的$\sigma$。<br>那么核心问题是如何求解梯度了,目标函数等价于$\sum \sum - p log(q)$这个式子与<code>softmax</code>非常的类似，我们知道<code>softmax</code>的目标函数是$\sum -y \log p$，对应的梯度是$y - p$(注：这里的<code>softmax</code>中<code>y</code>表示<code>label</code>，<code>p</code>表示预估值)。 同样我们可以推导<code>SNE</code>的目标函数中的<code>i</code>在<code>j</code>下的条件概率情况的梯度是$2(p_{j \mid i}-q_{j \mid i})(y_i-y_j)$， 同样<code>j</code>在<code>i</code>下的条件概率的梯度是$2(p_{j \mid i}-q_{j \mid i})(y_i-y_j)$, 最后得到完整的梯度公式如下:</p>
+<script type="math/tex; mode=display">\frac{\delta C}{\delta y\_i} = 2 \sum\_j (p\_{j \mid i} - q\_{j \mid i} + p\_{i \mid j} - q\_{i \mid j})(y\_i - y\_j)</script><p>在初始化中，可以用较小的$\sigma$下的高斯分布来进行初始化。为了加速优化过程和避免陷入局部最优解，梯度中需要使用一个相对较大的动量(<code>momentum</code>)。即参数更新中除了当前的梯度，还要引入之前的梯度累加的指数衰减项，如下:</p>
+<script type="math/tex; mode=display">Y^{(t)} = Y^{(t-1)} + \eta \frac{\delta C}{\delta Y} + \alpha(t)(Y^{(t-1)} - Y^{(t-2)})</script><p>这里的$Y^{(t)}$表示迭代<code>t</code>次的解，$\eta$表示学习速率,$\alpha(t)$表示迭代<code>t</code>次的动量。此外，在初始优化的阶段，每次迭代中可以引入一些高斯噪声，之后像模拟退火一样逐渐减小该噪声，可以用来避免陷入局部最优解。因此，<code>SNE</code>在选择高斯噪声，以及学习速率，什么时候开始衰减，动量选择等等超参数上，需要跑多次优化才可以。</p>
 <blockquote>
 <p><strong>思考:SNE有哪些不足？ 面对SNE的不足，你会做什么改进？</strong></p>
 </blockquote>
@@ -193,17 +199,22 @@
 <li>低维空间下，使用<code>t</code>分布替代高斯分布表达两点之间的相似度</li>
 </ul>
 <p><code>t-SNE</code>在低维空间下使用更重长尾分布的<code>t</code>分布来避免<code>crowding</code>问题和优化问题。在这里，首先介绍一下对称版的<code>SNE</code>，之后介绍<code>crowding</code>问题，之后再介绍<code>t-SNE</code></p>
-<h3 id="2-1-Symmetric-SNE"><a href="#2-1-Symmetric-SNE" class="headerlink" title="2.1 Symmetric SNE"></a>2.1 Symmetric SNE</h3><p>优化$p_{i \mid j}$和$q_{i \mid j}$的<code>KL</code>散度的一种替换思路是，使用联合概率分布来替换条件概率分布，即<code>P</code>是高维空间里各个点的联合概率分布，<code>Q</code>是低维空间下的，目标函数为:<br>$$C = KL(P \mid  \mid Q) = \sum_i \sum_j p_{i,j} \log \frac{p_{ij}}{q_{ij}}$$<br>这里的$p_{ii}$,$q_{ii}$为0，我们将这种<code>SNE</code>称之为<code>symmetric SNE</code>(对称<code>SNE</code>)，因为他假设了对于任意<code>i</code>,$p_{ij} = p_{ji}, q_{ij} = q_{ji}$，因此概率分布可以改写为:<br>$$p_{ij} = \frac{\exp(- \mid  \mid x_i - x_i \mid  \mid ^2 / 2\sigma^2)}{\sum_{k \neq l} \exp(- \mid  \mid x_i-x_j \mid  \mid ^2 / 2\sigma^2)}  \ \ \ \  q_{ij} = \frac{\exp(- \mid  \mid y_i - y_i \mid  \mid ^2)}{\sum_{k \neq l} \exp(- \mid  \mid y_i-y_j \mid  \mid ^2)}$$<br>这种表达方式，使得整体简洁了很多。但是会引入异常值的问题。比如$x_i$是异常值，那么$∣∣x_i−x_j∣∣^2$会很大，对应的所有的<code>j</code>,$p_{il}$都会很小(之前是仅在$x_i$下很小)，导致低维映射下的$y_i$对<code>cost</code>影响很小。</p>
+<h3 id="2-1-Symmetric-SNE"><a href="#2-1-Symmetric-SNE" class="headerlink" title="2.1 Symmetric SNE"></a>2.1 Symmetric SNE</h3><p>优化$p_{i \mid j}$和$q_{i \mid j}$的<code>KL</code>散度的一种替换思路是，使用联合概率分布来替换条件概率分布，即<code>P</code>是高维空间里各个点的联合概率分布，<code>Q</code>是低维空间下的，目标函数为:</p>
+<script type="math/tex; mode=display">C = KL(P \mid  \mid Q) = \sum\_i \sum\_j p\_{i,j} \log \frac{p\_{ij}}{q\_{ij}}</script><p>这里的$p_{ii}$,$q_{ii}$为0，我们将这种<code>SNE</code>称之为<code>symmetric SNE</code>(对称<code>SNE</code>)，因为他假设了对于任意<code>i</code>,$p_{ij} = p_{ji}, q_{ij} = q_{ji}$，因此概率分布可以改写为:</p>
+<script type="math/tex; mode=display">p\_{ij} = \frac{\exp(- \mid  \mid x\_i - x\_i \mid  \mid ^2 / 2\sigma^2)}{\sum\_{k \neq l} \exp(- \mid  \mid x\_i-x\_j \mid  \mid ^2 / 2\sigma^2)}  \ \ \ \  q\_{ij} = \frac{\exp(- \mid  \mid y\_i - y\_i \mid  \mid ^2)}{\sum\_{k \neq l} \exp(- \mid  \mid y\_i-y\_j \mid  \mid ^2)}</script><p>这种表达方式，使得整体简洁了很多。但是会引入异常值的问题。比如$x_i$是异常值，那么$∣∣x_i−x_j∣∣^2$会很大，对应的所有的<code>j</code>,$p_{il}$都会很小(之前是仅在$x_i$下很小)，导致低维映射下的$y_i$对<code>cost</code>影响很小。</p>
 <blockquote>
 <p><strong>思考: 对于异常值，你会做什么改进？pipi表示什么？</strong></p>
 </blockquote>
-<p>为了解决这个问题，我们将联合概率分布定义修正为: $p_{ij} = \frac{p_{i \mid j} + p_{j \mid i}}{2}$, 这保证了$\sum_j p_{ij} \gt \frac{1}{2n}$, 使得每个点对于<code>cost</code>都会有一定的贡献。对称<code>SNE</code>的最大优点是梯度计算变得简单了，如下:<br>$$\frac{\delta C}{\delta y_i} = 4 \sum_j (p_{ij} - q_{ij})(y_i - y_j)$$<br>实验中，发现对称<code>SNE</code>能够产生和<code>SNE</code>一样好的结果，有时甚至略好一点。</p>
+<p>为了解决这个问题，我们将联合概率分布定义修正为: $p_{ij} = \frac{p_{i \mid j} + p_{j \mid i}}{2}$, 这保证了$\sum_j p_{ij} \gt \frac{1}{2n}$, 使得每个点对于<code>cost</code>都会有一定的贡献。对称<code>SNE</code>的最大优点是梯度计算变得简单了，如下:</p>
+<script type="math/tex; mode=display">\frac{\delta C}{\delta y\_i} = 4 \sum\_j (p\_{ij} - q\_{ij})(y\_i - y\_j)</script><p>实验中，发现对称<code>SNE</code>能够产生和<code>SNE</code>一样好的结果，有时甚至略好一点。</p>
 <h3 id="2-2-Crowding问题"><a href="#2-2-Crowding问题" class="headerlink" title="2.2 Crowding问题"></a>2.2 Crowding问题</h3><p>拥挤问题就是说各个簇聚集在一起，无法区分。比如有一种情况，高维度数据在降维到10维下，可以有很好的表达，但是降维到两维后无法得到可信映射，比如降维如10维中有11个点之间两两等距离的，在二维下就无法得到可信的映射结果(最多3个点)。 进一步的说明，假设一个以数据点$x_i$为中心，半径为r的m维球(三维空间就是球)，其体积是按$r^m$增长的，假设数据点是在m维球中均匀分布的，我们来看看其他数据点与$x_i$的距离随维度增大而产生的变化。<br><img src="/uploads/f1.png" srcset="/img/loading.gif" alt=""><br>从上图可以看到，随着维度的增大，大部分数据点都聚集在m维球的表面附近，与点$x_i$的距离分布极不均衡。如果直接将这种距离关系保留到低维，就会出现拥挤问题。</p>
 <blockquote>
 <p><strong>怎么解决crowding问题呢?</strong></p>
 </blockquote>
 <p><code>Cook et al.(2007)</code> 提出一种<code>slight repulsion</code>的方式，在基线概率分布(<code>uniform background</code>)中引入一个较小的混合因子$\rho$,这样$q_{ij}$就永远不会小于\frac{2 \rho}{n(n-1)}(因为一共了<code>n(n-1)</code>个<code>pairs</code>)，这样在高维空间中比较远的两个点之间的$q_{ij}$总是会比$p_{ij}$大一点。这种称之为<code>UNI-SNE</code>，效果通常比标准的<code>SNE</code>要好。优化<code>UNI-SNE</code>的方法是先让$\rho$为0，使用标准的<code>SNE</code>优化，之后用模拟退火的方法的时候，再慢慢增加$\rho$. 直接优化<code>UNI-SNE</code>是不行的(即一开始$\rho$不为0)，因为距离较远的两个点基本是一样的$q_{ij}$(等于基线分布), 即使$p_{ij}$很大，一些距离变化很难在$q_{ij}$中产生作用。也就是说优化中刚开始距离较远的两个聚类点，后续就无法再把他们拉近了。</p>
-<h3 id="2-3-t-sne"><a href="#2-3-t-sne" class="headerlink" title="2.3 t-sne"></a>2.3 t-sne</h3><p>对称<code>SNE</code>实际上在高维度下 另外一种减轻”拥挤问题”的方法：在高维空间下，在高维空间下我们使用高斯分布将距离转换为概率分布，在低维空间下，我们使用更加偏重长尾分布的方式来将距离转换为概率分布，使得高维度下中低等的距离在映射后能够有一个较大的距离。<br><img src="/uploads/f2.png" srcset="/img/loading.gif" alt=""><br>我们对比一下高斯分布和<code>t</code>分布(如上图), <code>t</code>分布受异常值影响更小，拟合结果更为合理，较好的捕获了数据的整体特征。使用了<code>t</code>分布之后的<code>q</code>变化，如下:<br>$$q_{ij} = \frac{(1 +  \mid  \mid y_i -y_j \mid  \mid ^2)^{-1}}{\sum_{k \neq l} (1 +  \mid  \mid y_i -y_j \mid  \mid ^2)^{-1}}$$<br>此外，<code>t</code>分布是无限多个高斯分布的叠加，计算上不是指数的，会方便很多。优化的梯度如下:<br>$$\frac{\delta C}{\delta y_i} = 4 \sum_j(p_{ij}-q_{ij})(y_i-y_j)(1+ \mid  \mid y_i-y_j \mid  \mid ^2)^{-1}$$<br><img src="/uploads/f3.png" srcset="/img/loading.gif" alt=""><br><code>t-sne</code>的有效性，也可以从上图中看到：横轴表示距离，纵轴表示相似度, 可以看到，对于较大相似度的点，<code>t</code>分布在低维空间中的距离需要稍小一点；而对于低相似度的点，<code>t</code>分布在低维空间中的距离需要更远。这恰好满足了我们的需求，即同一簇内的点(距离较近)聚合的更紧密，不同簇之间的点(距离较远)更加疏远。</p>
+<h3 id="2-3-t-sne"><a href="#2-3-t-sne" class="headerlink" title="2.3 t-sne"></a>2.3 t-sne</h3><p>对称<code>SNE</code>实际上在高维度下 另外一种减轻”拥挤问题”的方法：在高维空间下，在高维空间下我们使用高斯分布将距离转换为概率分布，在低维空间下，我们使用更加偏重长尾分布的方式来将距离转换为概率分布，使得高维度下中低等的距离在映射后能够有一个较大的距离。<br><img src="/uploads/f2.png" srcset="/img/loading.gif" alt=""><br>我们对比一下高斯分布和<code>t</code>分布(如上图), <code>t</code>分布受异常值影响更小，拟合结果更为合理，较好的捕获了数据的整体特征。使用了<code>t</code>分布之后的<code>q</code>变化，如下:</p>
+<script type="math/tex; mode=display">q\_{ij} = \frac{(1 +  \mid  \mid y\_i -y\_j \mid  \mid ^2)^{-1}}{\sum\_{k \neq l} (1 +  \mid  \mid y\_i -y\_j \mid  \mid ^2)^{-1}}</script><p>此外，<code>t</code>分布是无限多个高斯分布的叠加，计算上不是指数的，会方便很多。优化的梯度如下:</p>
+<script type="math/tex; mode=display">\frac{\delta C}{\delta y\_i} = 4 \sum\_j(p\_{ij}-q\_{ij})(y\_i-y\_j)(1+ \mid  \mid y\_i-y\_j \mid  \mid ^2)^{-1}</script><p><img src="/uploads/f3.png" srcset="/img/loading.gif" alt=""><br><code>t-sne</code>的有效性，也可以从上图中看到：横轴表示距离，纵轴表示相似度, 可以看到，对于较大相似度的点，<code>t</code>分布在低维空间中的距离需要稍小一点；而对于低相似度的点，<code>t</code>分布在低维空间中的距离需要更远。这恰好满足了我们的需求，即同一簇内的点(距离较近)聚合的更紧密，不同簇之间的点(距离较远)更加疏远。</p>
 <p>总结一下，t-SNE的梯度更新有<strong>两大优势</strong>：</p>
 <ul>
 <li>对于不相似的点，用一个较小的距离会产生较大的梯度来让这些点排斥开来。</li>
@@ -530,6 +541,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

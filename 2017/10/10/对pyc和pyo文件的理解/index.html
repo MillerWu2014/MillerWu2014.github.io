@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -174,7 +174,6 @@
 <li>源码<strong>距离底层更远</strong>(根据官方文档的解释。不说，也感觉得到)</li>
 <li>运行时<strong>都需要生成字节码</strong>，交由<strong>虚拟机</strong>执行。(虚拟机在哪儿！你们也不看看各自都是用什么软件执行的！没错，就是解释器，别和我说是<code>IDLE</code>啊。虚拟机具体实现了由<code>switch-case</code>语句构成的框架函数<em><code>PyEval_EvalFrameEx</code></em>，刚刚说的字节码就是这货执行的)</li>
 <li>每次执行脚本，虚拟机<strong>总要多出加载和链接的流程</strong>。<a id="more"></a>
-
 </li>
 </ol>
 <h2 id="2-执行脚本的过程"><a href="#2-执行脚本的过程" class="headerlink" title="2. 执行脚本的过程"></a>2. 执行脚本的过程</h2><p>那么，有人要问了：不是说，运行时总要生成字节码么！那，字节码都去哪儿了？先说说，虚拟机它是怎么执行脚本的</p>
@@ -195,8 +194,7 @@
 <li>模块在每次导入前总会<strong>检查其字节码文件的修改时间是否与自身的一致</strong>。若是则直接从该字节码文件读取内容，否则源模块重新导入，并在最后生成同名文件覆盖当前已有的字节码，从而完成内容的更新(详见<code>import.py</code>)。这样，就避免了修改源代码后与本地字节码文件产生冲突(当然，设计者也不会这么傻。</li>
 </ul>
 <ul>
-<li><p><strong><code>.pyc文件</code></strong>是由<code>.py</code>文件经过编译后生成的字节码文件，其<strong>加载速度相对于之前的<code>.py</code>文件有所提高</strong>，而且还可以<strong>实现源码隐藏</strong>，以及<strong>一定程度上的反编译</strong>。比如，<code>Python3.3</code>编译生成的<code>.pyc</code>文件，<code>Python3.4</code>就别想着去运行啦！</p>
-</li>
+<li><strong><code>.pyc文件</code></strong>是由<code>.py</code>文件经过编译后生成的字节码文件，其<strong>加载速度相对于之前的<code>.py</code>文件有所提高</strong>，而且还可以<strong>实现源码隐藏</strong>，以及<strong>一定程度上的反编译</strong>。比如，<code>Python3.3</code>编译生成的<code>.pyc</code>文件，<code>Python3.4</code>就别想着去运行啦！</li>
 <li><p><strong><code>.pyo</code>文件</strong>也是<strong>优化</strong>(注意这两个字，便于后续的理解)编译后的程序(<strong>相比于<code>.pyc</code>文件更小</strong>)，也可以<strong>提高加载速度</strong>。但对于嵌入式系统，它可将所需模块编译成<code>.pyo</code>文件以<strong>减少容量</strong>。</p>
 <p>但总的来说，作用上是几乎与原来的<code>.py</code>脚本没有区别的，也就是然并卵 (当然，并非毫无作用。比如，我个人觉得用处最大的地方就是<strong>防止别人偷看我的代码</strong>。毕竟<code>.py</code>源文件是直接以源码的形式呈现给大家的)。呃…这么说，好像又有点自相矛盾的赶脚。</p>
 </li>
@@ -204,27 +202,30 @@
 <p><code>Python</code>选项</p>
 <ul>
 <li><em><code>-O</code></em>，表示<strong>优化生成.pyo字节码</strong>(这里又有优化两个字，得注意啦！)</li>
-<li><em><code>-OO</code></em>，表示进一步<strong>移除*</strong><code>-O</code><em>选项生成的字节码文件中的*</em>文档字符串*<em>(这是在作用效果上解释的，而不是说从</em><code>-O</code>*选项得到的文件去除)</li>
+<li><em><code>-OO</code></em>，表示进一步<strong>移除*</strong><code>-O</code><em>选项生成的字节码文件中的<strong>文档字符串</strong>(这是在作用效果上解释的，而不是说从</em><code>-O</code>*选项得到的文件去除)</li>
 <li><em><code>-m</code></em>，表示<strong>导入并运行指定的模块</strong></li>
 </ul>
 <p>对此，我们可以使用如下格式运行<code>.py</code>文件来生成<code>.pyc</code>文件(以下调用均假设<code>/path/to</code>目录含有<code>.py</code>脚本)：</p>
-<pre><code class="python">python -m py_compile /path/to/需要生成.pyc的脚本.py 
+<pre><code class="lang-python">python -m py_compile /path/to/需要生成.pyc的脚本.py 
 #若批量处理.py文件
 #则替换为/path/to/{需要生成.pyc的脚本1,脚本2,...}.py
-#或者/path/to/</code></pre>
+#或者/path/to/
+</code></pre>
 <p>效果等同于下面:</p>
-<pre><code class="python">import py_compile
+<pre><code class="lang-python">import py_compile
 py_compile.compile(r&#39;/path/to/需要生成.pyc的脚本.py&#39;) 
 #同样也可以是包含.py文件的目录路径
-#此处尽可能使用raw字符串，从而避免转义的麻烦。比如，这里不加“r”的话，你就得对斜杠进行转义</code></pre>
+#此处尽可能使用raw字符串，从而避免转义的麻烦。比如，这里不加“r”的话，你就得对斜杠进行转义
+</code></pre>
 <h2 id="3-py-compile模块"><a href="#3-py-compile模块" class="headerlink" title="3. py_compile模块"></a>3. py_compile模块</h2><p><code>py_compile</code>是<code>Python</code>的自带模块，这里面就两个函数。其下的<code>py_compile.compile*(*file*[, *cfile*[, *dfile*[, *doraise*]]])</code>可将<code>.py</code>文件编译生成<code>.pyc</code>文件，对应的参数解释如下</p>
 <ol>
 <li><em><code>file</code></em>，表示需要生成<code>.pyc</code>或<code>.pyo</code>文件的<strong>源脚本名</strong>(字符串)；</li>
-<li><em><code>cfile</code></em>，表示需要生成<code>.pyc</code>或<code>.pyo</code>文件的<strong>目标脚本名</strong>。呃…好像没有区别，也就是源脚本—–目标脚本。当然，它默认是以<code>.pyc</code>为扩展名的路径名的字符串。此外，当且仅当所使用的解释器允许编译成<code>.pyo</code>文件，才能以<code>.pyo</code>结尾。</li>
+<li><em><code>cfile</code></em>，表示需要生成<code>.pyc</code>或<code>.pyo</code>文件的<strong>目标脚本名</strong>。呃…好像没有区别，也就是源脚本——-目标脚本。当然，它默认是以<code>.pyc</code>为扩展名的路径名的字符串。此外，当且仅当所使用的解释器允许编译成<code>.pyo</code>文件，才能以<code>.pyo</code>结尾。</li>
 <li><em><code>dfile</code></em>，表示编译出错时，<strong>将报错信息中的名字<code>file</code>替换为<code>dfile</code></strong>。</li>
 <li><em><code>doraise</code></em>，<strong>设置是否忽略异常</strong>。若为<code>True</code>，则抛出<code>PyCompileError</code>异常；否则直接将错误信息写入<code>sys.stderr</code>（什么！不知道<code>sys.stderr</code>！温馨提示：<code>sys.stderr</code>是<code>Python</code>自带的<strong>标准错误输出</strong>)</li>
 </ol>
-<pre><code class="python">python -O -m py_compile /path/to/需要生成.pyo的脚本.py</code></pre>
+<pre><code class="lang-python">python -O -m py_compile /path/to/需要生成.pyo的脚本.py
+</code></pre>
 <p>那么，有人要问了：为什么不是像生成<code>.pyc</code>文件那样采用<em><code>python -O /path/to/</code>需要生成<code>pyo</code>的脚本<code>.py</code></em>形式的调用？<br>忘记说明这一点了，很多博客以及书籍都像我上面那样解释<em><code>-O</code></em>选项的作用，但详细来解释的话是：    </p>
 <p>-O <strong>选项，将<code>.pyc</code>文件优化(注意我一直强调的优化二字，这里就用到啦！)</strong>为<code>.pyo</code>文件，而不是将<code>.py</code>文件优化编译为<code>.pyo</code>文件。(其直接的结果是优化编译后的文件略微小于<code>.pyc</code>文件，也就是减肥了。现在，大家知道<code>.pyo</code>文件为什么小的原因了吧！)</p>
 <h2 id="4-注意"><a href="#4-注意" class="headerlink" title="4. 注意"></a>4. 注意</h2><p>以上无论是生成<code>.pyc</code>还是<code>.pyo</code>文件，都将在当前脚本的目录下生成一个含有字节码的文件夹<strong><code>__pycache__</code></strong>。</p>
@@ -511,6 +512,37 @@ py_compile.compile(r&#39;/path/to/需要生成.pyc的脚本.py&#39;)
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

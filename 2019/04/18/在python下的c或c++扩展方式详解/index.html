@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -173,17 +173,19 @@
 <h2 id="为什么要进行c-c-扩展"><a href="#为什么要进行c-c-扩展" class="headerlink" title="为什么要进行c/c++扩展"></a>为什么要进行c/c++扩展</h2><p><code>python</code>之所以使用广泛，主要是因为使用简单，第三方扩展库强大，对于某个问题，能迅速的验证自己的思路或某个原型。但是，<code>python</code>的效率是比较低的，因此很多涉及到效率的时候需要使用<code>c/c++</code>来实现，为<code>python</code>提供接口即可。这样混合编程后，能达到快速+效率的双重目的。</p>
 <h2 id="python的c-c-扩展"><a href="#python的c-c-扩展" class="headerlink" title="python的c/c++扩展"></a>python的c/c++扩展</h2><p>在<code>python</code>下的<code>c/c+</code>扩展有很多方式，主要有<code>cffi/ctypes</code>，<code>cpython</code>和<code>cython</code>这几种方式，各个方式都有优势。下面对这几个方式进行详细的说明。</p>
 <h3 id="cffi来进行c扩展"><a href="#cffi来进行c扩展" class="headerlink" title="cffi来进行c扩展"></a>cffi来进行c扩展</h3><p><code>cffi</code>是连接<code>c</code>和<code>python</code>的桥梁，是在<code>pypy</code>中分离出来的一个库，这个和<code>python</code>自带的<code>ctypes</code>模块很相似，但是<code>cffi</code>更加通用。下面我们定义了一个<code>pi.h</code>和<code>pi.c</code>文件：</p>
-<pre><code class="c">// file: pi.h
+<pre><code class="lang-c">// file: pi.h
 #ifndef C_EXTEND_PYTHON_PI_H
 #define C_EXTEND_PYTHON_PI_H
 
-float pi_approx(float n);#endif *//C_EXTEND_PYTHON_PI_H*</code></pre>
-<pre><code class="c">// file: pi.c
+float pi_approx(float n);#endif *//C_EXTEND_PYTHON_PI_H*
+</code></pre>
+<pre><code class="lang-c">// file: pi.c
 float pi_approx(float n){
     return 3.1415926 * n * n;
-}</code></pre>
+}
+</code></pre>
 <p>使用cffi模块来对这两个文件进行编译，会生成一个<code>c source</code>文件和<code>.so</code>或<code>.pyd</code>文件，可以在python下直接引用，进行使用，编译文件如下：</p>
-<pre><code class="python">from cffi import FFI
+<pre><code class="lang-python">from cffi import FFI
 
 ffi_builder = FFI()
 ffi_builder.cdef(&quot;&quot;&quot;
@@ -197,11 +199,11 @@ ffi_builder.set_source(&quot;_pi_cffi&quot;,
                        libraries=[])  # library name, for the linker
 
 if *__name__ == &quot;__main__&quot;:
-    ffi_builder.compile(verbose=True )</code></pre>
-<p>直接运行该编译文件则可创建python的c扩展库：<code>.so</code>或<code>.pyd</code>文件；另外也会生成<code>_pi_cffi.c</code>的源码。将<code>.so</code>或<code>.pyd</code>文件放如对应的目录即可实现引用。这种方式比较方便，能迅速构建c扩展。</p>
-<a id="more"></a>
+    ffi_builder.compile(verbose=True )
+</code></pre>
+<p>直接运行该编译文件则可创建python的c扩展库：<code>.so</code>或<code>.pyd</code>文件；另外也会生成<code>_pi_cffi.c</code>的源码。将<code>.so</code>或<code>.pyd</code>文件放如对应的目录即可实现引用。这种方式比较方便，能迅速构建c扩展。<br><a id="more"></a></p>
 <h3 id="cpython的方式"><a href="#cpython的方式" class="headerlink" title="cpython的方式"></a>cpython的方式</h3><p>这种方式，是利用Python的C-API接口来构建python模块。Python的每个版本官方都有相应的C-API文档，每个版本API可能存在一些不同。特别是Python2和Python3（本文是基于Python3的版本）之间。下面我们就通过代码来进行说明。主要实现一个列表中所有元素的和。代码如下：</p>
-<pre><code class="c">/*
+<pre><code class="lang-c">/*
  * #include &quot;/opt/anaconda3/include/python3.6m/Python.h&quot;
  * Python.h has all the required function definitions to manipulate the Python objects
  */
@@ -282,11 +284,13 @@ PyMODINIT_FUNC PyInit_addList(void){
     Py_INCREF(SpamError);
     PyModule_AddObject(m, &quot;error&quot;, SpamError);
     return m;
-}</code></pre>
+}
+</code></pre>
 <p>完成上面功能后，编写一个setup.py即可：</p>
-<pre><code class="python">from distutils.core import setup, Extension
+<pre><code class="lang-python">from distutils.core import setup, Extension
 
-setup(name=&#39;addList&#39;, version=&#39;1.0&#39;, ext_modules=[Extension(&#39;addList&#39;, [&#39;addList.c&#39;])])</code></pre>
+setup(name=&#39;addList&#39;, version=&#39;1.0&#39;, ext_modules=[Extension(&#39;addList&#39;, [&#39;addList.c&#39;])])
+</code></pre>
 <p>运行<code>python setup.py build</code>即可进行编译。编译后悔生成相应的<code>.so</code>或<code>.pyd</code>文件文件：模块名称为addList。python可以直接进行引用该文件即可。<br>这种方法比较灵活，但是需要对python的C-API相对有了解。官方是推荐这种方法来进行扩展的，比其他方法都要原生，对c++也支持的非常好。</p>
 <h3 id="CYTHON的方式进行扩展"><a href="#CYTHON的方式进行扩展" class="headerlink" title="CYTHON的方式进行扩展"></a>CYTHON的方式进行扩展</h3><p><code>cython</code>可以看成一个python的超集，不仅结合了c的语法，同时能使用c的东西。它的运行过程主要是将<code>cython</code>实现的代码转成c代码，并进行编译形成Python的扩展库。<code>cython</code>不仅仅进行了Python与C之间的转换，还对部分操作进行了优化。在<code>cython</code>可以使用c的任何东西, 同时支持Python的函数和类的方式编程。目前很多第三方库都有使用它，比如<code>scikit-learn</code>，<code>scipy</code>等等很多。具体的一些用法可以参考它的官方文档。下面我通过<code>cython</code>从不同的角度来展示它的用法。</p>
 <h4 id="使用cython连接c文件和python"><a href="#使用cython连接c文件和python" class="headerlink" title="使用cython连接c文件和python"></a>使用cython连接c文件和python</h4><p>假设现在我写一个<code>c</code>的一些方法，包括了头文件和源文件：</p>
@@ -295,25 +299,28 @@ setup(name=&#39;addList&#39;, version=&#39;1.0&#39;, ext_modules=[Extension(&#39
 #include &lt;math.h&gt;
 
 int add(int x, int y);
-int sub(int x, int y);</code></pre><pre><code class="c">// file: csample.c
+int sub(int x, int y);
+</code></pre><pre><code class="lang-c">// file: csample.c
 int add(int x, int y){
     return x + y;
 }
 
 int sub(int x, int y){
     return x - y;
-}</code></pre>
+}
+</code></pre>
 <p>现在我要用<code>cython</code>来使用上面定义的c方法，首先创建一个<code>cython</code>的头文件<code>csample.pxd</code>文件，文件中引用<code>csample.h</code>的方法,，并定义一个<code>Point</code>结构体：</p>
-<pre><code class="c">// file csample.pxd
+<pre><code class="lang-c">// file csample.pxd
 cdef extern from &quot;csample.h&quot;:
     int add(int x, int y)
     int sub(int x, int y)
 
 ctypedef struct Point:
     double x
-    double y</code></pre>
+    double y
+</code></pre>
 <p>再新建一个<code>pyx</code>的文件，通过<code>cython</code>来定义<code>python</code>的接口：</p>
-<pre><code class="python">// file: sample.pyx
+<pre><code class="lang-python">// file: sample.pyx
 cimport csample
 
 from cpython.pycapsule cimport *
@@ -341,9 +348,10 @@ def Point(x, y):
 
     p.x = x
     p.y = y
-    return PyCapsule_New(&lt;void *&gt; p, &quot;Point&quot;, &lt;PyCapsule_Destructor&gt;delPoint)</code></pre>
+    return PyCapsule_New(&lt;void *&gt; p, &quot;Point&quot;, &lt;PyCapsule_Destructor&gt;delPoint)
+</code></pre>
 <p>这样整个过程就实现了，基本和上面<code>cpython</code>的过程类似，只是采用的方式不同。下面编写一个<code>setup.py</code>的文件即可进行编译<code>python setup.py build</code>。生成对一个的扩展包。</p>
-<pre><code class="python"># file: setup.py
+<pre><code class="lang-python"># file: setup.py
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
@@ -357,17 +365,19 @@ setup(
     name=&#39;Sample extension module&#39;,
     cmdclass={&#39;build_ext&#39;: build_ext},
     ext_modules=ext_modules
-)</code></pre>
+)
+</code></pre>
 <h4 id="在cython中使用头文件-pxd"><a href="#在cython中使用头文件-pxd" class="headerlink" title="在cython中使用头文件(pxd)"></a>在cython中使用头文件(pxd)</h4><p>头文件的使用具有一定的好处，方便大量代码的维护等等。在<code>cython</code>中也可以使用头文件，在上面的例子中已经应用到了。下面再进行说明。首先创建一个头文件， 定义相应的方法，结构等：</p>
-<pre><code class="python"># sample.pxd
+<pre><code class="lang-python"># sample.pxd
 cdef int function1(int a, int b=*)
 cdef double add_one(double x)
 
 cdef class A:
     cdef public int a, b
-    cpdef void foo(self, double x)</code></pre>
+    cpdef void foo(self, double x)
+</code></pre>
 <p>再根据头文件实现对应的方法：</p>
-<pre><code class="python"># file: sample.pyx
+<pre><code class="lang-python"># file: sample.pyx
 cdef int function1(int a, int b=10):
     cdef int x = a - b
     return x + a * b
@@ -382,9 +392,10 @@ cdef class A:
         self.b = b
 
     cpdef void foo(self, double x):
-        print(x + add_one(10.25))</code></pre>
+        print(x + add_one(10.25))
+</code></pre>
 <p>下面编写<code>setup.py</code>进行编译即可：</p>
-<pre><code class="python"># setup.py
+<pre><code class="lang-python"># setup.py
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
@@ -398,9 +409,10 @@ setup(
     name=&#39;Sample extension module&#39;,
     cmdclass={&#39;build_ext&#39;: build_ext},
     ext_modules=ext_modules
-)</code></pre>
+)
+</code></pre>
 <h4 id="在cython中使用指针（pointer）"><a href="#在cython中使用指针（pointer）" class="headerlink" title="在cython中使用指针（pointer）"></a>在cython中使用指针（<code>pointer</code>）</h4><p>在cython中也是可以使用指针的，可以将python对象转化为指针在<code>cython</code>中使用，下面是具体的示例，代码中给了注释说明，这里就不详细介绍了。</p>
-<pre><code class="python">from cpython cimport array
+<pre><code class="lang-python">from cpython cimport array
 from cython.parallel import prange
 cimport numpy as np
 import cython
@@ -431,9 +443,10 @@ def addList_numpy(list_array, long s):
         https://github.com/cython/cython/wiki/tutorials-NumpyPointerToC
     &quot;&quot;&quot;
     cdef np.ndarray[long, ndim=1, mode=&#39;c&#39;] p_array = np.array(list_array)  # transform c memory type
-    return add_list(&lt;unsigned long *&gt; &amp;p_array[0], s)  # &amp;p_array[0] or &lt;int*&gt; p_array.data</code></pre>
+    return add_list(&lt;unsigned long *&gt; &amp;p_array[0], s)  # &amp;p_array[0] or &lt;int*&gt; p_array.data
+</code></pre>
 <h4 id="在cython中使用结构体（struct）"><a href="#在cython中使用结构体（struct）" class="headerlink" title="在cython中使用结构体（struct）"></a>在cython中使用结构体（struct）</h4><p><code>cython</code>可以使用c的任何东西，因此结构体也是支持的，这里用一个小的例子来说明在<code>cython</code>中的使用。代码如下所示，如果在<code>cython</code>中返回结构体，对应到<code>python</code>中就是一个字典的对象。</p>
-<pre><code class="python">ctypedef struct Node:
+<pre><code class="lang-python">ctypedef struct Node:
     double x
     double y
 
@@ -443,7 +456,8 @@ def setNode(double x, double y):
     cdef Node *p_node = &amp;node
     p_node.x = x
     p_node.y = y
-    return p_node[0]  # 返回了字典</code></pre>
+    return p_node[0]  # 返回了字典
+</code></pre>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>上面主要对<code>cffi</code>, <code>cpython</code>和<code>cython</code>的三种方式进行了详解。这三种方式也是主流的方式，其中比较常用的应该是<code>cython</code>的方式，特别是和<code>numpy</code>的结合。其次是<code>cffi</code>的方式，但是还是推荐<code>cpython</code>的方式，这种方式更加原生，和python结合的更好，但是，难度也是最高的。在工作应用中可以根据自己的需要选择不同的方式。</p>
 
             </div>
@@ -731,6 +745,37 @@ def setNode(double x, double y):
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

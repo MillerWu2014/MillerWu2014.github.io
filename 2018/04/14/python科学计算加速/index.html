@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -184,7 +184,7 @@
 <p>[5].pycuda的翻译：<a href="https://zhuanlan.zhihu.com/p/32062796" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/32062796</a></p>
 <h2 id="2-使用C加速"><a href="#2-使用C加速" class="headerlink" title="2.使用C加速"></a>2.使用C加速</h2><p>python中可以使用c实现部分功能来进行加速，比如Cython，Cython也可以和numpy配合使用，来对numpy进行加速。</p>
 <h3 id="2-1-Cython加速"><a href="#2-1-Cython加速" class="headerlink" title="2.1 Cython加速"></a>2.1 Cython加速</h3><p>(1) 使用Cython和numpy结合    将两者结合使用可以有效的加速python中的核心代码，下面通过示例说明怎么结合。下面通过cython的形式实现一个矩阵点乘的方法，具体代码如下，文件名为<code>multi.pyx</code>：</p>
-<pre><code class="python">from __future__ import division
+<pre><code class="lang-python">from __future__ import division
 cimport cython
 import numpy as np
 cimport numpy as np
@@ -215,9 +215,10 @@ def multi_product(np.ndarray a, np.ndarray b):
     for _r_ in range(a_array_r):
         for _c_ in range(a_array_c):
              out[_r_, _c_] = a[_r_, _c_] * b[_r_, _c_]
-    return out</code></pre>
+    return out
+</code></pre>
 <p>创建一个setup.py的文件，类似c++中的makefile配置文件，setup.py文件内容主要时配置编译，具体代码如下所示：</p>
-<pre><code class="python">import numpy
+<pre><code class="lang-python">import numpy
 from distutils.core import setup, Extension
 from Cython.Distutils import build_ext
 
@@ -227,11 +228,13 @@ setup(
                  Extension(&quot;multi&quot;, [&quot;multi.pyx&quot;],
                  include_dirs=[numpy.get_include()])
               ]
-)</code></pre>
+)
+</code></pre>
 <p>上面setup.py文件中的include_dirs非常重要，否则在后面编译pyx文件时会出现一些错误：找不到”numpy/arrayobject.h”,因此需要在setup.py文件中将依赖的.h文件给添加上。下面通过命令进行编译即可：</p>
-<pre><code class="shell">python setup.py build_ext --inplace</code></pre>
+<pre><code class="lang-shell">python setup.py build_ext --inplace
+</code></pre>
 <p> 编译后会生成<code>.so</code>文件(linux，windows下为dll文件)。后面通过python直接引用该文件，调用其中的方法即可。下面对使用cython实现的点乘方法和numpy包的<code>multiply</code>方法效率进行对比：</p>
-<pre><code class="python">import timeit
+<pre><code class="lang-python">import timeit
 
 print(timeit.timeit(stmt=&quot;multi.multi_product(x, y)&quot;, setup=&quot;import multi; import numpy as np; x = np.array([[1, 2, 3], [2.4, 89.0, 11]]); y = np.array([[1, 2, 3], [2.4, 89.0, 11]])&quot;, number=10000))
 
@@ -239,7 +242,8 @@ print(timeit.timeit(stmt=&quot;np.multiply(x, y)&quot;, setup=&quot;import numpy
 
 # -------- output -------------------
 0.03196066700184019
-0.006172515997604933</code></pre>
+0.006172515997604933
+</code></pre>
 <p>效率上还是比不上numpy，主要是因为numpy在这方面做了深度优化。但是比纯python实现的方法要快很多。<br>Refrence</p>
 <p>[1]Cython官方文档：<a href="http://cython.org/" target="_blank" rel="noopener">http://cython.org/</a></p>
 <p>[2].Cython基础教程中文版：<a href="https://moonlet.gitbooks.io/cython-document-zh_cn/content/ch1-basic_tutorial.html" target="_blank" rel="noopener">https://moonlet.gitbooks.io/cython-document-zh_cn/content/ch1-basic_tutorial.html</a></p>
@@ -535,6 +539,37 @@ print(timeit.timeit(stmt=&quot;np.multiply(x, y)&quot;, setup=&quot;import numpy
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

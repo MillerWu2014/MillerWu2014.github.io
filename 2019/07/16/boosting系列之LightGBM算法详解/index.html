@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -171,9 +171,7 @@
             <div class="markdown-body">
               <h2 id="LightGBM简介"><a href="#LightGBM简介" class="headerlink" title="LightGBM简介"></a>LightGBM简介</h2><p><code>LightGBM</code>是由微软团队基于<code>xgboost</code>的缺点新的实现，主要思想还是基于<code>GBDT</code>算法，在细节上进行了优化，在效率和精度方面都超过了<code>xgboost</code>的实现。并且支持分布式并行，包括特征并行，数据并行以及GPU并行计算。下面就对该算法的原理和细节进行详细说明。</p>
 <p><code>LightGBM</code>主要针对<code>xgboost</code>或<code>gbdt</code>中特征分裂进行了优化，<code>xgb</code>和其他<code>gbdt</code>的实现中都采用了<code>pre-sort</code>，这种方式对内存消耗和训练速度上效率都非常低，还有另外一种实现就是通过直方图算法（histogram-based algorithm）因此，<code>LightGBM</code>采用<code>histogram</code>算法来对每个特征的分裂进行优化。</p>
-<p>另外，为了减小训练数据集，一般是通过下采用，或者通过阈值的方式来过滤掉权重较小的数据。同样，可以通过过滤掉弱特征来减少特征量，从而在每次训练弱分类器的过程中提升模型的训练效率。但是<code>GBDT</code>中并没有样本权重的指标，下面就基于<code>LightGBM</code>论文中提出的点进行详细描述。</p>
-<a id="more"></a>
-
+<p>另外，为了减小训练数据集，一般是通过下采用，或者通过阈值的方式来过滤掉权重较小的数据。同样，可以通过过滤掉弱特征来减少特征量，从而在每次训练弱分类器的过程中提升模型的训练效率。但是<code>GBDT</code>中并没有样本权重的指标，下面就基于<code>LightGBM</code>论文中提出的点进行详细描述。<br><a id="more"></a></p>
 <h2 id="算法过程"><a href="#算法过程" class="headerlink" title="算法过程"></a>算法过程</h2><p>主要对<code>LigthGBM</code>中的直方图算法，<code>GOSS</code>算法以及<code>EFB</code>进行详细的说明和算法过程描述，这三个点是该算法中最核心的优化和细节实现。并对这三个点的作用进行说明。</p>
 <h3 id="histogram算法"><a href="#histogram算法" class="headerlink" title="histogram算法"></a>histogram算法</h3><p>直方图算法的基本思想是先把连续的浮点特征值离散化成k个整数，同时构造一个宽度为k的直方图。在遍历数据的时候，根据离散化后的值作为索引在直方图中累积统计量，当遍历一次数据后，直方图累积了需要的统计量，然后根据直方图的离散值，遍历寻找最优的分割点。下面是<code>histogram</code>的过程：</p>
 <p><img src="/uploads/1563269661109.png" srcset="/img/loading.gif" alt="1563269661109"></p>
@@ -486,6 +484,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

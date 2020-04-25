@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -133,7 +133,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    685 字
+                    687 字
                   </span>
                 
 
@@ -171,34 +171,32 @@
             <div class="markdown-body">
               <p><code>jupyter notebook</code>是一个基于浏览器的<code>python</code>数据分析工具，使用起来非常方便，具有极强的交互方式和富文本的展示效果。<code>jupyter</code>是它的升级版，它的安装也非常方便，一般<code>Anaconda</code>安装包中会自带。安装好以后直接输入<code>jupyter notebook</code>便可以在浏览器中使用。但是它默认只能在本地访问，如果想把它安装在服务器上，然后在本地远程访问，则需要进行如下配置：<a id="more"></a></p>
 <ol>
-<li><p>登陆远程服务器</p>
-</li>
-<li><p>生成配置文件<code>$jupyter notebook --generate-config</code></p>
-</li>
+<li>登陆远程服务器</li>
+<li>生成配置文件<code>$jupyter notebook --generate-config</code></li>
 <li><p>生成密码打开<code>ipython</code>，创建一个密文的密码：</p>
-<pre><code class="shell">In [1]: from notebook.auth import passwd
+<pre><code class="lang-shell">In [1]: from notebook.auth import passwd
 In [2]: passwd()
   Enter password:
   Verify password:
-Out[2]: &#39;sha1:ce23d945972f:34769685a7ccd3d08c84a18c63968a41f1140274&#39;</code></pre>
+Out[2]: &#39;sha1:ce23d945972f:34769685a7ccd3d08c84a18c63968a41f1140274&#39;
+</code></pre>
 <p>把生成的密文<code>sha1:ce…</code>复制下来</p>
 </li>
 <li><p>修改默认配置文件<br><code>$vim ~/.jupyter/jupyter_notebook_config.py</code><br>进行如下修改：</p>
-<pre><code class="shell">c.NotebookApp.ip=&#39;*&#39;
+<pre><code class="lang-shell">c.NotebookApp.ip=&#39;*&#39;
 c.NotebookApp.password = u&#39;sha:ce...  # 刚才复制的那个密文&#39;
 c.NotebookApp.open_browser = False
-c.NotebookApp.port =8888 #随便指定一个端口</code></pre>
+c.NotebookApp.port =8888 #随便指定一个端口
+</code></pre>
 </li>
-<li><p>启动<code>jupyter notebook：$jupyter notebook</code></p>
-</li>
-<li><p>远程访问<br>此时应该可以直接从本地浏览器直接访问<code>http://address_of_remote:8888</code>就可以看到<code>jupyter</code>的登陆界面。</p>
-</li>
-<li><p>建立<code>ssh</code>通道<br>如果登陆失败，则有可能是服务器防火墙设置的问题，此时最简单的方法是在本地建立一个<code>ss</code>h通道：在本地终端中输入<code>ssh username@address_of_remote -L127.0.0.1:1234:127.0.0.1:8888</code>便可以在<code>localhost:1234</code>直接访问远程的<code>jupyter</code>了。</p>
-</li>
+<li>启动<code>jupyter notebook：$jupyter notebook</code></li>
+<li>远程访问<br>此时应该可以直接从本地浏览器直接访问<code>http://address_of_remote:8888</code>就可以看到<code>jupyter</code>的登陆界面。</li>
+<li>建立<code>ssh</code>通道<br>如果登陆失败，则有可能是服务器防火墙设置的问题，此时最简单的方法是在本地建立一个<code>ss</code>h通道：在本地终端中输入<code>ssh username@address_of_remote -L127.0.0.1:1234:127.0.0.1:8888</code>便可以在<code>localhost:1234</code>直接访问远程的<code>jupyter</code>了。</li>
 <li><p>给<code>jupyter-notebook</code>服务器换个皮肤</p>
 <pre><code>pip install jupyterthemes
 jt -l`  #　看看有哪些皮肤，再用
-jt -t {皮肤名} -cellw 960 -T -tfs 11 -f source -nf ubuntu -tf source -fs 10</code></pre><p>重启<code>jupyter-notebook</code>服务器，即可享受新皮肤。</p>
+jt -t {皮肤名} -cellw 960 -T -tfs 11 -f source -nf ubuntu -tf source -fs 10
+</code></pre><p>重启<code>jupyter-notebook</code>服务器，即可享受新皮肤。</p>
 </li>
 <li><p>给<code>jupyter</code>安装插件  </p>
 <pre><code># 安装`Jupyter Notebook extensions`
@@ -206,7 +204,8 @@ conda install -c conda-forge jupyter_contrib_nbextensions
 or
 pip install https://github.com/ipython-contrib/IPython-notebook-xtensions/archive/master.zip --user
 pip install jupyter_contrib_nbextensions
-jupyter contrib nbextension install --user</code></pre><p>运行<code>Jupyter Notebook</code>, 在打开的<code>Notebook</code>界面里, 你会发现多了一个<code>Nbextensions</code>,点击这个<code>tab</code>勾选<code>Table of Contents</code> (有的版本是<code>toc2</code>). 然后创建或者打开一个<code>Jupter Notebook</code>。</p>
+jupyter contrib nbextension install --user
+</code></pre><p>运行<code>Jupyter Notebook</code>, 在打开的<code>Notebook</code>界面里, 你会发现多了一个<code>Nbextensions</code>,点击这个<code>tab</code>勾选<code>Table of Contents</code> (有的版本是<code>toc2</code>). 然后创建或者打开一个<code>Jupter Notebook</code>。</p>
 </li>
 <li><p>部署不同版本的spark jupyter-notes</p>
 </li>
@@ -225,7 +224,8 @@ jupyter toree install --interpreters=PySpark
 or
 jupyter toree install --spark_home=$SPARK_HOME --interpreters=PySpark
 or
-jupyter toree install --spark_home=$SPARK_HOME --interpreters=Scala,PySpark,SparkR,SQL</code></pre>
+jupyter toree install --spark_home=$SPARK_HOME --interpreters=Scala,PySpark,SparkR,SQL
+</code></pre>
             </div>
             <hr>
             <div>
@@ -505,6 +505,37 @@ jupyter toree install --spark_home=$SPARK_HOME --interpreters=Scala,PySpark,Spar
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,7 +170,7 @@
             
             <div class="markdown-body">
               <p><code>python</code>作为一个动态语言，在运行效率上为一大缺陷，但是作为一门成熟的语言，有很多方式可以提高<code>python</code>的运行效率，如:<code>cpython, pypy,numba,LLVMPy</code>。个人主要用户<code>python</code>处理数据和写一些数据挖掘方面的算法，因此使用<code>numba</code>较为方便。因此对<code>numba</code>说明下，并作为笔记记录以便以后查阅。<code>numba</code>的来源主要，<code>NumPy</code>的创始人<code>Travis Oliphant</code>在离开<code>Enthought</code>之后，创建了<code>CONTINUUM</code>，致力于将<code>Python</code>大数据处理方面的应用。最近推出的<code>Numba</code>项目能够将处理<code>NumPy</code>数组的<code>Python</code>函数<code>JIT</code>编译为机器码执行，从而上百倍的提高程序的运算速度。<a id="more"></a>下面看一个简单的例子：</p>
-<pre><code class="python">import numba as nb
+<pre><code class="lang-python">import numba as nb
 from numba import jit
 
 @jit(&#39;f8(f8[:])&#39;)
@@ -185,16 +185,19 @@ import numpy as np
 array = np.random.random(10000)
 %timeit sum1d(array)
 %timeit np.sum(array)
-%timeit sum(array</code></pre>
+%timeit sum(array
+</code></pre>
 <p>输出：</p>
 <pre><code>10000 loops, best of 3: 38.9 us per loop
 10000 loops, best of 3: 32.3 us per loop
-100 loops, best of 3: 12.4 ms per loop</code></pre><p><code>numba</code>中提供了修饰器利用<code>JIT</code>将其修饰的函数便以为机器函数，变返回一个可在<code>python</code>中调用机器码的包装对象。为了能够将<code>python</code>函数编译成能告诉执行的机器码，需要告诉<code>JIT</code>编译器函数的各个参数和返回值的类型。我们可以通过多种方式指定类型信息，在上面的例子中，类型信息由一个字符串<code>f8(f8[:])</code>指定。其中<code>f8</code>表示8个字节双精度浮点数，括号前面的<code>f8</code>表示返回值类型，括号里的表示参数类型，<code>[:]</code>表示一维数组。因此整个类型字符串表示<code>sum1d()</code>是一个参数为双精度浮点数的一维数组，返回值是一个双精度浮点数。需要注意的是JIT函数只能对指定的类型参数进行运算。</p>
+100 loops, best of 3: 12.4 ms per loop
+</code></pre><p><code>numba</code>中提供了修饰器利用<code>JIT</code>将其修饰的函数便以为机器函数，变返回一个可在<code>python</code>中调用机器码的包装对象。为了能够将<code>python</code>函数编译成能告诉执行的机器码，需要告诉<code>JIT</code>编译器函数的各个参数和返回值的类型。我们可以通过多种方式指定类型信息，在上面的例子中，类型信息由一个字符串<code>f8(f8[:])</code>指定。其中<code>f8</code>表示8个字节双精度浮点数，括号前面的<code>f8</code>表示返回值类型，括号里的表示参数类型，<code>[:]</code>表示一维数组。因此整个类型字符串表示<code>sum1d()</code>是一个参数为双精度浮点数的一维数组，返回值是一个双精度浮点数。需要注意的是JIT函数只能对指定的类型参数进行运算。</p>
 <p>如果希望<code>JIT</code>能够对所有的类型进行运算，可以所有<code>autojit</code>。但是该函数的运算速度远不及<code>JIT</code>，因为<code>autojit</code>在运算前需要判断类型，因此大大降低了效率。在<code>numba</code>中基本是使用<code>JIT</code>和<code>autojit</code>这两个函数装饰自己的函数。下面是<code>numba</code>模块所支持的所有类型：</p>
 <pre><code>[type for type in dir(numba.types)]
 
-[&#39;Any&#39;, &#39;Array&#39;, &#39;CPointer&#39;, &#39;CharSeq&#39;, &#39;Complex&#39;, &#39;Dispatcher&#39;, &#39;Dummy&#39;, &#39;Float&#39;, &#39;Function&#39;, &#39;FunctionPointer&#39;, &#39;Integer&#39;, &#39;Kind&#39;, &#39;Macro&#39;, &#39;Method&#39;, &#39;Module&#39;, &#39;Object&#39;, &#39;OpaqueType&#39;, &#39;Optional&#39;, &#39;Prototype&#39;, &#39;Record&#39;, &#39;Tuple&#39;, &#39;Type&#39;, &#39;UniTuple&#39;, &#39;UniTupleIter&#39;, &#39;UnicodeCharSeq&#39;, &#39;VarArg&#39;, &#39;__all__&#39;, &#39;__builtins__&#39;, &#39;__doc__&#39;, &#39;__file__&#39;, &#39;__name__&#39;, &#39;__package__&#39;, &#39;_autoincr&#39;, &#39;_make_signed&#39;, &#39;_make_unsigned&#39;, &#39;_typecache&#39;, &#39;abs_type&#39;, &#39;absolute_import&#39;, &#39;b1&#39;, &#39;bool_&#39;, &#39;boolean&#39;, &#39;byte&#39;, &#39;c16&#39;, &#39;c8&#39;, &#39;char&#39;, &#39;complex128&#39;, &#39;complex64&#39;, &#39;complex_domain&#39;, &#39;defaultdict&#39;, &#39;division&#39;, &#39;double&#39;, &#39;exception_type&#39;, &#39;f4&#39;, &#39;f8&#39;, &#39;float32&#39;, &#39;float64&#39;, &#39;float_&#39;, &#39;i1&#39;, &#39;i2&#39;, &#39;i4&#39;, &#39;i8&#39;, &#39;int16&#39;, &#39;int32&#39;, &#39;int64&#39;, &#39;int8&#39;, &#39;int_&#39;, &#39;intc&#39;, &#39;integer_domain&#39;, &#39;intp&#39;, &#39;len_type&#39;, &#39;long_&#39;, &#39;longlong&#39;, &#39;neg_type&#39;, &#39;none&#39;, &#39;number_domain&#39;, &#39;numpy&#39;, &#39;print_function&#39;, &#39;print_item_type&#39;, &#39;print_type&#39;, &#39;pyobject&#39;, &#39;range_iter32_type&#39;, &#39;range_iter64_type&#39;, &#39;range_state32_type&#39;, &#39;range_state64_type&#39;, &#39;range_type&#39;, &#39;real_domain&#39;, &#39;short&#39;, &#39;sign_type&#39;, &#39;signed_domain&#39;, &#39;slice3_type&#39;, &#39;slice_type&#39;, &#39;string&#39;, &#39;u1&#39;, &#39;u2&#39;, &#39;u4&#39;, &#39;u8&#39;, &#39;uchar&#39;, &#39;uint&#39;, &#39;uint16&#39;, &#39;uint32&#39;, &#39;uint64&#39;, &#39;uint8&#39;, &#39;uintc&#39;, &#39;uintp&#39;, &#39;ulong&#39;, &#39;ulonglong&#39;, &#39;unsigned_domain&#39;, &#39;ushort&#39;, &#39;void&#39;, &#39;voidptr&#39;]</code></pre><p>下面通过一个例子，利用<code>jit</code>和<code>autojit</code>进行对比，看效率如何：下面的例子中通过读取<code>ecexl</code>中的数据，再对数据进行处理（找出某个元素的索引，并返回其索引值。）</p>
-<pre><code class="python">import xlrd
+[&#39;Any&#39;, &#39;Array&#39;, &#39;CPointer&#39;, &#39;CharSeq&#39;, &#39;Complex&#39;, &#39;Dispatcher&#39;, &#39;Dummy&#39;, &#39;Float&#39;, &#39;Function&#39;, &#39;FunctionPointer&#39;, &#39;Integer&#39;, &#39;Kind&#39;, &#39;Macro&#39;, &#39;Method&#39;, &#39;Module&#39;, &#39;Object&#39;, &#39;OpaqueType&#39;, &#39;Optional&#39;, &#39;Prototype&#39;, &#39;Record&#39;, &#39;Tuple&#39;, &#39;Type&#39;, &#39;UniTuple&#39;, &#39;UniTupleIter&#39;, &#39;UnicodeCharSeq&#39;, &#39;VarArg&#39;, &#39;__all__&#39;, &#39;__builtins__&#39;, &#39;__doc__&#39;, &#39;__file__&#39;, &#39;__name__&#39;, &#39;__package__&#39;, &#39;_autoincr&#39;, &#39;_make_signed&#39;, &#39;_make_unsigned&#39;, &#39;_typecache&#39;, &#39;abs_type&#39;, &#39;absolute_import&#39;, &#39;b1&#39;, &#39;bool_&#39;, &#39;boolean&#39;, &#39;byte&#39;, &#39;c16&#39;, &#39;c8&#39;, &#39;char&#39;, &#39;complex128&#39;, &#39;complex64&#39;, &#39;complex_domain&#39;, &#39;defaultdict&#39;, &#39;division&#39;, &#39;double&#39;, &#39;exception_type&#39;, &#39;f4&#39;, &#39;f8&#39;, &#39;float32&#39;, &#39;float64&#39;, &#39;float_&#39;, &#39;i1&#39;, &#39;i2&#39;, &#39;i4&#39;, &#39;i8&#39;, &#39;int16&#39;, &#39;int32&#39;, &#39;int64&#39;, &#39;int8&#39;, &#39;int_&#39;, &#39;intc&#39;, &#39;integer_domain&#39;, &#39;intp&#39;, &#39;len_type&#39;, &#39;long_&#39;, &#39;longlong&#39;, &#39;neg_type&#39;, &#39;none&#39;, &#39;number_domain&#39;, &#39;numpy&#39;, &#39;print_function&#39;, &#39;print_item_type&#39;, &#39;print_type&#39;, &#39;pyobject&#39;, &#39;range_iter32_type&#39;, &#39;range_iter64_type&#39;, &#39;range_state32_type&#39;, &#39;range_state64_type&#39;, &#39;range_type&#39;, &#39;real_domain&#39;, &#39;short&#39;, &#39;sign_type&#39;, &#39;signed_domain&#39;, &#39;slice3_type&#39;, &#39;slice_type&#39;, &#39;string&#39;, &#39;u1&#39;, &#39;u2&#39;, &#39;u4&#39;, &#39;u8&#39;, &#39;uchar&#39;, &#39;uint&#39;, &#39;uint16&#39;, &#39;uint32&#39;, &#39;uint64&#39;, &#39;uint8&#39;, &#39;uintc&#39;, &#39;uintp&#39;, &#39;ulong&#39;, &#39;ulonglong&#39;, &#39;unsigned_domain&#39;, &#39;ushort&#39;, &#39;void&#39;, &#39;voidptr&#39;]
+</code></pre><p>下面通过一个例子，利用<code>jit</code>和<code>autojit</code>进行对比，看效率如何：下面的例子中通过读取<code>ecexl</code>中的数据，再对数据进行处理（找出某个元素的索引，并返回其索引值。）</p>
+<pre><code class="lang-python">import xlrd
 import numpy as np
 import numba
 from time import clock
@@ -247,7 +250,8 @@ if __name__ == &quot;__main__&quot;:
     print data2[:,0].tolist().index(200)            #将array转化为list进行index
     print data2[index,:]
 
-    print &quot;This process have to time %s second!&quot; % (end_time-start_time)  </code></pre>
+    print &quot;This process have to time %s second!&quot; % (end_time-start_time)
+</code></pre>
 <p>输出为：</p>
 <pre><code>199
 [ 200.  261.]
@@ -255,7 +259,8 @@ This process have to time 2.8969633643 second!
 #@autojit
 199
 [ 200.  261.]
-This process have to time 8.33246232783 second!</code></pre><p>可以看出<code>JIT</code>比<code>AUTOJIT</code>要快一些。当数据量大时差距会更加的大。另外<code>numba</code>和<code>numpy</code>配合使用效果最佳。可以通过<code>google</code>查询<code>cpython</code> ,<code>pypy</code> 和<code>numba</code>的效率比较,有很多这样文章。</p>
+This process have to time 8.33246232783 second!
+</code></pre><p>可以看出<code>JIT</code>比<code>AUTOJIT</code>要快一些。当数据量大时差距会更加的大。另外<code>numba</code>和<code>numpy</code>配合使用效果最佳。可以通过<code>google</code>查询<code>cpython</code> ,<code>pypy</code> 和<code>numba</code>的效率比较,有很多这样文章。</p>
 
             </div>
             <hr>
@@ -536,6 +541,37 @@ This process have to time 8.33246232783 second!</code></pre><p>可以看出<code
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -172,7 +172,8 @@
               <p>在数据抽取或者数据存取过程中难免会遇到用其他语言对<code>hive</code>数据库进行操作。如<code>python</code>远程对<code>hive</code>数据库进行操作，需要通过<code>thrift</code>服务进行操作。本文的环境是<code>python==3.6.1</code>， <code>hive==1.1.0</code>，<code>thfit==0.10.0</code></p>
 <h2 id="ThriftServer介绍"><a href="#ThriftServer介绍" class="headerlink" title="ThriftServer介绍"></a>ThriftServer介绍</h2><p>客户端对<code>hive</code>数据库进行操作可以通过<code>Cli</code>进行，在本地这种方式较好，但是在远程操作时会很麻烦，因此提供了<code>hiveserver</code>和<code>hiveserver2</code>，在不启动cli的情况下对<code>hive</code>进行操作，可以在远程通过其他语言(<code>java, python, php</code>等)向hive请求并返回结果。也就是利用<code>thrift</code>进行整个过程操作。</p>
 <p><code>hiveserver2</code>主要是向远程调用提供了接口，通过<code>thrift rpc</code>实现，进行远程的操作。可以实现远程并行操作<code>hive</code>数据库。启动<code>hiveserver2</code>如下：</p>
-<pre><code class="shell">nohup hive --service hiveserver2 &amp;</code></pre>
+<pre><code class="lang-shell">nohup hive --service hiveserver2 &amp;
+</code></pre>
 <p>在启动后<code>hiveserver2</code>默认监听的端口为<code>10000</code>，可以在hive的配置文件(<code>hive-site.xml</code>)中查看或者修改该端口。可以通过命令查看该端口是否被监听：<code>netstat -antp | grep 10000</code><a id="more"></a></p>
 <h2 id="连接hive的框架"><a href="#连接hive的框架" class="headerlink" title="连接hive的框架"></a>连接hive的框架</h2><p>在连接<code>hive</code>时，可以选择<code>thrift</code>本身，<code>pyhive</code>，<code>pyhs2</code>和<code>impyla</code>。在使用过程中首先尝试了<code>thrift</code>本身，但是通过配置后在连接返回：<code>thrift.transport.TTransport.TTransportException: None</code>，据网友说这是连接<code>hiveserver2</code>出现的问题。因此弃用<code>thrift</code>直接连接<code>hive</code>，选择其他三个。</p>
 <p><code>pyhs2</code>是以前hive官方推荐使用的库，主要依赖了<code>thrift</code>和<code>sasl</code>。但是这个库后面没有维护了，因此在最新的<code>python</code>和<code>hive</code>下有很多问题，因此弃用。</p>
@@ -181,24 +182,26 @@
 <ol>
 <li>安装依赖包<code>sasl</code>的环境. 当安装了下面的<code>sasl</code>相关的部署包才能正确安装sasl</li>
 </ol>
-<pre><code class="shell"># ubuntu
+<pre><code class="lang-shell"># ubuntu
 sudo apt-get install sasl2-bin libsasl2-2 libsasl2-dev libsasl2-modules
 # centos
 sudo yum install cyrus-sasl-devel cyrus-sasl-gssapi cyrus-sasl-md5 cyrus-sasl-plain
 # 使用pip安装python下的sasl
-pip install sasl==0.2.1</code></pre>
-<ol start="2">
+pip install sasl==0.2.1
+</code></pre>
+<ol>
 <li>安装<code>thrift</code>的<code>python</code>包：<code>pip install thrift==0.10.0</code></li>
 <li>安装<code>thrift_sasl</code>，者个包依赖了<code>sasl</code>和<code>thrift</code>：<code>pip install thrift_sasl====0.3.0</code></li>
 <li>如果是<code>ubuntu</code>，则会多出一个步骤，否则在引用<code>sasl</code>包时可能会报错：<code>_ZTVNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEEE</code>，因此需要对<code>python</code>使用的<code>libgcc</code>进行更新，因为我部署的<code>python</code>环境是<code>anaconda3</code>因此直接执行<code>conda install libgcc</code>即可。</li>
 <li>安装<code>pyhive</code>，<code>pyhive</code>的安装很简单：<code>pip install pyhive==0.5.0</code></li>
 </ol>
 <p>经过上面的安装可以进行包的测试：</p>
-<pre><code class="shell">python -c &quot;import sasl&quot;
+<pre><code class="lang-shell">python -c &quot;import sasl&quot;
 python -c &quot;import thrift&quot;
-python -c &quot;import pyhive&quot;</code></pre>
+python -c &quot;import pyhive&quot;
+</code></pre>
 <p>测试成功后就可以连接服务端操作hive：</p>
-<pre><code class="python">from pyhive import hive
+<pre><code class="lang-python">from pyhive import hive
 from TCLIService.ttypes import TOperationState
 cursor = hive.connect(&#39;localhost&#39;).cursor()
 cursor.execute(&#39;SELECT * FROM table LIMIT 10&#39;, async=True)
@@ -210,7 +213,8 @@ while status in (TOperationState.INITIALIZED_STATE, TOperationState.RUNNING_STAT
         print message
     status = cursor.poll().operationState
 
-print cursor.fetchall()</code></pre>
+print cursor.fetchall()
+</code></pre>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="http://www.cnblogs.com/liu-yao/p/3hive-dethriftserver-fu-wu.html" target="_blank" rel="noopener">hive的hiveserver服务介绍</a></p>
 <p><a href="https://github.com/dropbox/PyHive" target="_blank" rel="noopener">pyhive的github官方地址</a></p>
 <p><a href="https://stackoverflow.com/questions/22838752/hadoop-python-client-driver-for-hiveserver2-fails-to-install" target="_blank" rel="noopener">Python client driver for HiveServer2 fails to install</a></p>
@@ -499,6 +503,37 @@ print cursor.fetchall()</code></pre>
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

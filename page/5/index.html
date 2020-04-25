@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 100vh;">
+  <header style="height: 50vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -124,10 +124,6 @@
           </div>
 
           
-            <div class="scroll-down-bar">
-              <i class="fas fa-angle-down scroll-down-arrow"></i>
-            </div>
-          
         </div>
       </div>
     </div>
@@ -137,7 +133,7 @@
     
       <div class="container nopadding-md">
         <div class="py-5 z-depth-3" id="board"
-          style=margin-top:0>
+          >
           
           <div class="container">
             <div class="row">
@@ -213,7 +209,8 @@ object testParseTimeSeries {
         other.foreach(println)
         other.aggregate()
     }
-}...</div>
+}
+...</div>
         </div>
       </a>
 
@@ -274,7 +271,8 @@ rdd1.mapPartitionsWithIndex {
 
         }
       }.collect
-res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,List(10, 9, 8, 7, 6)))...</div>
+res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,List(10, 9, 8, 7, 6)))
+...</div>
         </div>
       </a>
 
@@ -318,7 +316,7 @@ res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,
 视频讲义，介绍boosting算法，主要介绍AdaBoosing
 在这个网站的资源项里列出了对于boosting算法来源介绍的几篇文章，可以下载
 一个博客介绍了许多视觉中常用算法，作者的实验和理解，这里附录的链接是关于使用opencv进行人脸检测的过程和代码，可以帮助理解训练过程是如何完成的
-这里是一个台湾的电子期刊上关于AdaBoost的介绍 — Jackknife，Bootstraping, bagging, boosting, AdaBoosting, Rand forest 和 gradient boosting这些术语，我经常搞混淆，现在把它们放在一起，以示区别。(部分文字来自网络，由于是之前记的笔记，忘记来源了，特此向作者抱歉） 
+这里是一个台湾的电子期刊上关于AdaBoost的介绍 —- Jackknife，Bootstraping, bagging, boosting, AdaBoosting, Rand forest 和 gradient boosting这些术语，我经常搞混淆，现在把它们放在一起，以示区别。(部分文字来自网络，由于是之前记的笔记，忘记来源了，特此向作者抱歉） 
 
 Bootstraping: 名字来自成语pull up by your own bootstraps，意思是依靠你自己的资源，称为自助法，它是一种有放回的抽样方法，它是非参数统计中一种重要的估计统计量方差进而进行区间估计的统计方法。其核心思想和基本步骤如下： 
 
@@ -344,9 +342,9 @@ Bootstraping: 名字来自成语pull up by your own bootstraps，意思是依靠
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/bagging/">bagging</a>&nbsp;
-          
             <a href="/tags/boosting/">boosting</a>&nbsp;
+          
+            <a href="/tags/bagging/">bagging</a>&nbsp;
           
             <a href="/tags/randomforest/">randomforest</a>&nbsp;
           
@@ -439,7 +437,8 @@ if __name__ == &quot;__main__&quot;:
 # ouput
 Miller
 25
-None...</div>
+None
+...</div>
         </div>
       </a>
 
@@ -676,6 +675,37 @@ None...</div>
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

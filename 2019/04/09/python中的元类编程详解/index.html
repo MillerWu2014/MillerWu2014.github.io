@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,19 +170,21 @@
             
             <div class="markdown-body">
               <h2 id="类是动态创建的"><a href="#类是动态创建的" class="headerlink" title="类是动态创建的"></a>类是动态创建的</h2><p>我们知道Python 里一切都是对象，那么是对象就有对应的“类(Class)”，或称“类型(type)”。 Python 中可以用 type(obj) 来得到对象的“类”。既然一切都是对象，一个“类(class)”也可以认为是一个对象，那么类的“类型(type)”是什么呢？“类(class)”的类型(type) 都是 type。那 type 的类型又是什么呢？抱歉，type 的类型还是 type，是一个递归的类型。“普通类(class)”可以用来生成实例(instance)，同样的，元类 (meta-class)也可以生成实例，生成的实例就是“普通类”了。类(class)可以有多个实例(instance)。而创建实例的方法就是调用类的构造函数(constructor)：</p>
-<pre><code class="python">class Spam(object):
+<pre><code class="lang-python">class Spam(object):
     def __init__(self, name):
         self.name = name
-        spam = Spam(&#39;name&#39;)</code></pre>
+        spam = Spam(&#39;name&#39;)
+</code></pre>
 <p>上例我们定义了一个类，并调用类的构造函数创建了该类的一个实例。我们知道类也可以看作类 type 的一个实例，那么如何用 type 的构造函数来动态创建一个类呢？我们先看看type的构造函数：<code>class type(name, bases, dict)</code></p>
 <ul>
 <li><code>name</code>: 字符串类型，存放新类的名字</li>
 <li><code>bases</code>: 元组(tuple)类型，指定类的基类/父类</li>
 <li><code>dict</code>: 字典类型，存放该类的所有属性(attributes)和方法(method)</li>
 </ul>
-<pre><code class="python">&gt;&gt;&gt; class X:
+<pre><code class="lang-python">&gt;&gt;&gt; class X:
         a = 1
-&gt;&gt;&gt; X = type(&#39;X&#39;, (object,), dict(a=1))</code></pre>
+&gt;&gt;&gt; X = type(&#39;X&#39;, (object,), dict(a=1))
+</code></pre>
 <a id="more"></a>
 <h2 id="类的创建过程"><a href="#类的创建过程" class="headerlink" title="类的创建过程"></a>类的创建过程</h2><p>要了解元类(meta-class)的作用，我们就需要了解 Python 里类的创建过程，如下：<br><img src="https://lotabout.me/2018/Understanding-Python-MetaClass/class-creation.svg" srcset="/img/loading.gif" alt="类class的创建过程"></p>
 <ol>
@@ -192,7 +194,7 @@
 <li>上述步骤结束后，就得到了创建类需要的所有信息，这时 Python 会调用元类的构造函数来真正创建类。如果你想在类的创建过程中做一些定制(customization)的话，创建过程中任何用到了元类的地方，我们都能通过覆盖元类的默认方法来实现定制。这也是元类“无所不能”的所在，它深深地嵌入了类的创建过程。</li>
 </ol>
 <h2 id="自定义元类"><a href="#自定义元类" class="headerlink" title="自定义元类"></a>自定义元类</h2><p>元类的主要目的就是为了当创建类时能够自动地改变类。通常，你会为API做这样的事情，你希望可以创建符合当前上下文的类。假想一个很傻的例子，你决定在你的模块里所有的类的属性都应该是大写形式。有好几种方法可以办到，但其中一种就是通过设定<strong>metaclass</strong>。采用这种方法，这个模块中的所有类都会通过这个元类来创建，我们只需要告诉元类把所有的属性都改成大写形式就万事大吉了。</p>
-<pre><code class="python"># 元类会自动将你通常传给‘type’的参数作为自己的参数传入
+<pre><code class="lang-python"># 元类会自动将你通常传给‘type’的参数作为自己的参数传入
 def upper_attr(future_class_name, future_class_parents, future_class_attr):
     &#39;&#39;&#39;返回一个类对象，将属性都转为大写形式&#39;&#39;&#39;
     #选择所有不以&#39;__&#39;开头的属性 
@@ -204,20 +206,22 @@ def upper_attr(future_class_name, future_class_parents, future_class_attr):
 
 class Foo(object):
     __metaclass__ = upper_attr
-    bar = &#39;bip&#39;</code></pre>
+    bar = &#39;bip&#39;
+</code></pre>
 <p>使用class来创建元类：</p>
-<pre><code class="python">class UpperAttrMetaclass(type):
+<pre><code class="lang-python">class UpperAttrMetaclass(type):
     def __new__(cls, name, bases, dct):
         attrs = ((name, value) for name, value in dct.items() if not name.startswith(&#39;__&#39;))
         uppercase_attr = dict((name.upper(), value) for name, value in attrs)
-        return super(UpperAttrMetaclass, cls).__new__(cls, name, bases, uppercase_attr)</code></pre>
+        return super(UpperAttrMetaclass, cls).__new__(cls, name, bases, uppercase_attr)
+</code></pre>
 <h2 id="元类中的特殊方法"><a href="#元类中的特殊方法" class="headerlink" title="元类中的特殊方法"></a>元类中的特殊方法</h2><p>type 类，作为Python中所有类（包括type本身）的默认元类，定义了一些特殊方法，可供自定义的元类覆盖，以完成特定的行为。常见的几个特殊方法有:</p>
 <ul>
 <li><code>__new__(cls,name,base,attr)</code>: 元类中, <strong>new</strong> 会在你定义类的时候执行, 只执行一次.</li>
 <li><code>__init__(self, name, *args, **kwargs)</code>: 该元类的实例(也就是普通类)创建后被调用，用于为初始化实例的.</li>
 <li><code>__call__(self, *args, **kwargs)</code>: 元类创建的实例(也就是普通类),构造普通类的对象时调用</li>
 </ul>
-<pre><code class="python">class NewMeta(type):
+<pre><code class="lang-python">class NewMeta(type):
     def __new__(*args, **kwargs):
         print(&#39;__new__() from NewMeta&#39;,args,kwargs)
         return type.__new__(*args, **kwargs)
@@ -234,15 +238,17 @@ class Test(object,metaclass=NewMeta):
     pass
 
 print(&#39;---------------------------------&#39;)
-Test()</code></pre>
+Test()
+</code></pre>
 <p>结果为：</p>
-<pre><code class="text">__new__() from NewMeta (&lt;class &#39;__main__.NewMeta&#39;&gt;, &#39;Test&#39;, (&lt;class &#39;object&#39;&gt;,), {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__qualname__&#39;: &#39;Test&#39;}) {}
+<pre><code class="lang-text">__new__() from NewMeta (&lt;class &#39;__main__.NewMeta&#39;&gt;, &#39;Test&#39;, (&lt;class &#39;object&#39;&gt;,), {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__qualname__&#39;: &#39;Test&#39;}) {}
 __init__() from NewMeta ((&lt;class &#39;object&#39;&gt;,), {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__qualname__&#39;: &#39;Test&#39;}) {}
 ---------------------------------
-__call__() from NewMeta () {}</code></pre>
+__call__() from NewMeta () {}
+</code></pre>
 <p>类在创建类的时候<strong>new</strong>只会被调用一次。而这个<strong>new</strong>就是用来创建出我们的类。因为普通类是元类创建出来的类，可以认为普通类是元类的实例对象。所以每次运行普通类的时候都会去调用元类的<strong>call</strong>。而在<strong>call</strong>中我们拿到已经创建好的实例对象。</p>
 <h2 id="通过元类来实现单例模式"><a href="#通过元类来实现单例模式" class="headerlink" title="通过元类来实现单例模式"></a>通过元类来实现单例模式</h2><p>当初我也很疑惑为什么我们是从写使用元类的<strong>init</strong>方法，而不是使用<strong>new</strong>方法来初为元类增加一个属性。其实我只是上面那一段关于元类中<strong>new</strong>方法迷惑了，它主要用于我们需要对类的结构进行改变的时候我们才要重写这个方法。</p>
-<pre><code class="python">class Singleton(type):
+<pre><code class="lang-python">class Singleton(type):
     def __init__(self, *args, **kwargs):
         print &quot;__init__&quot;
         self.__instance = None
@@ -271,13 +277,14 @@ print foo1 is foo2  # True
 # __call__
 # __call__
 # {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__metaclass__&#39;: &lt;class &#39;__main__.Singleton&#39;&gt;, &#39;_Singleton__instance&#39;: &lt;__main__.Foo object at 0x100c52f10&gt;, &#39;__dict__&#39;: &lt;attribute &#39;__dict__&#39; of &#39;Foo&#39; objects&gt;, &#39;__weakref__&#39;: &lt;attribute &#39;__weakref__&#39; of &#39;Foo&#39; objects&gt;, &#39;__doc__&#39;: None}
-# True</code></pre>
+# True
+</code></pre>
 <p>基于这个例子：</p>
 <ul>
 <li>我们知道元类(Singleton)生成的实例是一个类(Foo),而这里我们仅仅需要对这个实例(Foo)增加一个属性(<strong>instance)来判断和保存生成的单例。想想也知道为一个类添加一个属性当然是在</strong>init__中实现了。</li>
 <li>关于<strong>call</strong>方法的调用，因为Foo是Singleton的一个实例。所以Foo()这样的方式就调用了Singleton的<strong>call</strong>方法。不明白就回头看看上一节中的<strong>call</strong>方法介绍。假如我们通过元类的<strong>new</strong>方法来也可以实现，但显然没有通过<strong>init</strong>来实现优雅，因为我们不会为了为实例增加一个属性而重写<strong>new</strong>方法。所以这个形式不推荐。</li>
 </ul>
-<pre><code class="python">class Singleton(type):
+<pre><code class="lang-python">class Singleton(type):
     def __new__(cls, name,bases,attrs):
         print &quot;__new__&quot; 
         attrs[&quot;_instance&quot;] = None
@@ -300,7 +307,8 @@ print Foo.__dict__print foo1 is foo2  # True
 # __call__
 # __call__
 # {&#39;__module__&#39;: &#39;__main__&#39;, &#39;__metaclass__&#39;: &lt;class &#39;__main__.Singleton&#39;&gt;, &#39;_instance&#39;: &lt;__main__.Foo object at 0x103e07ed0&gt;, &#39;__dict__&#39;: &lt;attribute &#39;__dict__&#39; of &#39;Foo&#39; objects&gt;, &#39;__weakref__&#39;: &lt;attribute &#39;__weakref__&#39; of &#39;Foo&#39; objects&gt;, &#39;__doc__&#39;: None}
-# True</code></pre>
+# True
+</code></pre>
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ol>
 <li>深刻理解Python中的元类(metaclass):<a href="http://blog.jobbole.com/21351/" target="_blank" rel="noopener">http://blog.jobbole.com/21351/</a></li>
 <li>Python 元类 (MetaClass) 小教程: <a href="https://lotabout.me/2018/Understanding-Python-MetaClass/" target="_blank" rel="noopener">https://lotabout.me/2018/Understanding-Python-MetaClass/</a></li>
@@ -593,6 +601,37 @@ print Foo.__dict__print foo1 is foo2  # True
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -172,17 +172,21 @@
               <p>Apache Arrow 是 Apache 基金会全新孵化的一个顶级项目。它设计的目的在于作为一个跨平台的数据层，来加快大数据分析项目的运行速度。</p>
 <p>现在大数据处理模型很多，用户在应用大数据分析时，除了将 Hadoop 等大数据平台作为一个存储和批处理平台之外，同样也得关注系统的扩展性和性能。过去开源社区已经发布了很多工具来完善大数据分析的生态系统，这些工具包含了数据分析的各个层面，例如列式存储格式（Parquet，ORC），内存计算模型（Drill，Spark，Impala 和 Storm）以及其强大的 API 接口。而 Arrow 则是最新加入的一员，它提供了一种跨平台应用的内存数据交换格式。<br><img src="/uploads/arrow_f.png" srcset="/img/loading.gif" alt="使用arrow之前"><br><img src="/uploads/arrow_b.png" srcset="/img/loading.gif" alt="使用arrow之后"><a id="more"></a></p>
 <h2 id="arrow的python版本安装"><a href="#arrow的python版本安装" class="headerlink" title="arrow的python版本安装"></a>arrow的python版本安装</h2><p>arrow是apache下的一个顶级项目，它是一个跨平台的内存数据交换格式。通过conda来进行安装：<code>conda install -c conda-forge pyarrow</code>，官方的安装推荐使用conda，具体可以见<a href="https://arrow.apache.org/docs/python/install.html" target="_blank" rel="noopener">apache arrow documentation</a>.</p>
-<pre><code class="python">import pyarrow as pa
+<pre><code class="lang-python">import pyarrow as pa
 
 data = b&#39;ddgkdfkgfdlgl8439495435043050883483495&#39;
 buf = pa.py_buffer(data)
-buf</code></pre>
-<pre><code>&lt;pyarrow.lib.Buffer at 0x7f46706d0ab0&gt;</code></pre><pre><code class="python">buf.size  # 38</code></pre>
-<h3 id="结合numpy使用"><a href="#结合numpy使用" class="headerlink" title="结合numpy使用"></a>结合numpy使用</h3><pre><code class="python">import numpy as np
+buf
+</code></pre>
+<pre><code>&lt;pyarrow.lib.Buffer at 0x7f46706d0ab0&gt;
+</code></pre><pre><code class="lang-python">buf.size  # 38
+</code></pre>
+<h3 id="结合numpy使用"><a href="#结合numpy使用" class="headerlink" title="结合numpy使用"></a>结合numpy使用</h3><pre><code class="lang-python">import numpy as np
 
 data = np.random.random((100, 10)).reshape(-1)
 pa_array = pa.array(data)
-pa_array</code></pre>
+pa_array
+</code></pre>
 <pre><code>&lt;pyarrow.lib.DoubleArray object at 0x7f467b68aea8&gt;
 [
   0.688175,
@@ -206,13 +210,16 @@ pa_array</code></pre>
   0.879404,
   0.979877,
   0.883003
-]</code></pre><pre><code class="python">np_array = pa_array.to_numpy().reshape((100, 10))
-np_array</code></pre>
-<h3 id="结合pandas使用"><a href="#结合pandas使用" class="headerlink" title="结合pandas使用"></a>结合pandas使用</h3><pre><code class="python">import pandas as pd
+]
+</code></pre><pre><code class="lang-python">np_array = pa_array.to_numpy().reshape((100, 10))
+np_array
+</code></pre>
+<h3 id="结合pandas使用"><a href="#结合pandas使用" class="headerlink" title="结合pandas使用"></a>结合pandas使用</h3><pre><code class="lang-python">import pandas as pd
 
 df = pd.DataFrame(data=np.random.randint(1, 10, (10, 4)), columns=[&quot;column_a&quot;, &quot;column_b&quot;, &quot;column_c&quot;, &quot;column_d&quot;])
 pa_df = pa.Table.from_pandas(df)
-[m for m in dir(pa_df) if not m.startswith(&#39;__&#39;)]</code></pre>
+[m for m in dir(pa_df) if not m.startswith(&#39;__&#39;)]
+</code></pre>
 <pre><code>[&#39;_column&#39;,
  &#39;_validate&#39;,
  &#39;add_column&#39;,
@@ -236,17 +243,23 @@ pa_df = pa.Table.from_pandas(df)
  &#39;shape&#39;,
  &#39;to_batches&#39;,
  &#39;to_pandas&#39;,
- &#39;to_pydict&#39;]</code></pre><pre><code class="python">pa_df.to_pandas()</code></pre>
-<h3 id="导入csv格式的数据"><a href="#导入csv格式的数据" class="headerlink" title="导入csv格式的数据"></a>导入csv格式的数据</h3><pre><code class="python">from pyarrow import csv
+ &#39;to_pydict&#39;]
+</code></pre><pre><code class="lang-python">pa_df.to_pandas()
+</code></pre>
+<h3 id="导入csv格式的数据"><a href="#导入csv格式的数据" class="headerlink" title="导入csv格式的数据"></a>导入csv格式的数据</h3><pre><code class="lang-python">from pyarrow import csv
 
 csv_file_path = &#39;/opt/workspace/project/ModisResistModule/data/FirmsPoint/fire_nrt_V1_21640.csv&#39;
 
 def to_df_arrow(file_path):
     table = csv.read_csv(file_path)
 
-%timeit df_pa = to_df_arrow(csv_file_path)</code></pre>
-<pre><code>26 ms ± 97.9 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre><pre><code class="python">%timeit df = pd.read_csv(csv_file_path)</code></pre>
-<pre><code>164 ms ± 1.18 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre><h2 id="arrow的IO操作"><a href="#arrow的IO操作" class="headerlink" title="arrow的IO操作"></a>arrow的IO操作</h2><pre><code class="python">def py_write(string):
+%timeit df_pa = to_df_arrow(csv_file_path)
+</code></pre>
+<pre><code>26 ms ± 97.9 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</code></pre><pre><code class="lang-python">%timeit df = pd.read_csv(csv_file_path)
+</code></pre>
+<pre><code>164 ms ± 1.18 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</code></pre><h2 id="arrow的IO操作"><a href="#arrow的IO操作" class="headerlink" title="arrow的IO操作"></a>arrow的IO操作</h2><pre><code class="lang-python">def py_write(string):
     with open(&quot;./test_py_string.dat&quot;, &quot;wb&quot;) as writer:
         writer.write(string)
 
@@ -256,9 +269,11 @@ def pa_write(string):
 
 s = b&quot;abvndjfklfljklluuillllldjdsfhdsfjhdskf2r73564385435934953475742742&quot;        
 %timeit py_write(s)
-%timeit pa_write(s)</code></pre>
+%timeit pa_write(s)
+</code></pre>
 <pre><code>934 µs ± 23.3 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-969 µs ± 88 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)</code></pre><pre><code class="python">def py_reader():
+969 µs ± 88 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+</code></pre><pre><code class="lang-python">def py_reader():
     with open(&quot;./test_py_string.dat&quot;, &quot;rb&quot;) as reader:
         reader.read()
 
@@ -273,34 +288,45 @@ def pa_reader2():
 
 %timeit py_reader()
 %timeit pa_reader1()
-%timeit pa_reader2()</code></pre>
+%timeit pa_reader2()
+</code></pre>
 <pre><code>8.76 µs ± 24.3 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 5.73 µs ± 9.02 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-8.26 µs ± 28.8 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)</code></pre><h2 id="pickle和arrow的对比"><a href="#pickle和arrow的对比" class="headerlink" title="pickle和arrow的对比"></a>pickle和arrow的对比</h2><p>这儿有pickle，msgpack和pyarrow的对比测试：<a href="http://satoru.rocks/2018/08/fastest-way-to-serialize-array/" target="_blank" rel="noopener">http://satoru.rocks/2018/08/fastest-way-to-serialize-array/</a></p>
-<pre><code class="python">import pickle
+8.26 µs ± 28.8 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+</code></pre><h2 id="pickle和arrow的对比"><a href="#pickle和arrow的对比" class="headerlink" title="pickle和arrow的对比"></a>pickle和arrow的对比</h2><p>这儿有pickle，msgpack和pyarrow的对比测试：<a href="http://satoru.rocks/2018/08/fastest-way-to-serialize-array/" target="_blank" rel="noopener">http://satoru.rocks/2018/08/fastest-way-to-serialize-array/</a></p>
+<pre><code class="lang-python">import pickle
 
 data = {
     i: np.random.randn(500, 500) for i in range(100)
 }
 
 buf = pa.serialize(data).to_buffer()
-%timeit restored_data = pa.deserialize(buf)</code></pre>
-<pre><code>207 µs ± 1.78 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)</code></pre><pre><code class="python">pickled = pickle.dumps(data)
-%timeit unpickled_data = pickle.loads(pickled)</code></pre>
-<pre><code class="python">56.6 ms ± 165 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre>
-<pre><code class="python">from pyarrow.feather import write_feather, read_feather
+%timeit restored_data = pa.deserialize(buf)
+</code></pre>
+<pre><code>207 µs ± 1.78 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+</code></pre><pre><code class="lang-python">pickled = pickle.dumps(data)
+%timeit unpickled_data = pickle.loads(pickled)
+</code></pre>
+<pre><code class="lang-python">56.6 ms ± 165 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</code></pre>
+<pre><code class="lang-python">from pyarrow.feather import write_feather, read_feather
 import pandas as pd
 import numpy as np
 
-df = pd.DataFrame(data=np.random.randint(1, 100, (1000000, 4)), columns=list(&#39;abcd&#39;))</code></pre>
-<pre><code class="python">save_file = &quot;./tmp_frame.feather&quot;
+df = pd.DataFrame(data=np.random.randint(1, 100, (1000000, 4)), columns=list(&#39;abcd&#39;))
+</code></pre>
+<pre><code class="lang-python">save_file = &quot;./tmp_frame.feather&quot;
 %timeit write_feather(df, save_file)
-%timeit df.to_pickle(&quot;./tmp_frame.pickle&quot;)</code></pre>
+%timeit df.to_pickle(&quot;./tmp_frame.pickle&quot;)
+</code></pre>
 <pre><code>200 ms ± 5.59 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
-206 ms ± 7.8 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)</code></pre><pre><code class="python">%timeit read_feather(save_file)
-%timeit pd.read_pickle(&quot;./tmp_frame.pickle&quot;)</code></pre>
+206 ms ± 7.8 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</code></pre><pre><code class="lang-python">%timeit read_feather(save_file)
+%timeit pd.read_pickle(&quot;./tmp_frame.pickle&quot;)
+</code></pre>
 <pre><code>4.72 ms ± 18.9 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
-12.4 ms ± 42.2 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)</code></pre>
+12.4 ms ± 42.2 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+</code></pre>
             </div>
             <hr>
             <div>
@@ -580,6 +606,37 @@ df = pd.DataFrame(data=np.random.randint(1, 100, (1000000, 4)), columns=list(&#3
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

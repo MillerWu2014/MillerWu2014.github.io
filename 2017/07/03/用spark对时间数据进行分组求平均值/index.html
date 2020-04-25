@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,7 +170,7 @@
             
             <div class="markdown-body">
               <h3 id="实现过程"><a href="#实现过程" class="headerlink" title="实现过程"></a>实现过程</h3><p>数据格式为key,timestrap,value。需求是按照<code>key</code>并对<code>timestrap</code>固定时间间隔计算，再将<code>key</code>和时间间隔作为<code>key</code>进行分组统计<code>value</code>的均值。其中利用了<code>spark</code>的<code>gourpbykey</code>操作，并对时间进行了转换。实现过程如下：</p>
-<pre><code class="java">package org.app.spark
+<pre><code class="lang-java">package org.app.spark
 
 /**
   * Created by root on 17-7-2.
@@ -222,7 +222,8 @@ object testParseTimeSeries {
         other.foreach(println)
         other.aggregate()
     }
-}</code></pre>
+}
+</code></pre>
 <a id="more"></a>
 <h3 id="部分数据"><a href="#部分数据" class="headerlink" title="部分数据"></a>部分数据</h3><pre><code>a,2016/1/2 12:12,41
 a,2016/1/2 13:12,19
@@ -269,7 +270,8 @@ b,2016/1/4 5:12,57
 b,2016/1/4 6:12,13
 b,2016/1/4 7:12,75
 b,2016/1/4 8:12,100
-b,2016/1/4 9:12,49</code></pre>
+b,2016/1/4 9:12,49
+</code></pre>
             </div>
             <hr>
             <div>
@@ -549,6 +551,37 @@ b,2016/1/4 9:12,49</code></pre>
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

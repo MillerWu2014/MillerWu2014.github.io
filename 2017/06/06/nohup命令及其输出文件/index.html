@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -170,15 +170,15 @@
             
             <div class="markdown-body">
               <h3 id="nohup命令及其输出文件"><a href="#nohup命令及其输出文件" class="headerlink" title="nohup命令及其输出文件"></a>nohup命令及其输出文件</h3><p>今天在linux上部署wdt程序，在SSH客户端执行./start-dishi.sh,启动成功,在关闭SSH客户端后，运行的程序也同时终止了，怎样才能保证在推出SSH客户端后程序能一直执行呢？通过网上查找资料，发现需要使用nohup命令。</p>
-<p>完美解决方案：<code>nohup ./start-dishi.sh &gt;output 2&gt;&amp;1 &amp;</code></p>
-<a id="more"></a>
+<p>完美解决方案：<code>nohup ./start-dishi.sh &gt;output 2&gt;&amp;1 &amp;</code><br><a id="more"></a></p>
 <h3 id="现对上面的命令进行下解释"><a href="#现对上面的命令进行下解释" class="headerlink" title="现对上面的命令进行下解释"></a>现对上面的命令进行下解释</h3><ul>
 <li>用途：不挂断地运行命令。</li>
 <li>语法：<code>nohup Command [ Arg ... ] [　&amp; ]</code></li>
 <li>描述：nohup 命令运行由 Command 参数和任何相关的 Arg 参数指定的命令，忽略所有挂断（SIGHUP）信号。在注销后使用 nohup 命令运行后台中的程序。要运行后台中的 nohup 命令，添加 &amp; （ 表示“and”的符号）到命令的尾部。</li>
 </ul>
 <p>操作系统中有三个常用的流：<br>　　0：标准输入流 stdin<br>　　1：标准输出流 stdout<br>　　2：标准错误流 stderr<br>一般当我们用<code>&gt; console.txt</code>，实际是 <code>1&gt;console.txt</code>的省略用法；<code>&lt; console.txt</code> ，实际是 <code>0 &lt; console.txt</code>的省略用法。</p>
-<h3 id="下面步入正题："><a href="#下面步入正题：" class="headerlink" title="下面步入正题："></a>下面步入正题：</h3><pre><code class="shell">&gt;nohup ./start-dishi.sh &gt;output 2&gt;&amp;1 &amp;</code></pre>
+<h3 id="下面步入正题："><a href="#下面步入正题：" class="headerlink" title="下面步入正题："></a>下面步入正题：</h3><pre><code class="lang-shell">&gt;nohup ./start-dishi.sh &gt;output 2&gt;&amp;1 &amp;
+</code></pre>
 <p>解释:</p>
 <ol>
 <li>带&amp;的命令行，即使terminal（终端）关闭，或者电脑死机程序依然运行（前提是你把程序递交到服务器上)；</li>
@@ -457,6 +457,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

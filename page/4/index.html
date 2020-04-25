@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 100vh;">
+  <header style="height: 50vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -124,10 +124,6 @@
           </div>
 
           
-            <div class="scroll-down-bar">
-              <i class="fas fa-angle-down scroll-down-arrow"></i>
-            </div>
-          
         </div>
       </div>
     </div>
@@ -137,7 +133,7 @@
     
       <div class="container nopadding-md">
         <div class="py-5 z-depth-3" id="board"
-          style=margin-top:0>
+          >
           
           <div class="container">
             <div class="row">
@@ -190,7 +186,9 @@ class loadData {
             TypeMatched(_label_, _features_)
         })
     }
-}...</div>
+}
+
+...</div>
         </div>
       </a>
 
@@ -248,9 +246,9 @@ class loadData {
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/metaclass/">metaclass</a>&nbsp;
-          
             <a href="/tags/six/">six</a>&nbsp;
+          
+            <a href="/tags/metaclass/">metaclass</a>&nbsp;
           
             <a href="/tags/abc/">abc</a>&nbsp;
           
@@ -442,6 +440,7 @@ from pyspark import SparkContext, SparkConf
 
 conf = SparkConf().setAppName(&quot;test&quot;).setMaster(&quot;local&quot;).setSparkHome(&quot;/opt/spark1.6.0/&quot;)
 sc = SparkContext(conf=conf)
+
 上面通过SparkConf对象设置了conf. 再创建sc对象，并将设置传给sc对象。SparkConf对象的方法有：set(key,value),setIfMissing(key,value),setMaster(value),setAppName(value)，setSparkHome(value)，setExecutorEnv(key=None, value=None, pairs=None)，setAll(pairs)并对应了get方法。...</div>
         </div>
       </a>
@@ -566,8 +565,7 @@ sc = SparkContext(conf=conf)
         
         <div class="index-excerpt" style="max-height: none;">
           <div class="index-text mb-1">
-T-SNE(t-distributed stochastic neighbor embedding)是用于降维的一种机器学习算法，是由 Laurens van der Maaten 和 Geoffrey Hinton在08年提出来。此外，t-SNE 是一种非线性降维算法，非常适用于高维数据降维到2维或者3维，进行可视化。t-SNE是由SNE(Stochastic Neighbor Embedding, SNE; Hinton and Roweis, 2002)发展而来。我们先介绍SNE的基本原理，之后再扩展到t-SNE。最后再看一下t-SNE的实现以及一些优化。
-...</div>
+T-SNE(t-distributed stochastic neighbor embedding)是用于降维的一种机器学习算法，是由 Laurens van der Maaten 和 Geoffrey Hinton在08年提出来。此外，t-SNE 是一种非线性降维算法，非常适用于高维数据降维到2维或者3维，进行可视化。t-SNE是由SNE(Stochastic Neighbor Embedding, SNE; Hinton and Roweis, 2002)发展而来。我们先介绍SNE的基本原理，之后再扩展到t-SNE。最后再看一下t-SNE的实现以及一些优化。...</div>
         </div>
       </a>
 
@@ -766,6 +764,37 @@ T-SNE(t-distributed stochastic neighbor embedding)是用于降维的一种机器
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -175,7 +175,7 @@
 <li>如果在类定义了<code>__getattribute__()</code>方法，那么它无条件被调用。当实例化的对象每次引用属性和方法时都会先调用它。如果属性查找不到那么就会引发AttributeError的异常。除非在类中同时定义了<code>__getattribute__()</code>和<code>__getattr__()</code>两个方法。</li>
 </ol>
 <p>下面来看一个<code>__setattr__</code>的实例：</p>
-<pre><code class="python">class MagicTest(object):
+<pre><code class="lang-python">class MagicTest(object):
     def __init__(self):
         self.name = &quot;Miller&quot;
         self.age = 25
@@ -192,11 +192,11 @@ if __name__ == &quot;__main__&quot;:
 # ouput
 Miller
 25
-None</code></pre>
+None
+</code></pre>
 <a id="more"></a>
-
 <h3 id="getattribute-的使用"><a href="#getattribute-的使用" class="headerlink" title="__getattribute__的使用"></a><code>__getattribute__</code>的使用</h3><p>从上面的代码中可以很清楚的知道，magic在引用sex不存在的属性时，调用了<code>__getattr__</code>方法。因此返回了None。那么现在存在一个问题：<code>__getattribute__</code>是怎么样的呢？我们把上面的代码稍作修改看会怎么样。如下：</p>
-<pre><code class="python">class MagicTest1(object):
+<pre><code class="lang-python">class MagicTest1(object):
     def __init__(self):
         self.name = &quot;Miller&quot;
         self.age = 25
@@ -218,10 +218,11 @@ __getattribute__
 25
 -------------------AttributeError Traceback (most recent call last)
 
-AttributeError: `MagicTest1` object has no attribute `sex`  (2)</code></pre>
+AttributeError: `MagicTest1` object has no attribute `sex`  (2)
+</code></pre>
 <p>可以看出上面的代码中有几个地方很疑惑，在上面我已经进行了标记(1),(2)。首先来看第一个疑惑的地方：<br>(1)为什么要使用super来调用object的<code>__getattribute__</code>方法呢？首先，<code>__getattribute__</code>方法在新式类中才存在，在python2.x需要继承object才会有这个方法，python3.x全是新式类。其次，这样做的好处是防止无线循环查找属性。因为getattribute在访问属性的时候一直会被调用，自定义的getattribute方法里面同时需要返回相应的属性，通过<code>self.__dict__</code>取值会继续向下调用getattribute，造成循环调用.<br>(2)为什么会有AttributeError呢？因在上面代码中，<code>__getattribute__</code>会被无条件调用，当调用sex属性时，去实例对象magic1中查找是否具备该属性：<code>t.__dict__</code>中查找，每个类和实例对象都有一个<code>__dict__</code>的属性，若在<code>t.__dict__</code>中找不到对应的属性，则去该实例的类中寻找，即<code>t.__class__.__dict__</code>。若在实例的类中也招不到该属性，则去父类中寻找，即<code>t.__class__.__bases__.__dict_</code>中寻找。若以上均无法找到，则会调用<code>__getattr__</code>方法，执行内部的命令（若未重载<code>__getattr__</code>方法，则直接报错：AttributeError)。</p>
 <p>总体来说查找过程是:<code>__dict__</code> ——&gt; <code>__class__.__dict__</code> ——&gt; <code>__class__.__bases__.__dict__</code>；如果都查找不到就会调用<code>__getattr__</code>方法。如果没有<code>__getattr__</code>方法则会引发异常AttributeError。<br>下面我们可以打印出对象的属性看里面的值：</p>
-<pre><code class="python">print magic1.__dict__
+<pre><code class="lang-python">print magic1.__dict__
 print magic1.__class__.__bases__.__dict__
 print magic1.__class__.__dict__
 __getattribute__
@@ -229,9 +230,10 @@ __getattribute__
 __getattribute__
 {`__module__`: `__main__`, `__getattribute__`: &lt;function __getattribute__ at 0x00000000042C6E48&gt;, `__dict__`: &lt;attribute `__dict__` of `MagicTest1` objects&gt;, `__weakref__`: &lt;attribute `__weakref__` of `MagicTest1` objects&gt;, `__doc__`: None, `__init__`: &lt;function __init__ at 0x00000000042C6F28&gt;}
 __getattribute__
-AttributeError: `tuple` object has no attribute `__dict__`</code></pre>
+AttributeError: `tuple` object has no attribute `__dict__`
+</code></pre>
 <p>可以知道。上面输出是还是调用了<code>__getattribute__</code>方法，因此在输出时才会打印<code>__getattribute__</code>。输出的<code>__dict__</code>如上面输出所示。<br>因为在上面的MagicTest1中我们定义了name和age属性。我改变代码并并显式定义个属性sex并进行赋值看会是什么结果？</p>
-<pre><code class="python">class MagicTest1(object):
+<pre><code class="lang-python">class MagicTest1(object):
     def __init__(self):
         self.name = &quot;Miller&quot;
         self.age = 25
@@ -247,9 +249,10 @@ if __name__ == &quot;__main__&quot;:
     magic1.sex = &quot;man&quot;
     print magic1.sex
 __getattribute__
-Women</code></pre>
+Women
+</code></pre>
 <p>从结果中可以看出，给sex属性赋值后并没有生效。这是因为在访问属性和方法时会被无条件的调用，因此导致sex属性的值并未生效。因此一定要注意防止这种情况发生。如果定义了类的<code>__getattribute__()</code>方法，你可能还想定义一个<code>__setattr__()</code>方法，并在两者之间进行协同，以跟踪属性的值。否则，在创建实例之后所设置的值将会消失在黑洞中。如下的代码：</p>
-<pre><code class="python">class MagicTest1(object):
+<pre><code class="lang-python">class MagicTest1(object):
     def __init__(self):
         self.name = &quot;Miller&quot;
         self.age = 25
@@ -269,9 +272,10 @@ Women</code></pre>
 if __name__ == &quot;__main__&quot;:
     magic1 = MagicTest1()
     magic1.sex = &quot;man&quot;
-    print magic1.sex</code></pre>
+    print magic1.sex
+</code></pre>
 <h3 id="定义三种方法"><a href="#定义三种方法" class="headerlink" title="定义三种方法"></a>定义三种方法</h3><p>假设我们在一个类中定义了<code>__getattribute__</code>，<code>__setattr__</code>，<code>__getattr__</code>这三个方法：</p>
-<pre><code class="python">class CardHolder(object):
+<pre><code class="lang-python">class CardHolder(object):
     acctlen = 8  # Class data
     retireage = 59.5
 
@@ -306,7 +310,8 @@ if __name__ == &quot;__main__&quot;:
                 raise TypeError(&quot;invald acct number&quot;)
         elif name == &quot;remain&quot;:
             raise TypeError(&quot;cannot set remain&quot;)
-        self.__dict__[name] = value  # Avoid loops, orig names</code></pre>
+        self.__dict__[name] = value  # Avoid loops, orig names
+</code></pre>
 <p>上面的代码中：在属性赋值时首先会调用<code>__setattr__</code>方法，即使是在<code>__init__</code>中赋值也会调用<code>__setattr__</code>。<code>__getattribute__</code>实现了对部分属性值的计算，在<code>__setattr__</code>也可以实现值的计算或者类型检测等操作。在实际应用中有利于统一接口，使整个类更加的严谨等很多好处。</p>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>当访问某个实例属性时，<code>__getattribute__</code>会被无条件调用，如未实现自己的<code>__getattr__</code>方法，会抛出AttributeError提示找不到这个属性，如果自定义了自己<strong>getattr</strong>方法的话，方法会在这种找不到属性的情况下被调用，比如上面的例子中的情况。所以在找不到属性的情况下通过实现自定义的getattr方法来实现一些功能是一个不错的方式，因为它不会像<code>__getattribute__</code>方法每次都会调用可能会影响一些正常情况下的属性访问。<br>参考文档：</p>
 <ul>
@@ -591,6 +596,37 @@ if __name__ == &quot;__main__&quot;:
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

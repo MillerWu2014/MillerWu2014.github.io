@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -133,7 +133,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    373 字
+                    375 字
                   </span>
                 
 
@@ -169,10 +169,13 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <p>梯度下降算法是最优化理论中的最常用方法，目前在深度学习以及机器学习算法中广泛应用，主要为了求目标函数极值的最优解。其中原理很简单沿着目标函数梯度下降的方向搜索极小值。参数按照梯度更新的公式如下：<br>$$<br>\theta := \theta - {\alpha} \cdot {\nabla}_{\theta} {J(\theta)}<br>$$<br>其中$\alpha$为学习率或者衰减因子，每次在更新时都会用$\alpha$为步长来更新参数。因此$\alpha$的取值比较讲究。</p>
+              <p>梯度下降算法是最优化理论中的最常用方法，目前在深度学习以及机器学习算法中广泛应用，主要为了求目标函数极值的最优解。其中原理很简单沿着目标函数梯度下降的方向搜索极小值。参数按照梯度更新的公式如下：</p>
+<script type="math/tex; mode=display">
+\theta := \theta - {\alpha} \cdot {\nabla}\_{\theta} {J(\theta)}</script><p>其中$\alpha$为学习率或者衰减因子，每次在更新时都会用$\alpha$为步长来更新参数。因此$\alpha$的取值比较讲究。</p>
 <ol>
 <li>学习率较小时，收敛到极值的速度较慢。</li>
-<li>学习率较大时，容易在搜索过程中发生震荡。<br>如下图所示：<br><img src="/uploads/lr_diff.jpg" srcset="/img/loading.gif" alt="lr取值不同时的收敛情况"><br>上图中，当lr过大时就会出现来回震荡，主要是因为lr取值过大，而在参数更新公式中梯度可正可负，因此导致来回震动。而lr过小时，收敛会逐渐减慢。因此有很多改进的梯度下降法对学习率进行改进，如冲量的梯度下降法。还有学习率衰减因子。如:<br>$$<br>lr_{i} = lr_{0} \cdot \frac {1} {1 + \alpha \cdot i}<br>$$<br>上面的公式中lr会随着迭代的次数逐渐减小。$lr_{0}$为初始学习率，$\alpha$为0-1的一个常数。$\alpha$越小，学习率衰减地越慢，当$\alpha$=0时，学习率保持不变。$\alpha$越大，学习率衰减地越快，当$\alpha$=1时，学习率衰减最快。</li>
+<li>学习率较大时，容易在搜索过程中发生震荡。<br>如下图所示：<br><img src="/uploads/lr_diff.jpg" srcset="/img/loading.gif" alt="lr取值不同时的收敛情况"><br>上图中，当lr过大时就会出现来回震荡，主要是因为lr取值过大，而在参数更新公式中梯度可正可负，因此导致来回震动。而lr过小时，收敛会逐渐减慢。因此有很多改进的梯度下降法对学习率进行改进，如冲量的梯度下降法。还有学习率衰减因子。如:<script type="math/tex; mode=display">
+lr\_{i} = lr\_{0} \cdot \frac {1} {1 + \alpha \cdot i}</script>上面的公式中lr会随着迭代的次数逐渐减小。$lr_{0}$为初始学习率，$\alpha$为0-1的一个常数。$\alpha$越小，学习率衰减地越慢，当$\alpha$=0时，学习率保持不变。$\alpha$越大，学习率衰减地越快，当$\alpha$=1时，学习率衰减最快。</li>
 </ol>
 
             </div>
@@ -192,9 +195,9 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/SGD/">SGD</a>
-                    
                       <a class="hover-with-bg" href="/tags/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D/">梯度下降</a>
+                    
+                      <a class="hover-with-bg" href="/tags/SGD/">SGD</a>
                     
                   </span>
                 
@@ -454,6 +457,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

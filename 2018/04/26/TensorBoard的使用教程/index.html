@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -172,17 +172,18 @@
               <p>TensorFlow 可用于训练大规模深度神经网络所需的计算，使用该工具涉及的计算往往复杂而深奥。很多人也认为NN为一个黑盒，对训练过程种的很多东西不太了解。因此Google推出了基于TensorFlow的深度学习可视化工具TensorBoard 。您可以用 TensorBoard 来展现 TensorFlow 图，绘制图像生成的定量指标图以及显示附加数据（如其中传递的图像），也可以通过该工具了解模型训练过程种参数的收敛过程，判断模型是否过拟合，是否是欠拟合等。</p>
 <h2 id="1-summary"><a href="#1-summary" class="headerlink" title="1.summary"></a>1.summary</h2><p>首先明确一点,<code>summary</code>也是<code>op</code>。要对某些变量或值进行可视化，就必须在创建图的过程中将这些变量或标量给记录下来，后续将训练过程得记录给写入log，再通过tensorboard进行展示。</p>
 <h3 id="1-1-标量可视化"><a href="#1-1-标量可视化" class="headerlink" title="1.1 标量可视化"></a>1.1 标量可视化</h3><p>如果我们想对标量在训练中可视化，可以使用<code>tf.summary.scalar()</code>，比如损失loss，accuracy等。这个API得接口如下所示，主要用于标量，会得到一个标量得summary：</p>
-<pre><code class="python">tf.summary.scalar(name, tensor, collections=None, family=None)
+<pre><code class="lang-python">tf.summary.scalar(name, tensor, collections=None, family=None)
 &quot;&quot;&quot;
 调用这个函数来观察Tensorflow的Graph中某个节点
 parameters
 ----------
 tensor: 想要在TensorBoard中观察的节点
 name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以name命名
-&quot;&quot;&quot;</code></pre>
+&quot;&quot;&quot;
+</code></pre>
 <a id="more"></a>
 <h3 id="1-2-参数可视化"><a href="#1-2-参数可视化" class="headerlink" title="1.2 参数可视化"></a>1.2 参数可视化</h3><p>使用<code>tf.summary.histogram()</code>可以对参数进行可视化，如权重，偏置项等。可以通过该API可视化参数的分布情况，每次迭代的分布情况等。</p>
-<pre><code class="python">tf.summary.histogram(name, values, collections=None, family=None)
+<pre><code class="lang-python">tf.summary.histogram(name, values, collections=None, family=None)
 &quot;&quot;&quot;
 return
 ------
@@ -194,12 +195,13 @@ parameters
     values: A real numeric Tensor. Any shape. Values to use to build the histogram.
     collections: Optional list of graph collections keys. The new summary op is added to these collections.     Defaults to [GraphKeys.SUMMARIES].
     family: Optional; if provided, used as the prefix of the summary tag name, which controls the tab name used for display on Tensorboard.
-&quot;&quot;&quot;</code></pre>
+&quot;&quot;&quot;
+</code></pre>
 <h3 id="1-3-其他-images-text-audio-的可视化"><a href="#1-3-其他-images-text-audio-的可视化" class="headerlink" title="1.3 其他(images, text, audio)的可视化"></a>1.3 其他(images, text, audio)的可视化</h3><p>TensorBoard也可以对图片，文本和音频等近可视化，具体API可以查看官方文档。</p>
 <h2 id="2-对所有的summary进行merge"><a href="#2-对所有的summary进行merge" class="headerlink" title="2.对所有的summary进行merge"></a>2.对所有的summary进行merge</h2><p>在 TensorFlow 中，只有当您运行指令时，指令才会执行，或者另一个 op 依赖于指令的输出时，指令才会运行。我们刚才创建的这些总结节点都围绕着您的图：您目前运行的 op 都不依赖于这些节点的结果。因此，为了生成总结信息，我们需要运行所有这些总结节点。这样的手动操作是枯燥而乏味的，因此可以使用 <a href="https://www.tensorflow.org/api_docs/python/tf/summary/merge_all?hl=zh-cn" target="_blank" rel="noopener"><code>tf.summary.merge_all</code></a> 来将这些操作合并为一个 op，从而生成所有总结数据，生成一个<code>summary</code>对象，供后面<code>File_Writer</code>的<code>add_summary</code>使用。<strong>和初始化所有的变量用法相似</strong>。</p>
 <p>然后您可以执行该合并的总结 op，它会在特定步骤将所有总结数据生成一个序列化的 <code>summary protobuf</code> 对象。最后，要将此总结数据写入磁盘，请将此总结 protobuf 对象传递给 <a href="https://www.tensorflow.org/api_docs/python/tf/summary/FileWriter?hl=zh-cn" target="_blank" rel="noopener"><code>tf.summary.FileWriter</code></a>。</p>
 <h2 id="3-FileWriter"><a href="#3-FileWriter" class="headerlink" title="3.FileWriter"></a>3.FileWriter</h2><p>这个步骤主要是将summary的结果（protobuf序列化后的数据）写入磁盘。后面启动TensorBoard服务时好使用该数据，在前端进行可视化。下面在训练过程中会通过<code>add_summary(summary, global_step=None)</code>将summary添加到FileWriter对象中。</p>
-<pre><code class="python">Class FileWriter:
+<pre><code class="lang-python">Class FileWriter:
     &quot;&quot;&quot;
     Writes Summary protocol buffers to event files.
     &quot;&quot;&quot;
@@ -216,18 +218,21 @@ parameters
         &quot;&quot;&quot;
 
 # example
-writer = tf.summary.FileWriter(&quot;.&quot; + &#39;/train&#39;, session.graph)</code></pre>
+writer = tf.summary.FileWriter(&quot;.&quot; + &#39;/train&#39;, session.graph)
+</code></pre>
 <h3 id="3-1-add-summary"><a href="#3-1-add-summary" class="headerlink" title="3.1 add_summary"></a>3.1 add_summary</h3><p>因为前面说明了summary也是一个OP，因此在需要session中，每个训练步（或者多个训练步）将summary对象添加到FileWriter中。summary对象是通过前面merge步骤中生成。因此一般会执行下面两个步骤：</p>
-<pre><code class="python">summary = session.run(merged, feed_dict={x: X, y: Y})
-wiriter.add_summary(summary, global_step=train_step)</code></pre>
+<pre><code class="lang-python">summary = session.run(merged, feed_dict={x: X, y: Y})
+wiriter.add_summary(summary, global_step=train_step)
+</code></pre>
 <p>下面再看下<code>add_summary</code>的api接口：</p>
-<pre><code class="python">def add_summary(summary, global_step=None):
+<pre><code class="lang-python">def add_summary(summary, global_step=None):
     &quot;&quot;&quot;
     parameters
     ----------
     summary: A Summary protocol buffer, optionally serialized as a string.
     global_step: Number. Optional global step value to record with the summary.
-    &quot;&quot;&quot;</code></pre>
+    &quot;&quot;&quot;
+</code></pre>
 <blockquote>
 <p><strong>note</strong>：</p>
 <ol>
@@ -237,14 +242,16 @@ wiriter.add_summary(summary, global_step=train_step)</code></pre>
 </ol>
 </blockquote>
 <h2 id="4-启动TensorBoard服务"><a href="#4-启动TensorBoard服务" class="headerlink" title="4.启动TensorBoard服务"></a>4.启动TensorBoard服务</h2><p>训练完成后，就可以进入到命令行启动TensorBoard，可以指定到某个logdir，指定TensorBoard服务监听的IP，监听的端口等。只需要再命令行指定，如下：</p>
-<pre><code class="shell">tensorboard --logdir tain --host 0.0.0.0 --port 88888
-tensorboard --logdir /tmp/train</code></pre>
+<pre><code class="lang-shell">tensorboard --logdir tain --host 0.0.0.0 --port 88888
+tensorboard --logdir /tmp/train
+</code></pre>
 <p>启动服务后就可以再浏览器中查看深度网络的可视化。</p>
 <h2 id="5-配合name-scope使用"><a href="#5-配合name-scope使用" class="headerlink" title="5.配合name_scope使用"></a>5.配合<code>name_scope</code>使用</h2><p>当网络比较复杂时，整体网络的图看上去就会比较混乱，为了解决这个问题，TensorFlow中加入了name_scope，这样TensorBoard的可视化网络看上去更有层次性。如下使用：</p>
-<pre><code class="python">with tf.name_scope(&quot;weight&quot;):
+<pre><code class="lang-python">with tf.name_scope(&quot;weight&quot;):
     w = tf.Variable(initial_value=tf.random_uniform([784, 10], -1, 1), name=&quot;weight&quot;)
 with tf.name_scope(&quot;bias&quot;):
-    b = tf.Variable(initial_value=tf.random_uniform(shape=[10]), name=&quot;bias&quot;)</code></pre>
+    b = tf.Variable(initial_value=tf.random_uniform(shape=[10]), name=&quot;bias&quot;)
+</code></pre>
 <h2 id="6-Refrence"><a href="#6-Refrence" class="headerlink" title="6.Refrence"></a>6.Refrence</h2><p>[1]. <a href="https://jhui.github.io/2017/03/12/TensorBoard-visualize-your-learning/" target="_blank" rel="noopener">TensorBoard - Visualize your learning</a></p>
 <p>[2].<a href="https://blog.csdn.net/u012436149/article/details/53184847" target="_blank" rel="noopener">TensorFlow可视化</a></p>
 <p>[3].<a href="http://www.tensorfly.cn/tfdoc/how_tos/summaries_and_tensorboard.html" target="_blank" rel="noopener">TensorBoard可视化学习</a></p>
@@ -529,6 +536,37 @@ with tf.name_scope(&quot;bias&quot;):
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

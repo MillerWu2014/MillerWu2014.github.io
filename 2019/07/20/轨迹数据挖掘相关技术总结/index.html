@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -174,8 +174,9 @@
 <p>以前接触的数据大多没有空间的概念，都是一些普通的数据样本。这些数据可以认为是空间独立的，因此在数据分析或挖掘时，使用起来更加的方便，其技术也相对于成熟。而轨迹数据不同，它同时具有时间和空间双维度，在建模的时候很多传统算法在应用时都存在一定的问题，如轨迹的距离度量，这么一个简单问题，在轨迹里面都会变得复杂。</p>
 <p>通过本次项目的实施，也对轨迹数据涉及到的主要问题进行了梳理，一些涉及到的技术栈进行了总结，便于后面项目中遇到该类问题时进查阅，同时增加自己的理解。</p>
 <h2 id="轨迹数据涉及的技术栈"><a href="#轨迹数据涉及的技术栈" class="headerlink" title="轨迹数据涉及的技术栈"></a>轨迹数据涉及的技术栈</h2><p>轨迹数据的技术栈基本和普通的技术栈涉及到的过程一致，但是过程中某个部分具有很大的差异，下图是经过梳理得到的整个轨迹数据的涉及到的技术栈，其中每个部分都含有很多部分。具体如下图所示：</p>
-<p><img src="/uploads/%E8%BD%A8%E8%BF%B9%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E6%8A%80%E6%9C%AF%E6%A0%88.png" srcset="/img/loading.gif" alt="轨迹数据挖掘技术栈"><a id="more"></a></p>
+<p><img src="/uploads/轨迹数据挖掘技术栈.png" srcset="/img/loading.gif" alt="轨迹数据挖掘技术栈"><a id="more"></a></p>
 <h3 id="轨迹数据存储"><a href="#轨迹数据存储" class="headerlink" title="轨迹数据存储"></a>轨迹数据存储</h3><p>轨迹数据的存储和普通的数据存储不同，轨迹数据属于GIS数据，包含了位置数据，而且轨迹的表示为几何图形中的<code>Line</code>格式。因此一般采用GIS数据库进行存储，目前比较流行存储数据对比如下表所示：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -185,7 +186,8 @@
 <th>HDFS</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td><a href="https://en.wikipedia.org/wiki/Environmental_Systems_Research_Institute" target="_blank" rel="noopener">ESRI</a> GIS Tools for <a href="https://en.wikipedia.org/wiki/Hadoop" target="_blank" rel="noopener">Hadoop</a></td>
 <td>yes</td>
 <td>yes (own specific API)</td>
@@ -198,13 +200,13 @@
 <td>yes</td>
 </tr>
 <tr>
-<td><a href="https://en.wikipedia.org/wiki/H2_(DBMS)" target="_blank" rel="noopener">H2</a> (H2GIS)</td>
+<td><a href="https://en.wikipedia.org/wiki/H2_(DBMS" target="_blank" rel="noopener">H2</a>) (H2GIS)</td>
 <td>no</td>
 <td>yes (custom, no raster)</td>
 <td>no</td>
 </tr>
 <tr>
-<td><a href="https://en.wikipedia.org/wiki/Ingres_(database)" target="_blank" rel="noopener">Ingres</a></td>
+<td><a href="https://en.wikipedia.org/wiki/Ingres_(database" target="_blank" rel="noopener">Ingres</a>)</td>
 <td>yes (if extension is installed)</td>
 <td>yes (custom, no raster)</td>
 <td>no</td>
@@ -239,10 +241,11 @@
 <td>yes</td>
 <td>no</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <p>目前比较流行的为<code>PostgreSQL with PostGIS</code>，<code>GeoMesa</code>数据库，支持<code>Point, Line, Poly</code>等几何图形的存储，而且包含了很多GIS相关的功能函数使用。目前，MySQL，MongoDB, Redis等都支持GEO，但是对轨迹数据支持不完整，阿里，腾讯都有自己的时空数据的数据库。</p>
-<p>###轨迹数据的处理</p>
-<p>轨迹数据处理是非常重要的一环，数据处理包括，轨迹的压缩，噪声的过滤，轨迹分段等等。数据处理不仅会影响后面建模，对特征提取，后期应用都会有一定的影响。</p>
+<h3 id="轨迹数据的处理"><a href="#轨迹数据的处理" class="headerlink" title="轨迹数据的处理"></a>轨迹数据的处理</h3><p>轨迹数据处理是非常重要的一环，数据处理包括，轨迹的压缩，噪声的过滤，轨迹分段等等。数据处理不仅会影响后面建模，对特征提取，后期应用都会有一定的影响。</p>
 <h4 id="轨迹压缩"><a href="#轨迹压缩" class="headerlink" title="轨迹压缩"></a>轨迹压缩</h4><p>轨迹数据可能存在的主要问题有：数据量大，噪声多，定位不准，位置偏移等，而数据压缩可以在一定程度上解决这些问题，比如减少数据量，在某些应用场景下，不需要非常密集(时间)的轨迹数据，那么数据压缩后可以减小数据量。数据压缩主要有离线压缩（批量）和在线压缩。</p>
 <ul>
 <li>离线压缩：Douglas-Peucker (DP)，Top-Down Time Ratio（TDTR）等算法</li>
@@ -271,7 +274,9 @@
 <p><img src="/uploads/1553750720955.png" srcset="/img/loading.gif" alt=""></p>
 <h3 id="算法过程"><a href="#算法过程" class="headerlink" title="算法过程"></a>算法过程</h3><h4 id="轨迹的距离度量"><a href="#轨迹的距离度量" class="headerlink" title="轨迹的距离度量"></a>轨迹的距离度量</h4><p>轨迹的距离从3个方面进行度量，两个轨迹之间<strong>最远点和最短点之间的距离</strong>，轨迹的<strong>长度</strong>，轨迹的<strong>角度</strong>。三者的度量公式如下图所示：</p>
 <p><img src="/uploads/traj_distance.png" srcset="/img/loading.gif" alt="trajectory distance"></p>
-<p>最终的总距离为：<br>$$<br>dist(L_i;L_j) = w_{\bot} d_{\bot}(Li;Lj)+w_{\parallel} d_{\parallel}(Li;Lj)+w_{\theta} d_{\theta}(Li;Lj )<br>$$<br>其中权重为默认均为1，根据不同的应用场景可以修改权重。</p>
+<p>最终的总距离为：</p>
+<script type="math/tex; mode=display">
+dist(L_i;L_j) = w_{\bot} d_{\bot}(Li;Lj)+w_{\parallel} d_{\parallel}(Li;Lj)+w_{\theta} d_{\theta}(Li;Lj )</script><p>其中权重为默认均为1，根据不同的应用场景可以修改权重。</p>
 <h4 id="Partition处理"><a href="#Partition处理" class="headerlink" title="Partition处理"></a>Partition处理</h4><p>轨迹的分段主要是通过MDL（最小描述长度）算法。通过找到轨迹的特征点来确定partition，通过计算两个点之间存在partition特征点时的MDL开销和不存在partition特征点时的开销，进行对比，从而确定特征点，并标记出来，算法相对较简单。最终将轨迹划分为了Segment，具体算法过程如下图所示：</p>
 <p><img src="/uploads/traj_partition.png" srcset="/img/loading.gif" alt="trajectory partition"></p>
 <p>通过python实现后得到的测试结果如下图：</p>
@@ -569,6 +574,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

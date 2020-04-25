@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -174,7 +174,7 @@
 <p>直接继承抽象基类的子类就没有这么灵活，在<code>metaclass</code>是 <code>abc.ABCMeta</code>的抽象基类中可以声明”抽象方法“和“抽象属性”，直接继承自抽象基类的子类虽然判断<code>issubclass()</code>时为真，但只有完全覆写（实现）了抽象基类中的“抽象”内容后，才能被实例化，而通过注册的虚拟子类则不受此影响。</p>
 <p><code>metaclass</code>为 <code>abc.ABCMeta</code> 的抽象基类如果想要声明“抽象方法”，可以使用<code>abc</code>模块中的装饰器 <code>@abstractmethod</code>，如果想声明“抽象属性”，可以使用<code>abc</code>模块中的<code>@abstractproperty</code> 。最后，为什么要提<code>six</code>模块呢，<code>six</code>模块是<code>Python</code>为了兼容<code>Python 2.x</code> 和<code>Python 3.x</code>提供的一个模块，该模块中有一个针对类的装饰器<code>@six.add_metaclass(MetaClass)</code>可以为两个版本的<code>Python</code>类方便地添加<code>metaclass</code>。这样我们就可以同时利用<code>Python</code>中的<code>abc</code>模块和<code>six</code>模块在类的定义前添加<code>@six.add_metaclass(abc.ABCMeta)</code>来优雅地声明一个抽象基础类了！</p>
 <p>在<code>python2.x</code>和<code>python3.x</code>下都可以通过下面的代码来实现：</p>
-<pre><code class="python">from abc import ABCMeta, abstractmethod
+<pre><code class="lang-python">from abc import ABCMeta, abstractmethod
 import six
 
 @six.add_metaclass(ABCMeta)
@@ -189,8 +189,9 @@ class MyClass1(object):
 
     @abstractmethod
     def run(self):
-        &quot;子类中实现该方法&quot;</code></pre>
-<pre><code class="python">class metaTest(six.with_metaclass(ABCMeta, object)):
+        &quot;子类中实现该方法&quot;
+</code></pre>
+<pre><code class="lang-python">class metaTest(six.with_metaclass(ABCMeta, object)):
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
@@ -201,16 +202,18 @@ class MyClass1(object):
         &quot;&quot;&quot;需要实现这个类的方法&quot;&quot;&quot;
 
     def __len__(self):
-        return 3</code></pre>
+        return 3
+</code></pre>
 <p>而原始在<code>python2</code>和<code>python3</code>中需要使用不同的方式：</p>
-<pre><code class="python"># python2
+<pre><code class="lang-python"># python2
 class MyClass(object):
     __metaclass__ = ABCMeta
     pass
 
 # python3
 class MyClass3(object, metaclass=ABCMeta):
-    pass</code></pre>
+    pass
+</code></pre>
 
             </div>
             <hr>
@@ -229,9 +232,9 @@ class MyClass3(object, metaclass=ABCMeta):
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/metaclass/">metaclass</a>
-                    
                       <a class="hover-with-bg" href="/tags/six/">six</a>
+                    
+                      <a class="hover-with-bg" href="/tags/metaclass/">metaclass</a>
                     
                       <a class="hover-with-bg" href="/tags/abc/">abc</a>
                     
@@ -493,6 +496,37 @@ class MyClass3(object, metaclass=ABCMeta):
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 

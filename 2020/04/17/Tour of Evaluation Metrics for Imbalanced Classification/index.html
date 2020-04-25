@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 40vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -183,7 +183,6 @@
 <p>Discover SMOTE, one-class classification, cost-sensitive learning, threshold moving, and much more <a href="https://machinelearningmastery.com/imbalanced-classification-with-python/" target="_blank" rel="noopener">in my new book</a>, with 30 step-by-step tutorials and full Python source code.</p>
 <p>Let’s get started.</p>
 <a id="more"></a>
-
 <h2 id="Tutorial-Overview"><a href="#Tutorial-Overview" class="headerlink" title="Tutorial Overview"></a><strong>Tutorial Overview</strong></h2><p>This tutorial is divided into three parts; they are:</p>
 <ol>
 <li>Challenge of Evaluation Metrics</li>
@@ -258,6 +257,7 @@
 </ul>
 <p>Most threshold metrics can be best understood by the terms used in a confusion matrix for a binary (two-class) classification problem. This does not mean that the metrics are limited for use on binary classification; it is just an easy way to quickly understand what is being measured.</p>
 <p>The confusion matrix provides more insight into not only the performance of a predictive model but also which classes are being predicted correctly, which incorrectly, and what type of errors are being made. In this type of confusion matrix, each cell in the table has a specific and well-understood name, summarized as follows:</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -266,7 +266,8 @@
 <th>Negative Prediction</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td>Positive Class</td>
 <td>True Positive (TP)</td>
 <td>False Negative (FN)</td>
@@ -276,7 +277,9 @@
 <td>False Positive (FP)</td>
 <td>True Negative (TN)</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <p>There are two groups of metrics that may be useful for imbalanced classification because they focus on one class; they are sensitivity-specificity and precision-recall.</p>
 <h4 id="Sensitivity-Specificity-Metrics"><a href="#Sensitivity-Specificity-Metrics" class="headerlink" title="Sensitivity-Specificity Metrics"></a><strong>Sensitivity-Specificity Metrics</strong></h4><p>Sensitivity refers to the true positive rate and summarizes how well the positive class was predicted.</p>
 <ul>
@@ -301,12 +304,12 @@
 </ul>
 <p>Precision and recall can be combined into a single score that seeks to balance both concerns, called the F-score or the F-measure.</p>
 <ul>
-<li><strong>F-Measure</strong> = (2 * Precision * Recall) / (Precision + Recall)</li>
+<li><strong>F-Measure</strong> = (2 <em> Precision </em> Recall) / (Precision + Recall)</li>
 </ul>
 <p>The F-Measure is a popular metric for imbalanced classification.</p>
 <p>The Fbeta-measure measure is an abstraction of the F-measure where the balance of precision and recall in the calculation of the <a href="https://machinelearningmastery.com/arithmetic-geometric-and-harmonic-means-for-machine-learning/" target="_blank" rel="noopener">harmonic mean</a> is controlled by a coefficient called <em>beta</em>.</p>
 <ul>
-<li><strong>Fbeta-Measure</strong> = ((1 + beta^2) * Precision * Recall) / (beta^2 * Precision + Recall)</li>
+<li><strong>Fbeta-Measure</strong> = ((1 + beta^2) <em> Precision </em> Recall) / (beta^2 * Precision + Recall)</li>
 </ul>
 <p>For more on precision, recall and F-measure for imbalanced classification, see the tutorial:</p>
 <ul>
@@ -378,7 +381,7 @@
 <p>Perhaps the most common metric for evaluating predicted probabilities is log loss for binary classification (or the negative log likelihood), or known more generally as <a href="https://machinelearningmastery.com/cross-entropy-for-machine-learning/" target="_blank" rel="noopener">cross-entropy</a>.</p>
 <p>For a binary classification dataset where the expected values are y and the predicted values are yhat, this can be calculated as follows:</p>
 <ul>
-<li><strong>LogLoss</strong> = -((1 – y) * log(1 – yhat) + y * log(yhat))</li>
+<li><strong>LogLoss</strong> = -((1 – y) <em> log(1 – yhat) + y </em> log(yhat))</li>
 </ul>
 <p>The score can be generalized to multiple classes by simply adding the terms; for example:</p>
 <ul>
@@ -778,6 +781,37 @@
   </script>
 
 
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
 
 
 
