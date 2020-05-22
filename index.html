@@ -111,7 +111,7 @@
 </nav>
 
     <div class="view intro-2" id="background" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
+         style="background: url('/img/DeltaJunction_ZH-CN9901755694_1920x1080.jpg') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask rgba-black-light flex-center">
@@ -140,6 +140,96 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2020/04/29/Python3%E4%B8%AD)%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0(%E6%96%B9%E6%B3%95%E8%8C%83%E5%9E%8B/">
+        <p class="h4 index-header">Python3中实现函数(方法)范型</p>
+      </a>
+
+      <a href="/2020/04/29/Python3%E4%B8%AD)%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0(%E6%96%B9%E6%B3%95%E8%8C%83%E5%9E%8B/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">最近浏览python官方文档中的new feature中看到一些新的功能，其中有几个功能是非常棒的，在使用python时可能会经常使用。因此进行测试以及记录。其中就包括singledispatch，这个功能好比c++面向对象中，可以存在多个同名的方法，可以根据不同类型的参数自己选择适配的方法。也可以称为范型，重载等。在很多的编程语言中都存在这样的情况，比如swift语言中也类似，通过函数的参数类型和返回类型确定一个函数（函数签名），在函数调用时根据参数的类型选择适配的函数。
+装饰器singledispatch该装饰器在python3.7中已经存在了，主要是对函数实现范型，官方的描述为：将一个函数转换为 单分派 generic function。要定义一个泛型函数，应使用 @singledispatch 装饰器进行装饰。但是必须注意的是当函数有多个参数时，只作用于第一个参数。下面通过示例观察：
+from functools import singledispatch
+
+@singledispatch
+def func(x: int, verbose: bool = True):
+    if verbose:
+        print(&quot;The param &#39;x&#39; type: &quot;, type(x))
+    print(&quot;\t&quot;, x)
+
+@func.register
+def _(x: list, verbose: bool = True):
+    if verbose:
+        print(&quot;The param &#39;x&#39; type: &quot;, type(x))
+    for _x in x:
+        print(&quot;\t&quot;, _x)
+
+@func.register()
+def _(x, verbose: bool = True):
+    if verbose:
+        print(&quot;The param &#39;x&#39; type: &quot;, type(x))
+    for _k, _x in x.items():
+        print(&quot;\t&quot;, _k, _x)
+
+def reg(x: str, verbose: bool = False):
+    if verbose:
+        print(print(&quot;The param &#39;x&#39; type: &quot;, type(x)))
+    print(&quot;---------- register -------------&quot;)
+    print(&quot;\t&quot;, x)
+
+if __name__ == &#39;__main__&#39;:
+    func.register(reg)
+    for p in (10, [101, 102, 103], {&quot;a&quot;: 99, &quot;b&quot;: 98, &quot;c&quot;: 97}, &quot;Hello World!&quot;):
+        func(p)
+
+# output
+The param &#39;x&#39; type:  &lt;class &#39;int&#39;&gt;
+         10
+The param &#39;x&#39; type:  &lt;class &#39;list&#39;&gt;
+         101
+         102
+         103
+The param &#39;x&#39; type:  &lt;class &#39;dict&#39;&gt;
+         a 99
+         b 98
+         c 97
+---------- register -------------
+         Hello World!
+
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2020-04-29&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/python3/">python3</a>&nbsp;
+          
+            <a href="/tags/%E8%A3%85%E9%A5%B0%E5%99%A8/">装饰器</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
 
   <div class="row mx-auto index-card">
     
@@ -623,85 +713,6 @@ X = N(\mu, \Sigma) \tag{1}其中，$\mu$为向量，$\Sigma$为协方差矩阵�
     </div>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2019/04/18/%E5%9C%A8python%E4%B8%8B%E7%9A%84c%E6%88%96c++%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3/">
-        <p class="h4 index-header">python下的c/c++扩展方式详解</p>
-      </a>
-
-      <a href="/2019/04/18/%E5%9C%A8python%E4%B8%8B%E7%9A%84c%E6%88%96c++%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">python作为一种胶水语言，最重要的是非常容易的和shell，c/c++之间进行相互扩展，而本文主要是对python的c/c++扩展进行详细讲解，并作为笔记便于以后的使用。
-为什么要进行c/c++扩展python之所以使用广泛，主要是因为使用简单，第三方扩展库强大，对于某个问题，能迅速的验证自己的思路或某个原型。但是，python的效率是比较低的，因此很多涉及到效率的时候需要使用c/c++来实现，为python提供接口即可。这样混合编程后，能达到快速+效率的双重目的。
-python的c/c++扩展在python下的c/c+扩展有很多方式，主要有cffi/ctypes，cpython和cython这几种方式，各个方式都有优势。下面对这几个方式进行详细的说明。
-cffi来进行c扩展cffi是连接c和python的桥梁，是在pypy中分离出来的一个库，这个和python自带的ctypes模块很相似，但是cffi更加通用。下面我们定义了一个pi.h和pi.c文件：
-// file: pi.h
-#ifndef C_EXTEND_PYTHON_PI_H
-#define C_EXTEND_PYTHON_PI_H
-
-float pi_approx(float n);#endif *//C_EXTEND_PYTHON_PI_H*
-
-// file: pi.c
-float pi_approx(float n){
-    return 3.1415926 * n * n;
-}
-
-使用cffi模块来对这两个文件进行编译，会生成一个c source文件和.so或.pyd文件，可以在python下直接引用，进行使用，编译文件如下：
-from cffi import FFI
-
-ffi_builder = FFI()
-ffi_builder.cdef(&quot;&quot;&quot;
-    float pi_approx(float n);
-&quot;&quot;&quot;)
-# This describes the extension module &quot;_pi_cffi&quot; to produce.
-ffi_builder.set_source(&quot;_pi_cffi&quot;,
-                       &quot;&quot;&quot;
-                           #include &quot;pi.c&quot;   // the C header of the library
-                       &quot;&quot;&quot;,
-                       libraries=[])  # library name, for the linker
-
-if *__name__ == &quot;__main__&quot;:
-    ffi_builder.compile(verbose=True )
-
-直接运行该编译文件则可创建python的c扩展库：.so或.pyd文件；另外也会生成_pi_cffi.c的源码。将.so或.pyd文件放如对应的目录即可实现引用。这种方式比较方便，能迅速构建c扩展。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2019-04-18&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/Python/">Python</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/c-c/">c/c++</a>&nbsp;
-          
-            <a href="/tags/numpy/">numpy</a>&nbsp;
-          
-            <a href="/tags/cython/">cython</a>&nbsp;
-          
-            <a href="/tags/%E4%BC%98%E5%8C%96/">优化</a>&nbsp;
-          
-            <a href="/tags/compile/">compile</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
 
 
   <nav aria-label="index posts navigation">
@@ -908,6 +919,56 @@ if *__name__ == &quot;__main__&quot;:
   
 
 
+
+  
+  
+    <script type="text/javascript">
+      //定义获取词语下标
+      var a_idx = 0;
+      jQuery(document).ready(function ($) {
+        //点击body时触发事件
+        $("body").click(function (e) {
+          //需要显示的词语
+          var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正", "法治", "爱国", "敬业", "诚信", "友善");
+          //设置词语给span标签
+          var $i = $("<span/>").text(a[a_idx]);
+          //下标等于原来下标+1  余 词语总数
+          a_idx = (a_idx + 1) % a.length;
+          //获取鼠标指针的位置，分别相对于文档的左和右边缘。
+          //获取x和y的指针坐标
+          var x = e.pageX, y = e.pageY;
+          //在鼠标的指针的位置给$i定义的span标签添加css样式
+          $i.css({
+            "z-index": 999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": rand_color()
+          });
+          // 随机颜色
+          function rand_color() {
+            return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")"
+          }
+          //在body添加这个标签
+          $("body").append($i);
+          //animate() 方法执行 CSS 属性集的自定义动画。
+          //该方法通过CSS样式将元素从一个状态改变为另一个状态。CSS属性值是逐渐改变的，这样就可以创建动画效果。
+          //详情请看http://www.w3school.com.cn/jquery/effect_animate.asp
+          $i.animate({
+            //将原来的位置向上移动180
+            "top": y - 180,
+            "opacity": 0
+            //1500动画的速度
+          }, 1500, function () {
+            //时间到了自动删除
+            $i.remove();
+          });
+        });
+      })
+      ;
+    </script>
+  
 
 
 

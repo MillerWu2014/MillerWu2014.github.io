@@ -111,7 +111,7 @@
 </nav>
 
     <div class="view intro-2" id="background" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
+         style="background: url('/img/DeltaJunction_ZH-CN9901755694_1920x1080.jpg') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask rgba-black-light flex-center">
@@ -140,6 +140,85 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/04/18/%E5%9C%A8python%E4%B8%8B%E7%9A%84c%E6%88%96c++%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">python下的c/c++扩展方式详解</p>
+      </a>
+
+      <a href="/2019/04/18/%E5%9C%A8python%E4%B8%8B%E7%9A%84c%E6%88%96c++%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">python作为一种胶水语言，最重要的是非常容易的和shell，c/c++之间进行相互扩展，而本文主要是对python的c/c++扩展进行详细讲解，并作为笔记便于以后的使用。
+为什么要进行c/c++扩展python之所以使用广泛，主要是因为使用简单，第三方扩展库强大，对于某个问题，能迅速的验证自己的思路或某个原型。但是，python的效率是比较低的，因此很多涉及到效率的时候需要使用c/c++来实现，为python提供接口即可。这样混合编程后，能达到快速+效率的双重目的。
+python的c/c++扩展在python下的c/c+扩展有很多方式，主要有cffi/ctypes，cpython和cython这几种方式，各个方式都有优势。下面对这几个方式进行详细的说明。
+cffi来进行c扩展cffi是连接c和python的桥梁，是在pypy中分离出来的一个库，这个和python自带的ctypes模块很相似，但是cffi更加通用。下面我们定义了一个pi.h和pi.c文件：
+// file: pi.h
+#ifndef C_EXTEND_PYTHON_PI_H
+#define C_EXTEND_PYTHON_PI_H
+
+float pi_approx(float n);#endif *//C_EXTEND_PYTHON_PI_H*
+
+// file: pi.c
+float pi_approx(float n){
+    return 3.1415926 * n * n;
+}
+
+使用cffi模块来对这两个文件进行编译，会生成一个c source文件和.so或.pyd文件，可以在python下直接引用，进行使用，编译文件如下：
+from cffi import FFI
+
+ffi_builder = FFI()
+ffi_builder.cdef(&quot;&quot;&quot;
+    float pi_approx(float n);
+&quot;&quot;&quot;)
+# This describes the extension module &quot;_pi_cffi&quot; to produce.
+ffi_builder.set_source(&quot;_pi_cffi&quot;,
+                       &quot;&quot;&quot;
+                           #include &quot;pi.c&quot;   // the C header of the library
+                       &quot;&quot;&quot;,
+                       libraries=[])  # library name, for the linker
+
+if *__name__ == &quot;__main__&quot;:
+    ffi_builder.compile(verbose=True )
+
+直接运行该编译文件则可创建python的c扩展库：.so或.pyd文件；另外也会生成_pi_cffi.c的源码。将.so或.pyd文件放如对应的目录即可实现引用。这种方式比较方便，能迅速构建c扩展。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-04-18&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/c-c/">c/c++</a>&nbsp;
+          
+            <a href="/tags/numpy/">numpy</a>&nbsp;
+          
+            <a href="/tags/cython/">cython</a>&nbsp;
+          
+            <a href="/tags/%E4%BC%98%E5%8C%96/">优化</a>&nbsp;
+          
+            <a href="/tags/compile/">compile</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
 
   <div class="row mx-auto index-card">
     
@@ -232,9 +311,9 @@ dict: 字典类型，存放该类的所有属性(attributes)和方法(method)
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/metaclass/">metaclass</a>&nbsp;
-          
             <a href="/tags/python3/">python3</a>&nbsp;
+          
+            <a href="/tags/metaclass/">metaclass</a>&nbsp;
           
             <a href="/tags/%E5%85%83%E7%B1%BB/">元类</a>&nbsp;
           
@@ -382,13 +461,13 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
         
           <i class="iconfont icon-tag"></i>
           
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
             <a href="/tags/GNN/">GNN</a>&nbsp;
           
             <a href="/tags/generator/">generator</a>&nbsp;
           
             <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
           
             <a href="/tags/discriminator/">discriminator</a>&nbsp;
           
@@ -533,9 +612,9 @@ h(x)=f(x)*g(x)=(f*g)(x)2.2 卷积的物理意义从卷积的定义上可以看�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/CNN/">CNN</a>&nbsp;
           
@@ -589,9 +668,9 @@ h(x)=f(x)*g(x)=(f*g)(x)2.2 卷积的物理意义从卷积的定义上可以看�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/RNN/">RNN</a>&nbsp;
           
@@ -648,65 +727,13 @@ RNN中，每输入一步，每一层都共享参数$U,V,W$，RNN中主要在于�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/SGD/">SGD</a>&nbsp;
           
             <a href="/tags/RNN/">RNN</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2018/04/26/TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
-        <p class="h4 index-header">TensorBoard的使用教程</p>
-      </a>
-
-      <a href="/2018/04/26/TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">TensorFlow 可用于训练大规模深度神经网络所需的计算，使用该工具涉及的计算往往复杂而深奥。很多人也认为NN为一个黑盒，对训练过程种的很多东西不太了解。因此Google推出了基于TensorFlow的深度学习可视化工具TensorBoard 。您可以用 TensorBoard 来展现 TensorFlow 图，绘制图像生成的定量指标图以及显示附加数据（如其中传递的图像），也可以通过该工具了解模型训练过程种参数的收敛过程，判断模型是否过拟合，是否是欠拟合等。
-1.summary首先明确一点,summary也是op。要对某些变量或值进行可视化，就必须在创建图的过程中将这些变量或标量给记录下来，后续将训练过程得记录给写入log，再通过tensorboard进行展示。
-1.1 标量可视化如果我们想对标量在训练中可视化，可以使用tf.summary.scalar()，比如损失loss，accuracy等。这个API得接口如下所示，主要用于标量，会得到一个标量得summary：
-tf.summary.scalar(name, tensor, collections=None, family=None)
-&quot;&quot;&quot;
-调用这个函数来观察Tensorflow的Graph中某个节点
-parameters
-----------
-tensor: 想要在TensorBoard中观察的节点
-name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以name命名
-&quot;&quot;&quot;
-...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2018-04-26&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/tensorflow/">tensorflow</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
-          
-            <a href="/tags/tensorboard/">tensorboard</a>&nbsp;
           
         
       </div>
@@ -919,6 +946,56 @@ name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以
   
 
 
+
+  
+  
+    <script type="text/javascript">
+      //定义获取词语下标
+      var a_idx = 0;
+      jQuery(document).ready(function ($) {
+        //点击body时触发事件
+        $("body").click(function (e) {
+          //需要显示的词语
+          var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正", "法治", "爱国", "敬业", "诚信", "友善");
+          //设置词语给span标签
+          var $i = $("<span/>").text(a[a_idx]);
+          //下标等于原来下标+1  余 词语总数
+          a_idx = (a_idx + 1) % a.length;
+          //获取鼠标指针的位置，分别相对于文档的左和右边缘。
+          //获取x和y的指针坐标
+          var x = e.pageX, y = e.pageY;
+          //在鼠标的指针的位置给$i定义的span标签添加css样式
+          $i.css({
+            "z-index": 999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": rand_color()
+          });
+          // 随机颜色
+          function rand_color() {
+            return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")"
+          }
+          //在body添加这个标签
+          $("body").append($i);
+          //animate() 方法执行 CSS 属性集的自定义动画。
+          //该方法通过CSS样式将元素从一个状态改变为另一个状态。CSS属性值是逐渐改变的，这样就可以创建动画效果。
+          //详情请看http://www.w3school.com.cn/jquery/effect_animate.asp
+          $i.animate({
+            //将原来的位置向上移动180
+            "top": y - 180,
+            "opacity": 0
+            //1500动画的速度
+          }, 1500, function () {
+            //时间到了自动删除
+            $i.remove();
+          });
+        });
+      })
+      ;
+    </script>
+  
 
 
 

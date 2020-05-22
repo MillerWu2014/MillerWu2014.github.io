@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>Python3中实现函数(方法)范型</title>
+    <link href="/2020/04/29/Python3%E4%B8%AD)%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0(%E6%96%B9%E6%B3%95%E8%8C%83%E5%9E%8B/"/>
+    <url>/2020/04/29/Python3%E4%B8%AD)%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0(%E6%96%B9%E6%B3%95%E8%8C%83%E5%9E%8B/</url>
+    
+    <content type="html"><![CDATA[<p>最近浏览python官方文档中的new feature中看到一些新的功能，其中有几个功能是非常棒的，在使用python时可能会经常使用。因此进行测试以及记录。其中就包括singledispatch，这个功能好比c++面向对象中，可以存在多个同名的方法，可以根据不同类型的参数自己选择适配的方法。也可以称为范型，重载等。在很多的编程语言中都存在这样的情况，比如swift语言中也类似，通过函数的参数类型和返回类型确定一个函数（函数签名），在函数调用时根据参数的类型选择适配的函数。</p><h2 id="装饰器singledispatch"><a href="#装饰器singledispatch" class="headerlink" title="装饰器singledispatch"></a>装饰器<code>singledispatch</code></h2><p>该装饰器在python3.7中已经存在了，主要是对函数实现范型，官方的描述为：将一个函数转换为 <a href="https://docs.python.org/zh-cn/3/glossary.html#term-single-dispatch" target="_blank" rel="noopener">单分派</a> <a href="https://docs.python.org/zh-cn/3/glossary.html#term-generic-function" target="_blank" rel="noopener">generic function</a>。要定义一个泛型函数，应使用 <code>@singledispatch</code> 装饰器进行装饰。但是必须注意的是<strong>当函数有多个参数时，只作用于第一个参数</strong>。下面通过示例观察：</p><pre><code class="lang-python">from functools import singledispatch@singledispatchdef func(x: int, verbose: bool = True):    if verbose:        print(&quot;The param &#39;x&#39; type: &quot;, type(x))    print(&quot;\t&quot;, x)@func.registerdef _(x: list, verbose: bool = True):    if verbose:        print(&quot;The param &#39;x&#39; type: &quot;, type(x))    for _x in x:        print(&quot;\t&quot;, _x)@func.register()def _(x, verbose: bool = True):    if verbose:        print(&quot;The param &#39;x&#39; type: &quot;, type(x))    for _k, _x in x.items():        print(&quot;\t&quot;, _k, _x)def reg(x: str, verbose: bool = False):    if verbose:        print(print(&quot;The param &#39;x&#39; type: &quot;, type(x)))    print(&quot;---------- register -------------&quot;)    print(&quot;\t&quot;, x)if __name__ == &#39;__main__&#39;:    func.register(reg)    for p in (10, [101, 102, 103], {&quot;a&quot;: 99, &quot;b&quot;: 98, &quot;c&quot;: 97}, &quot;Hello World!&quot;):        func(p)# outputThe param &#39;x&#39; type:  &lt;class &#39;int&#39;&gt;         10The param &#39;x&#39; type:  &lt;class &#39;list&#39;&gt;         101         102         103The param &#39;x&#39; type:  &lt;class &#39;dict&#39;&gt;         a 99         b 98         c 97---------- register -------------         Hello World!</code></pre><p><a id="more"></a>可以看出，不同的参数类型，选择的函数不同。实现方式如上，通过装饰器的方式进行。在编码中通过<code>register</code>来实现分配。在python3.8中对该方法进行了优化，在<code>register</code>中可以传入类型参数，如下：</p><pre><code class="lang-python">@func.register(dict)def _(x, verbose: bool = True):    if verbose:        print(&quot;The param &#39;x&#39; type: &quot;, type(x))    for _k, _x in x.items():        print(&quot;\t&quot;, _k, _x)def reg(x, verbose: bool = False):    if verbose:        print(print(&quot;The param &#39;x&#39; type: &quot;, type(x)))    print(&quot;---------- register -------------&quot;)    print(&quot;\t&quot;, x)func.register(str, reg)</code></pre><h2 id="装饰器singledispatchmethod"><a href="#装饰器singledispatchmethod" class="headerlink" title="装饰器singledispatchmethod"></a>装饰器<code>singledispatchmethod</code></h2><p>该装饰器主要是针对类下面的方法实现单分配，实现和上面<code>singledispatch</code>一样的功能。但是在python3.8中支持对<code>classmethod</code>，<code>staticmethod</code>，<code>abstractmethod</code>等等的嵌套。但是<code>singledispatchmethod</code>必须在最外层进行装饰。必须注意的是，<strong>该装饰器也是根据非<code>self</code>，<code>class</code>的第一个参数有效</strong>。下面是对它的测试：</p><pre><code class="lang-python">class MyClass(object):    @singledispatchmethod    def singe(self, args, verbose=1):        if verbose:            print(&quot;The args type: &quot;, type(args))        raise NotImplementedError    @singe.register    def _(self, args: int, verbose=1):        if verbose:            print(&quot;The args type: &quot;, type(args))        print(&quot;\t&quot;, args)    @singe.register    def _(self, args: dict, verbose=0):        if verbose:            print(&quot;The args type: &quot;, type(args))        for _k, _x in args.items():            print(&quot;\t&quot;, _k, _x)c = MyClass()for p in (10, {&quot;a&quot;: 99, &quot;b&quot;: 98, &quot;c&quot;: 97}, [101, 102, 103]):    c.singe(p)# outputThe args type:  &lt;class &#39;int&#39;&gt;     10     a 99     b 98     c 97The args type:  &lt;class &#39;list&#39;&gt;raise NotImplementedError</code></pre><h2 id="类属性缓存cached-property"><a href="#类属性缓存cached-property" class="headerlink" title="类属性缓存cached_property"></a>类属性缓存<code>cached_property</code></h2><p>该方法在很早以前就已经实现，但是都未纳入到标准库中，该装饰器主要实现类中属性的缓存。再未纳入标准库之前就有很多实现方法，如函数装饰器，类装饰器等等。现在使用只需要从<code>functools</code>中导入<code>cached_property</code>即可。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Python</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>python3</tag>
+      
+      <tag>装饰器</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>【转载】机器学习中样本失衡下的分类评估指标选取指南</title>
     <link href="/2020/04/17/Tour%20of%20Evaluation%20Metrics%20for%20Imbalanced%20Classification/"/>
     <url>/2020/04/17/Tour%20of%20Evaluation%20Metrics%20for%20Imbalanced%20Classification/</url>
@@ -353,9 +380,9 @@
     
     <tags>
       
-      <tag>metaclass</tag>
-      
       <tag>python3</tag>
+      
+      <tag>metaclass</tag>
       
       <tag>元类</tag>
       
@@ -442,13 +469,13 @@
     
     <tags>
       
+      <tag>tensorflow</tag>
+      
       <tag>GNN</tag>
       
       <tag>generator</tag>
       
       <tag>deep learning</tag>
-      
-      <tag>tensorflow</tag>
       
       <tag>discriminator</tag>
       
@@ -510,9 +537,9 @@
     
     <tags>
       
-      <tag>deep learning</tag>
-      
       <tag>tensorflow</tag>
+      
+      <tag>deep learning</tag>
       
       <tag>CNN</tag>
       
@@ -547,9 +574,9 @@
     
     <tags>
       
-      <tag>deep learning</tag>
-      
       <tag>tensorflow</tag>
+      
+      <tag>deep learning</tag>
       
       <tag>RNN</tag>
       
@@ -580,9 +607,9 @@
     
     <tags>
       
-      <tag>deep learning</tag>
-      
       <tag>tensorflow</tag>
+      
+      <tag>deep learning</tag>
       
       <tag>SGD</tag>
       
