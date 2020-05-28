@@ -145,6 +145,50 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2020/05/28/WWWDC%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%92%8C%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1%E7%AC%94%E8%AE%B0/">
+        <p class="h4 index-header">WWDC机器学习与产品设计笔记</p>
+      </a>
+
+      <a href="/2020/05/28/WWWDC%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%92%8C%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1%E7%AC%94%E8%AE%B0/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">机器学习的返回很广，包括语音识别的，计算机视觉的，自然语言处理的等等；特别是深度学习技术的进步。但是这些最终都要进行应用，与产品进行结合，以产品的形式提供给用户，与用户进行交互，这些都需要设计，且精心设计。
+思考怎样造就优秀的机器学习产品机器学习或许不能解决某个问题，但是至少要提升产品质量或产品体验。就像iphone中的Face ID解锁，照片中直接可以搜索某个事物，可以查看回忆，Siri的事务处理等等。要设计优秀的机器学习体验，不仅要设计它的工作模式，还要设计它的外观和感觉；不仅要设计模型，还要设计界面。下面是机器学习在产品设计上的模型图：
+
+模型...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2020-05-28&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%80%9D%E8%80%83/">思考</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/%E4%BA%A7%E5%93%81/">产品</a>&nbsp;
+          
+            <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2020/04/29/Python3%E4%B8%AD)%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0(%E6%96%B9%E6%B3%95%E8%8C%83%E5%9E%8B/">
         <p class="h4 index-header">Python3中实现函数(方法)范型</p>
       </a>
@@ -639,74 +683,6 @@ CPU的情况如下,乐意看出只有其中一个CPU的使用率为100%以上，
             <a href="/tags/thread/">thread</a>&nbsp;
           
             <a href="/tags/pybind11/">pybind11</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2019/05/01/%E9%AB%98%E6%96%AF%E8%BF%87(Gaussian%20Process)%E7%A8%8B%E7%90%86%E8%A7%A3/">
-        <p class="h4 index-header">高斯过程（Gaussian Process）理解</p>
-      </a>
-
-      <a href="/2019/05/01/%E9%AB%98%E6%96%AF%E8%BF%87(Gaussian%20Process)%E7%A8%8B%E7%90%86%E8%A7%A3/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">对于高斯过程（Gaussian Process）已经心仪已久，但是之前大概看了一些文章，没有完全理解，本身这个模型是比较理解的，因此现在抽出时间来研究一番，本文中不会进行复杂的公式推导，主要对高斯过程进行理解。
-高斯过程是机器学习中 一种或者说一类的建模方法。这种建模方法得出的模型统称为非参数模型，比如：高斯过程，贝叶斯，KNN等（参数模型：回归，深度学习，逻辑回归）。高斯过程是从概率统计学的角度来解决问题，更确切的说应该是随机过程（Stochastic Process）种一个特殊的例子，下面是WIKI上的定义：
-
-高斯过程（Gaussian process）是观测值出现在一个连续域（例如时间或空间）的统计模型。在高斯过程中，连续输入空间中每个点都是与一个正态分布的随机变量相关联。此外，这些随机变量的每个有限集合都有一个多元正态分布。高斯过程的分布是所有那些（无限多个）随机变量的联合分布，正因如此，它是连续域（例如时间或空间）的分布。
-高斯过程被认为是一种机器学习算法，是以惰性学习方式，利用点与点之间同质性的度量作为核函数，以从输入的训练数据预测未知点的值。其预测结果不仅包含该点的值，而同时包含不确定性的资料－它的一维高斯分布（即该点的边际分布）。
-
-下面主要对高斯过程从几个方面进行详细的讲解，首先我们对高斯过程有一个大概的认知，通过一种通俗易懂的方式来进行说明，再从理论的角度来对高斯过程进行详细的理论讲解，最后会对高斯过程种使用的协方差函数（核函数）进行列举说明。另外会对使用高斯过程应该考虑的问题进行说明。
-1. 高斯过程的通俗理解（总体认知）在本文中通过高斯过程回归（GPR）来帮助高斯过程的理解。下面我们从回归的角度，从解决问题的角度看GPR是怎么一步一步解决我们的问题。
-对于回归我们是给出$X$和$Y$，再给出测试的$X_{test}$，要求预测得到$Y_{test}$。高斯过程的出发点就是：如果两个$x$比较接近，那么它们对应的$y$一定比较接近。对于给定的新$X_{test}$与之前给出的$X$有多近，从而就知道了要预测$Y$的$Y_{test}$有多近，来预测$Y_{test}$。那么如何度量Y之间有多近呢？高斯过程是通过协方差矩阵（相关系数矩阵），而这个协方差矩阵怎么计算呢？这儿将多维高斯分布作为先验，认为所有的y，服从一个多维的联合高斯分布，只需要根据$X$和$Y$来将协方差矩阵计算好，最后按照公式计算$Y_{test}$的边缘分布就可以了。
-上面解决了$Y$之间“近”的度量，那么$X$之间近怎么度量呢？那么核（kernel）就应该出现了，核不仅能刻画线性，而且能刻画非线性。目前整个问题就解决了：用$X$之间加kernel，来填充$Y$之间的协方差矩阵，然后计算$Y_{test}$的边缘分布。通过$X$和$Y$，给定$X_{test}$计算$Y_{test}$。
-上面我们对高斯过程有了一个总体认识后，下面我们就结合理论来进行理解，知道理论种每一步的具体作用，帮助我们理解高斯过程。
-2. 多元高斯分布在理解高斯过程之前需要对多元高斯分布有初步的认识，高斯分布是高斯过程的基础部件，而多元高斯分布是高斯分布的基础。多元高斯分布定义：
-
-多变量正态分布亦称为多元高斯分布。它是单维高斯分布向多维的推广。它同矩阵正态分布有紧密的联系。 一般形式：
-
-X = N(\mu, \Sigma) \tag{1}其中，$\mu$为向量，$\Sigma$为协方差矩阵，该分布为向量$\mu$为中心，协方差矩阵$\Sigma$决定其形状。N维随机向量 $X=[X_{1},\dots ,X_{N}]^{T}$如果服从多变量正态分布，必须满足下面的三个等价条件： 
-
-任何线性组合$Y=a_{1}X_{1}+\cdots +a_{N}X_{N}$服从正态分布。 
-存在随机向量 $Z=[Z_{1},\dots ,Z_{M}]^{T}$( 它的每个元素服从独立标准正态分布），向量 $\mu =[\mu_{1},\dots ,\mu_{N}]^{T}$及$N\times M$矩阵$A$满足$X=AZ+\mu $. 
-存在$\mu$ 和一个对称正定阵 $\Sigma$，满足$X$的特征函数$\phi_{X}\left(u;\mu ,\Sigma \right)=\exp \left(i\mu^{T}u-{\frac  {1}{2}}u^{T}\Sigma u\right)$，如果$\Sigma$是非奇异的，那么该分布可以由以下的PDF来描述：$f_{\mathbf {x} }(x_{1},\ldots ,x_{k})={\frac {1}{\sqrt {(2\pi )^{k}|{\boldsymbol {\Sigma }}|}}}\exp \left(-{\frac {1}{2}}({\mathbf {x} }-{\boldsymbol {\mu }})^{\mathrm {T} }{\boldsymbol {\Sigma }}^{-1}({\mathbf {x} }-{\boldsymbol {\mu }})\right)$，注意这里的$|\Sigma |$是协方差矩阵的行列式。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2019-05-01&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/kernel/">kernel</a>&nbsp;
-          
-            <a href="/tags/bayes/">bayes</a>&nbsp;
-          
-            <a href="/tags/gaussian/">gaussian</a>&nbsp;
-          
-            <a href="/tags/%E5%9B%9E%E5%BD%92/">回归</a>&nbsp;
-          
-            <a href="/tags/regression/">regression</a>&nbsp;
-          
-            <a href="/tags/GPR/">GPR</a>&nbsp;
           
         
       </div>

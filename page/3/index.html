@@ -145,6 +145,63 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/05/01/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        <p class="h4 index-header">深度学习-详解RNN网络及TensorFlow实现</p>
+      </a>
+
+      <a href="/2018/05/01/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">1.RNN是什么RNN在维基上面有两种定义，但是一般默认的为时间递归神经网络，全称为(Recurrent Neural Network，简称为RNN)。RNN主要解决序列数据的处理，如文本，语音，视频等。典型应用在语言模型中，比如下面的示例：
+我昨天上学迟到了，老师批评了____。
+
+让机器在空的地方填词，这儿填写的词最有可能是”我”，但对于这样的模型通过什么来实现呢？RNN就是很好的选择，它很擅长处理序列数据。
+传统的神经网络是层与层之间进行连接，但是每层之间的神经元是没有连接的（假设各个数据之间是相互独立的）。而RNN的结构就是当前层的数据和之前的输出也有关系，即每层之间的神经元不再是无连接，而是有连接的。基本结构可以通过下面表示：
+ 
+上面的结构中非常清晰的表示了layer的结构，主要针对序列型的数据，各个神经元之间存在关联，每个时刻的状态会输入到后续的时刻中。
+2.RNN结构RNN的大体结构如上图所示，也可以更加详细的表示，如下图中，输入，输出，状态项等。如下图中，存在一个循环结构，每个时间点的状态进行了下一时间点输入。
+ 
+在上图中，输入单元（input units）为：$x_{t-1}, x_t, x_{t+1}$，输出单元（output units）为：$o_{t-1}, o_t, o_{t+1}$，隐藏单元（hidden units）为：$s_{t-1}, s_t, s_{t+1}$。
+在某个时刻的隐层单元的输出：$s_t=f(Ws_{t-1}+Ux_t)$ ，其中$f$函数为激活函数，一般为sigmoid,tanh,relu等函数。在计算$s_0$时需要前面的状态，但是并不存在，因此一般设置为0向量。
+某个时刻$t$的输出为：$o_t=softmax(Vs_t)=softmax(V(f(Ws_{t-1}+Ux_t)))$，其中$s_t$为时刻$t$的记忆单元。$s_t$包含了前面所有步的记忆，但是在实际使用过程中，$s_t$只会包含前面若干步的记忆，而不是所有步。
+RNN中，每输入一步，每一层都共享参数$U,V,W$，RNN中主要在于隐藏层，在隐藏层能够捕捉到序列的关键信息。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-05-01&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/SGD/">SGD</a>&nbsp;
+          
+            <a href="/tags/RNN/">RNN</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2018/04/26/TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
         <p class="h4 index-header">TensorBoard的使用教程</p>
       </a>
@@ -551,51 +608,6 @@ nohup hive --service hiveserver2 &amp;
             <a href="/tags/job/">job</a>&nbsp;
           
             <a href="/tags/task/">task</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2017/08/15/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/">
-        <p class="h4 index-header">利用scikit-learn来分析模型欠拟合和过拟合问题</p>
-      </a>
-
-      <a href="/2017/08/15/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">当你运行一个学习算法时，如果这个算法的表现不理想，那么多半是出现两种情况：要么是偏差比较大、要么是方差比较大。换句话说，出现的情况要么是欠拟合、要么是过拟合问题。在建模的过程中经常会遇到模型拟合度不够或者过拟合，但是怎么去分析模型是否存在欠拟合和过拟合呢？一般通过模型的学习曲线和评估曲线来分析欠拟合和过拟合。并在实际应用中针对性的提出解决方案。下图为理论上识别欠拟合和过拟合的方法，如下：
-1. 使用学习曲线判别偏差和方差问题如果一个模型过于复杂，则参数太多，可能导致模型过拟合。解决过拟合问题，可以通过增加训练数据集，降低模型复杂度，交叉检验等。根据上图中，我们可以逐渐增加模型训练集，观察模型的偏差和方差变化，确定这种方式是否有效。上图中左上角的情况，模型偏差较大，训练和测试效果曲线都很差，精度太低，可能是欠拟合，解决欠拟合问题：一般通过增加模型参数，增加特征或者减小正则项等。
-下面通过python中scikit-learn的学习曲线来对欠拟合和过拟合进行说明，主要通过不同的数据量来逐步分析模型效果，看欠拟合和过拟合的情况。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2017-08-15&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/scikit-learn/">scikit-learn</a>&nbsp;
-          
-            <a href="/tags/overfit/">overfit</a>&nbsp;
-          
-            <a href="/tags/underfit/">underfit</a>&nbsp;
           
         
       </div>
