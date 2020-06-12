@@ -134,9 +134,9 @@
     
     <tags>
       
-      <tag>note</tag>
-      
       <tag>思考</tag>
+      
+      <tag>note</tag>
       
     </tags>
     
@@ -411,9 +411,9 @@
     
     <tags>
       
-      <tag>思考</tag>
-      
       <tag>Python3</tag>
+      
+      <tag>思考</tag>
       
     </tags>
     
@@ -494,11 +494,11 @@
     
     <tags>
       
-      <tag>GNN</tag>
+      <tag>KL散度</tag>
       
       <tag>deep learning</tag>
       
-      <tag>KL散度</tag>
+      <tag>GNN</tag>
       
       <tag>JS散度</tag>
       
@@ -529,11 +529,11 @@
       
       <tag>tensorflow</tag>
       
+      <tag>deep learning</tag>
+      
       <tag>GNN</tag>
       
       <tag>generator</tag>
-      
-      <tag>deep learning</tag>
       
       <tag>discriminator</tag>
       
@@ -634,9 +634,9 @@
       
       <tag>tensorflow</tag>
       
-      <tag>deep learning</tag>
-      
       <tag>RNN</tag>
+      
+      <tag>deep learning</tag>
       
       <tag>LSTM</tag>
       
@@ -667,11 +667,11 @@
       
       <tag>tensorflow</tag>
       
-      <tag>deep learning</tag>
-      
       <tag>SGD</tag>
       
       <tag>RNN</tag>
+      
+      <tag>deep learning</tag>
       
     </tags>
     
@@ -1001,9 +1001,9 @@
     
     <tags>
       
-      <tag>KL散度</tag>
-      
       <tag>机器学习</tag>
+      
+      <tag>KL散度</tag>
       
       <tag>距离</tag>
       
@@ -1086,9 +1086,9 @@
     
     <tags>
       
-      <tag>梯度下降</tag>
-      
       <tag>优化</tag>
+      
+      <tag>梯度下降</tag>
       
     </tags>
     
