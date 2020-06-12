@@ -145,6 +145,58 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
+        <p class="h4 index-header">深度学习-详解LSTM网络和TensorFlow实现</p>
+      </a>
+
+      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">LSTM网络是RNN网络中的特殊网络，再RNN文章中已经提到，RNN在时间步过长时，学习不到依赖关系。主要是RNN会引起梯度消失和梯度爆炸这两个问题，因此为了解决问题，研究者们提出了很多方式，其中GRU和LSTM网络就是这样诞生的。LSTM网络在应用中也取得了非凡的成就，特别是在语音识别，语言建模，翻译等等方面。
+1.长期依赖问题RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是time step过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。
+2.什么是LSTM网络LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？
+在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。
+下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，LSTM Cell中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-06-21&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/RNN/">RNN</a>&nbsp;
+          
+            <a href="/tags/LSTM/">LSTM</a>&nbsp;
+          
+            <a href="/tags/gate/">gate</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2018/05/01/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
         <p class="h4 index-header">深度学习-详解RNN网络及TensorFlow实现</p>
       </a>
@@ -185,9 +237,9 @@ RNN中，每输入一步，每一层都共享参数$U,V,W$，RNN中主要在于�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/SGD/">SGD</a>&nbsp;
           
@@ -562,52 +614,6 @@ nohup hive --service hiveserver2 &amp;
             <a href="/tags/MLE/">MLE</a>&nbsp;
           
             <a href="/tags/logistic/">logistic</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2017/08/30/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob-stage-task%E8%A7%A3%E6%9E%90/">
-        <p class="h4 index-header">spark中job运行过程详解和job,stage,task解析</p>
-      </a>
-
-      <a href="/2017/08/30/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob-stage-task%E8%A7%A3%E6%9E%90/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">了解了spark的基础后一直想清楚在spark整个执行过程。在spark客户端提交任务后，从job，stage，task，在到worker上执行，整过流程必须清楚，对后续的调优，spark中job运行原理都有很大的帮助。下面对spark中job运行过程进行详细解析，整个过程如下图所示。
-...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2017-08-30&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/spark/">spark</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/spark/">spark</a>&nbsp;
-          
-            <a href="/tags/stage/">stage</a>&nbsp;
-          
-            <a href="/tags/job/">job</a>&nbsp;
-          
-            <a href="/tags/task/">task</a>&nbsp;
           
         
       </div>

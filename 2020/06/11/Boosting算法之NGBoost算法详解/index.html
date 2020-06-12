@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="Miller Wu">
   <meta name="keywords" content="">
-  <title>WWDC机器学习与产品设计笔记 - Miller&#39;s Blog</title>
+  <title>boosting系列之NGBoost算法详解 - Miller&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
@@ -124,7 +124,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期四, 五月 28日 2020, 9:54 晚上
+                  星期四, 六月 11日 2020, 3:31 下午
                 </p>
               
 
@@ -133,7 +133,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    3.3k 字
+                    2.4k 字
                   </span>
                 
 
@@ -169,48 +169,169 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <p>机器学习的范围很广，包括语音识别的，计算机视觉的，自然语言处理的等等；特别是深度学习技术的进步。但是这些最终都要进行应用，与产品进行结合，以产品的形式提供给用户，与用户进行交互，这些都需要设计，且精心设计。</p>
-<h2 id="思考怎样造就优秀的机器学习产品"><a href="#思考怎样造就优秀的机器学习产品" class="headerlink" title="思考怎样造就优秀的机器学习产品"></a>思考怎样造就优秀的机器学习产品</h2><p>机器学习或许不能解决某个问题，但是至少要提升产品质量或产品体验。就像iphone中的Face ID解锁，照片中直接可以搜索某个事物，可以查看回忆，Siri的事务处理等等。要设计优秀的机器学习体验，不仅要设计它的工作模式，还要设计它的<strong>外观和感觉</strong>；不仅要设计模型，还要设计界面。下面是机器学习在产品设计上的模型图：</p>
-<p><img src="/uploads/机器学习与产品设计.png" srcset="/img/loading.gif" alt="机器学习与产品设计" style="zoom:56%;" /></p>
-<h3 id="模型"><a href="#模型" class="headerlink" title="模型"></a>模型</h3><p><a id="more"></a>机器学习模型是非常复杂和庞大的。创建模型必须做出很多决策，关于数据的，关于算法的，参数，框架，这些都会影响模型的效果；这些有专业的工程师或专家负责。但是在产品设计上一般关心的是数据和指标。</p>
-<p>数据是机器学习的基础，是解决用什么教计算机。指标是要评估的东西，一般都会将指标设计为一个值，评估机器学习的好坏，机器学习体验的好坏等等。</p>
-<h4 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h4><p>数据对机器学习模型是至关重要的，数据决定模型的行为，以及后续的一切。因此在设计阶段就必须考虑。比如要做某个情景下的机器学习模型，那么就必须要包括该情景下的数据，如果没有捕捉到该情景下的重要信息，那么模型不会见得会多好。</p>
-<p>数据应该是基于场景的，如果说产品或应用是基于许多场景，那就这些场景的数据就必须都要进行收集，而且需要考虑数据在不同场景下的平衡性（数据偏差）。比如你正在创建一个有趣或丰富的体验你应该为有趣、丰富的体验提供样本数据，如果你的产品是在户外使用你应该提供户外情境的样本。这样数据才能包容足够的信息，在后续的模型中才会更具有泛化性，用户体验上才会更好。</p>
-<blockquote>
-<p>关于数据收集的决策就是，从你现有的客户手中收集样本数据并从其它机构中获取全世界的统一的样本数据，但你不能反映世界，反映世界会增加系统偏差。你不应该针对现有客户进行优化，你应该针对你想要获得的客户进行优化；你不应该按世界原本的样子反映它，你应该反映一个更好的世界，是你所希望的那个世界。收集数据是设计体验的一种方式，优秀的体验常常能改变世界，它们不只是反映现在所存在的东西</p>
-</blockquote>
-<p>上面是演讲者所说的关于数据收集时的决策，原文的翻译中有一些问题，我简单进行了修改。主要有以下几点必须关注：</p>
-<ol>
-<li>数据收集可以非常全，也必须统一，但不能反映世界（这里应该是宏观上的全面的意思，能意会就好）</li>
-<li>收集数据时不应该针对现有客户进行优化，而是要针对你想要获取的客户进行优化。</li>
-<li>收集数据时不能就按原有世界样子进行收集，收集到的数据应该反映出一个更好的世界（这里的世界可以理解为场景，用户体验时的情景）。总之收集到的数据需要在原有的基础之上有所改变，有所改善。</li>
+              <p>去年末看过NGBoost的论文，由于时间原因没有仔细的去了解，现在终于可以花点时间来补一下NGBoost，NGBoost是斯坦福的研究团队提出的一种梯度提升方法，解决概率预测中的问题，在现实中预测问题带有很多不确定性，比如天气的预测，顾客流失率，信用等等。传统的机器学习一般是一个点的估计，NGBoost则是对概率预测，可以得到概率分布的预测。</p>
+<p>论文中通过模块化描述了NGBoost模型的整体结构，如下图所示.NGBoost通过自然梯度来实现拟合，其中模块主要包括<strong>基础学习器</strong>，<strong>参数的概率分布</strong>，<strong>评分规则</strong>这三大部分。</p>
+<p><img src="/uploads/model_struct.png" srcset="/img/loading.gif" alt="NGBoost三个模块"></p>
+<p>通过优化评分规则（例如最大似然估计（MLE）或更稳健的连续排名概率评分（CRPS）），对模型进行了训练，以使锐度(sharpness)最大化，并进行校准，最后会得到经过校准的估计。</p>
+<h2 id="自然梯度-Nature-Gradient"><a href="#自然梯度-Nature-Gradient" class="headerlink" title="自然梯度(Nature Gradient)"></a>自然梯度(Nature Gradient)</h2><p>NGBoost是一种概率预测的监督性学习法，通过概率分布的形式将不确定行带入了梯度计算中，再以函数的形式来预测条件概率($P(y|x)$)分布的参数。</p>
+<p>在标准预测中，目标对象是标量函数$E[y|x]$的估计，其中$x$是观察到的特征的向量，$y$是预测目标。 在NGBoost中，通过预测参数$θ∈R$来生成概率密度为$P_θ(y|x)$，$\theta$的概率预测， 相应的累积密度表示为$F_\theta$。</p>
+<p>此处会有KL散度来定义预测分布P和真实分布Q之间的距离，通过KL散度来定义规则评分，因此最终的目标就是最小化这个规则评分S。在每次迭代中，参数的更新就会影响分布的更新，从而影响规则评分。因此参数的更新非常重要，即分布的移动和更新，论文中是通过自然梯度解决。</p>
+<h2 id="模块化"><a href="#模块化" class="headerlink" title="模块化"></a>模块化</h2><p>NGBoost主要通过基础学习器，参数概率分布和评分规则三大模块：</p>
+<ul>
+<li>基础学习器为学习函数$f$，比如决策树</li>
+<li>参数概率分布（$P_\theta$），如正太分布，多变量正太分布，拉普拉斯分布（开源代码中未实现），伯努利分布，指数分布等。</li>
+<li>评分规则($S$)，如MLE，CRPS等</li>
+</ul>
+<h3 id="评分规则"><a href="#评分规则" class="headerlink" title="评分规则"></a>评分规则</h3><p>评分规则对「预测的概率分布」和「目标分布」的进行对照观察，评分规则$S$将一个预测的概率分布$P$和一个观测值$y$（结果）作为输入，并给预测赋分$S(P;y)$。得出结果的真实分布可获得预期中的最佳分数。在目前的实现中支持MLE和CRPS，CRPS可以提供更加稳定的结果。</p>
+<p>从上图中的模块化流程中可以看出，从输入X到Y，预测$Y|X$，是由条件分布$P_\theta$经过评分规则$S$产生的，其中$\theta$可以是一个值也可以是一个向量，它最终影响预测结果。</p>
+<h3 id="算法流程"><a href="#算法流程" class="headerlink" title="算法流程"></a>算法流程</h3><p>整个算法流程比较简单，和一般的GBDT算法流程相同，整个算法需要提前确定概率分布，迭代次数，学习率，评分规则和基础学习器。在算法中有一个缩放因子，该缩放因子在每次迭代中都会进行更新。</p>
+<p><img src="/uploads/ngboost_alg_flow.png" srcset="/img/loading.gif" alt="image-20200609152114311" style="zoom:50%;" /></p>
+<p>从算法流程中可以看出模型是按序列学习的，每个阶段都有一组函数$f$和一个缩放因子$\varphi$。算法在开始时，首先会估计一个共同的初始分布$\theta(0)$，并通过训练使它能最小化评分规则$S$，在所有训练样本的影响了变量上的总和，在本质上就是拟合y的边际分布。</p>
+<p>在每次迭代过程中，每批次的样本都会通过评分规则$S$，计算自然梯度$g$，再通过自然梯度在基学习器上进行投影(Projection)，基学习器上投影结果通过缩放因子进行梯度缩放，再引入学习率参数$\eta$等，来更新参数$\theta$：</p>
+<script type="math/tex; mode=display">
+y|x \sim P\_{\theta}(x), \theta = \theta^{(0)}-\eta\sum\_{m=1}^{M}\varphi^{(m)}*f^{(m)}(x)</script><p>其中，$\varphi$为缩放因子，在每次迭代中都会进行更新。</p>
+<h3 id="训练过程源码解析"><a href="#训练过程源码解析" class="headerlink" title="训练过程源码解析"></a>训练过程源码解析</h3><p>在官方开源的NGBoost源码中，对训练过程进行了详细的分析，目前的代码主要基于scikit-learn之上实现了NGBoost，目前实现了回归和分类(分类本身具有概率预测，因此一般都用于回归预测)。下面对源码关键部分进行注释，若要更详细了解可以参考官方开源代码：</p>
+<pre><code class="lang-python">def fit(self, X, Y, X_val=None, Y_val=None, sample_weight=None, val_sample_weight=None, train_loss_monitor=None,
+        val_loss_monitor=None, early_stopping_rounds=None):
+    &quot;&quot;&quot;
+    Fits an NGBoost model to the data
+    Parameters:
+    X                       : DataFrame object or List or numpy array of predictors (n x p) in Numeric format
+    Y                       : Type same as X. Should be floats for regression and integers from 0 to K-1 for K-class classification
+    X_val                   : DataFrame object or List or numpy array
+    Y_val                   : DataFrame object or List or numpy array
+    sample_weight           : how much to weigh each example in the training set. (defaults to 1)
+    val_sample_weight       : how much to weigh each example in the validation set. (defaults to 1)
+    train_loss_monitor      : Defaults to the score defined in the NGBoost constructor
+    val_loss_monitor        : Defaults to the score defined in the NGBoost constructor
+    early_stopping_rounds   : the number of consecutive boosting iterations during which the loss has to increase before the algorithm stops early
+
+    Output:
+        A fit NGBRegressor object
+    &quot;&quot;&quot;
+
+    if Y is None:
+        raise ValueError(&quot;y cannot be None&quot;)
+
+    X, Y = check_X_y(X, Y, y_numeric=True)
+
+    loss_list = []
+    self.fit_init_params_to_marginal(Y)  # 初始化分布的参数
+
+    params = self.pred_param(X)  # 参数初始化，在该方法中将使用self.fit_init_params_to_marginal(Y)的初始化参数结果
+
+    # -------- 此处省略部分非核心代码 ----------------
+
+    for itr in range(self.n_estimators):  # n_estimators为迭代次数和gbdt类似
+         # 首先对全量样本进行下采样, 默认为所有数据, 获得每次迭代的下采用数据, P_batch为该batch下的参数
+        _, col_idx, X_batch, Y_batch, weight_batch, P_batch = self.sample(
+            X, Y, sample_weight, params
+        ) 
+        self.col_idxs.append(col_idx)
+
+        D = self.Manifold(P_batch.T) # 获取参数分布,对应论文中的统计流形,通过Score规则和分布生成
+
+        loss_list += [train_loss_monitor(D, Y_batch, weight_batch)]  # 记录评分(score),评分规则的输入为分布和目标Y
+        loss = loss_list[-1]
+        grads = D.grad(Y_batch, natural=self.natural_gradient)  # 求梯度，自然梯度
+
+        proj_grad = self.fit_base(X_batch, grads, weight_batch)  # 将自然梯度在base learner上projection
+        # 下面更新缩放因子,每次迭代都会更新一次缩放因子,缩放因子的更新会参考初始参数和梯度值
+        # line_search方法中有向上和向下缩放,根据初始分布和Y的评分结果选择更新策略
+        scale = self.line_search(proj_grad, P_batch, Y_batch, weight_batch)  
+        # 开始更新分布的参数
+        params -= (
+            self.learning_rate
+            * scale
+            * np.array([m.predict(X[:, col_idx]) for m in self.base_models[-1]]).T
+        )  
+
+        # -------------------- 省略非核心代码 -------------------------------
+
+        # 模型训练的停止条件,将自然梯度在基学习器上映射后的梯度值进行norm后计算均值
+        if np.linalg.norm(proj_grad, axis=1).mean() &lt; self.tol:
+            if self.verbose:
+                print(f&quot;== Quitting at iteration / GRAD {itr}&quot;)
+            break
+
+    self.evals_result = {}
+    metric = self.Score.__name__.upper()
+    self.evals_result[&quot;train&quot;] = {metric: loss_list}
+    if X_val is not None and Y_val is not None:
+        self.evals_result[&quot;val&quot;] = {metric: val_loss_list}
+
+    return self
+</code></pre>
+<p><code>NGBoost</code>和其他<code>boosting</code>算法不同的是可以预测概率分布，因此可以使用<code>pred_dist</code>方法返回每个预测的概率分布。同时也支持<code>predict</code>接口，直接返回预测值。</p>
+<p>上面训练过程中其中统计流形的定义也是非常重要的。定义是通过评分规则和参数的分布混合定义统计流形。流行包含了分布的所有参数，而且有<code>fit</code>和<code>sample</code>方法，通过<code>Distribution</code>实现；还有<code>total_score</code>和<code>grad</code>方法，通过<code>Score</code>实现。</p>
+<pre><code class="lang-python">def manifold(Score, Distribution):
+    &quot;&quot;&quot;
+    Mixes a scoring rule and a distribution together to create the resultant &quot;Reimannian Manifold&quot;
+    (thus the name of the function). The resulting object has all the parameters of the distribution 
+    can be sliced and indexed like one, and carries the distributions `fit` and `sample` methods, but 
+    it also carries the appropriate `total_score` and `grad` methods that are inherited through 
+    distribution-specific inheritence of the relevant implementation of the scoring rule
+    &quot;&quot;&quot;
+
+    class Manifold(Distribution.implementation(Score), Distribution):
+        pass
+
+    return Manifold
+
+
+class Score:
+    def total_score(self, Y, sample_weight=None):
+        return np.average(self.score(Y), weights=sample_weight)
+
+    def grad(self, Y, natural=True):
+        grad = self.d_score(Y)
+        if natural:
+            metric = self.metric()
+            grad = np.linalg.solve(metric, grad)
+        return grad
+
+
+class Normal(RegressionDistn):
+    n_params = 2
+    scores = [NormalLogScore, NormalCRPScore]
+
+    def __init__(self, params):
+        super().__init__(params)
+        self.loc = params[0]
+        self.scale = np.exp(params[1])
+        self.var = self.scale ** 2
+        self.dist = dist(loc=self.loc, scale=self.scale)
+
+    def fit(Y):
+        m, s = sp.stats.norm.fit(Y)
+        return np.array([m, np.log(s)])
+
+    def sample(self, m):
+        return np.array([self.rvs() for i in range(m)])
+
+    def __getattr__(
+        self, name
+    ):  # gives us Normal.mean() required for RegressionDist.predict()
+        if name in dir(self.dist):
+            return getattr(self.dist, name)
+        return None
+
+    @property
+    def params(self):
+        return {&quot;loc&quot;: self.loc, &quot;scale&quot;: self.scale}
+</code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li>从官方的测试结果来看，NGBoost和其他Boosting算法的预测效果不分上下，甚至效果更好。</li>
+<li>效率上比其他模型差，目前的实现中使用了batch的模式。但是目前主要是通过python实现，核心部分并没有通过C/C++实现。</li>
+<li>目前官方开源的代码还没有实现<code>early stop</code>，基础学习器也支持较少。</li>
+<li>NGBoost的核心主要是自然梯度和评分规则的结合，并将自然梯度进行了一般化的简易实现。这部分也是很难理解的部分。</li>
 </ol>
-<p>在实践时，需要思考产品为用户创建什么样的体验？需要在某个场景下进行思考数据的收集。<strong>使用产品的用户，如何使用产品，思考数据可能会朝向或背离某些人群或某种体验而产生偏差的方式</strong>，并开始数据收集。</p>
-<p>随着产品的迭代更新，数据也需要被更新；可以了解使用你产品的用户更多需求，更好的在迭代中优化产品。在迭代中保持数据和产品的目标一致。</p>
-<h4 id="指标"><a href="#指标" class="headerlink" title="指标"></a>指标</h4><p>主要是对模型进行评估，对模型的评估包括很多，比如模型的精度，准确率，召回率。这些都是对模型的测试及效果评价。还包括模型运行有多快？或模型支持多少个类别等等，根据不同的场景设计不同的指标，但最终指标都是反映了良好的体。</p>
-<p>对于机器学习每次的失败都应该被追踪，需要对每次失败的任务进行思考，任务对应的用户，体验，行为，情景等等。特别是容错性低的情景下需要对失败的情景独立思考，处理。</p>
-<p>机器学习具有容错性，模型不太可能达到100%。而对于错误，要对它进行理解，需要进行解释，可能基于错误创建新的模型改进它们，也可以解释技术的局限性。我<strong>们不仅仅要关注模型正常下的情况，可能更多要关注失败下的情景，错误可以帮助我们了解每个情景的重要性，失败的情况还能帮助我们了解使用它的人更多需求或体验</strong>。</p>
-<p>在用户体验中，模型的体验不是体验，实际体验（用户使用产品时的体验）才是体验。因此需要尝试通过指标量化该体验，必须准确的量化，如果出现体验糟糕，指标确很好，那么指标就可能出错了。</p>
-<p>指标的演变也很重要，随时间的增长要经常质疑和评估指标的有效性（<strong>越依赖一样东西就越应该质疑它</strong>）。指标反映了价值，必须使价值和指标保持一致。</p>
-<h2 id="用户交互-界面"><a href="#用户交互-界面" class="headerlink" title="用户交互(界面)"></a>用户交互(界面)</h2><p>界面是非常重要的，用户通过直观、简单的方式和机器学习产品进行交互，体验。而界面主要是将模型的结果转化为输出，用户可以与之进行交互或体验。从界面中收集到反馈，即输入。</p>
-<h3 id="输出-Output"><a href="#输出-Output" class="headerlink" title="输出(Output)"></a>输出(Output)</h3><p>输出包括很多类型：多种选择，属性，可信度，限制；多种选择是以多种输出呈现给用户；属性是一种解释，帮助用户更加了解，帮助决策；可信度是对输出的确定性度量；限制发生在当用户对某功能的心理模型与实际所能实现的功能不相匹配时。</p>
-<h4 id="多种选择-Multiple-Options"><a href="#多种选择-Multiple-Options" class="headerlink" title="多种选择(Multiple Options)"></a>多种选择(Multiple Options)</h4><p>有时模型给出的输出可能不是最佳体验，在现实中存在太多的不确定性，那么就需要给出用户更多的选择；在交互中完成用户心目中最佳的选择。比如线路预测：有些人可能喜欢最近的，有些人可能不喜欢走高速，有些人喜欢风景好的路线…，而且在影响该模型的因素很多多，并在实时的变化，因此只能预测可能的最佳线路，输出多个选择。</p>
-<p>还有一个例子非常好，用户一天中要看很多信息，但是在某个时刻，某个地点，基于历史行为我可能只需要看TOP3的信息。因此多种选择的输出在这种场景中是非常重要的。</p>
-<h4 id="属性-Attributes"><a href="#属性-Attributes" class="headerlink" title="属性(Attributes)"></a>属性(Attributes)</h4><p>主要在解释性场景中的输出类型，比如推荐，通过属性解释推荐，关联客观事实，而不是主管臆测。比如，音乐推荐中，我们推荐了乡村音乐，是基于你听过“Love Story”……</p>
-<p>我们不能完全了解用户的喜好和口味，每个人每天都在发生变化，去剖析他们会让他们困惑，且收到局限性。</p>
-<h4 id="可信度-Confidence"><a href="#可信度-Confidence" class="headerlink" title="可信度(Confidence)"></a>可信度(Confidence)</h4><p>可信度可以和属性结合，也可以单独给出。比如我在iPhone中搜索某个术语，给我的结果中首先列出给我的事这个术语的解释信息，并标记为来自维基百科。这样就更具有可信度，因为维基百科的可信度非常高，这样就帮助我更加信赖该信息的准确性。</p>
-<p>在某些场景下直接使用可信度在设计上不太适合，比如说某个用户和另外的用户相似度达到85%，那么用户在体验式对85%是非常模糊的，可能很难理解这个85%，因此也是通过属性来解释性输出设计，比如根据你之前听了……歌单作出推荐。</p>
-<p>在某些场景下可以直接使用可信度，比如天气预报，明天有80%的可能下雨，那么用户在体验时根据可信度作出决策，应该带雨伞。用户对☁️预报的场景已经习惯这个百分比。</p>
-<p>还有在订购航班时，某个应用上给出这趟航班可能有70%的可能价格下降，这样用户体验会降低，用户可能会纠结这个百分比，而且预测为70%与65%的区别呢？还不如直接建议用户怎么决策，如建议购买，等待……</p>
-<h4 id="限制-Limitations"><a href="#限制-Limitations" class="headerlink" title="限制(Limitations)"></a>限制(Limitations)</h4><p>限制这中输出方式主要从产品的角度进行设计，当限制发生时，要引导用户，处理这种局限性，解除限制。比如我要在mac上通过siri设置一个定时器，但是mac上没有定时器，它做不到。但是在设计时，出处理这种限制，引导用户：你可以通过设置一个提醒来代替它。</p>
-<p>总之，输出只是一个设计媒介，通过了解可用的输出类型，可以选择与我们想要创建的体验相一致的输出而不仅仅是依赖于来自模型的标准输出。我们应该通过选择简单易懂和毫不费力的有帮助的输出，将机器学习的输出和产品设计完美结合。</p>
-<h3 id="输入-Input"><a href="#输入-Input" class="headerlink" title="输入(Input)"></a>输入(Input)</h3><p>提到了输入有四种方式：校准，隐性反馈，明确的反馈，修正；这四种方式在产品中实现方式以及达到的目的也有所不同。比如，校准主要是用于收集重要的信息。</p>
-<h4 id="校准-Calibration"><a href="#校准-Calibration" class="headerlink" title="校准(Calibration)"></a>校准(Calibration)</h4><p>使用校准的输入时 要让它保持流畅，用户体验毫不费力。 并且只请求重要信息，避免多次校准。</p>
-<h4 id="隐性反馈-Implicit-Feedback"><a href="#隐性反馈-Implicit-Feedback" class="headerlink" title="隐性反馈(Implicit Feedback)"></a>隐性反馈(Implicit Feedback)</h4><p>隐性主要是用户在和自己产品交互的过程中进行产生的信息，这些信息可以用于改善模型或功能。比如用户的历史行为记录信息，定位信息，当前行为信息等等。比如隐形反馈在个性化的服务中使用是非常有意义。</p>
-<h4 id="明确反馈-Explicit-Feedback"><a href="#明确反馈-Explicit-Feedback" class="headerlink" title="明确反馈(Explicit Feedback)"></a>明确反馈(Explicit Feedback)</h4><p>允许你的产品通过提出关于结果的具体问题而收集信息，直接让用户反馈一些信息，比如不像看到的建议的反馈，直接影响模型效果的一些的反馈，如将某首歌曲加入喜欢列表，标记为喜爱等等。</p>
-<p>明确反馈也分为消极反馈和积极反馈，实际上建议消极反馈优先于积极反馈，积极反馈可以更好地通过隐含信息进行推测，比如当阅读文章时，我给它添加书签或分享了它。因此在设计时不需要同时显示“喜欢”和“不喜欢”，只需要显示“不喜欢”的反馈即可。</p>
-<p>当使用明确反馈时，清楚地描述选项及其结果，使用能解释即将产生什么结果的描述，可能的话提供不同的选项来更好地理解用户的喜。当然，当我选择其中一个选项时，界面应该立即反映我的选择并隐藏与我的喜好所匹配的建议。 因此当用户提供明确反馈时 总是要立即并持久地采取措施。</p>
-<h4 id="修正-Corrections"><a href="#修正-Corrections" class="headerlink" title="修正(Corrections)"></a>修正(Corrections)</h4><p>更正是对结果的优化，让用户有更棒的体验，这种模式也是非常好的。修正同时也是隐性反馈的一种方式，它可以很好的改善机器学习结果。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>1.<a href="https://medium.com/@benbenbang/ngboost-intro-and-comparisons-df72adf94096" target="_blank" rel="noopener">https://medium.com/@benbenbang/ngboost-intro-and-comparisons-df72adf94096</a></p>
+<p>2.论文地址<a href="https://arxiv.org/pdf/1910.03225v1.pdf" target="_blank" rel="noopener">NGBoost: Natural Gradient Boosting for Probabilistic Prediction</a></p>
+<p>3.源码: <a href="https://github.com/stanfordmlgroup/ngboost" target="_blank" rel="noopener">https://github.com/stanfordmlgroup/ngboost</a></p>
+<p>4.自然梯度：<a href="https://www.zhihu.com/question/21923317" target="_blank" rel="noopener">https://www.zhihu.com/question/21923317</a></p>
+<p>5.NGBoost(自然梯度提升)：<a href="https://zhuanlan.zhihu.com/p/100271626" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/100271626</a></p>
+<p>6.NGBoost论文研读：<a href="https://blog.csdn.net/weixin_44750583/article/details/103940140?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase" target="_blank" rel="noopener">https://blog.csdn.net/weixin_44750583/article/details/103940140?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase</a></p>
 
             </div>
             <hr>
@@ -220,7 +341,7 @@
                   <span>
                 <i class="iconfont icon-inbox"></i>
                     
-                      <a class="hover-with-bg" href="/categories/%E6%80%9D%E8%80%83/">思考</a>
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
                       &nbsp;
                     
                   </span>&nbsp;&nbsp;
@@ -229,9 +350,13 @@
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/%E4%BA%A7%E5%93%81/">产品</a>
+                      <a class="hover-with-bg" href="/tags/boosting/">boosting</a>
                     
-                      <a class="hover-with-bg" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      <a class="hover-with-bg" href="/tags/catboost/">catboost</a>
+                    
+                      <a class="hover-with-bg" href="/tags/probabilistic/">probabilistic</a>
+                    
+                      <a class="hover-with-bg" href="/tags/gradient/">gradient</a>
                     
                   </span>
                 
@@ -244,18 +369,12 @@
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/06/11/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span class="hidden-mobile">boosting系列之NGBoost算法详解</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-6">
                     
                     
-                      <a href="/2020/04/29/Python3%E4%B8%AD)%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0(%E6%96%B9%E6%B3%95%E8%8C%83%E5%9E%8B/">
-                        <span class="hidden-mobile">Python3中实现函数(方法)范型</span>
+                      <a href="/2020/05/28/WWWDC%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%92%8C%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1%E7%AC%94%E8%AE%B0/">
+                        <span class="hidden-mobile">WWDC机器学习与产品设计笔记</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
@@ -434,7 +553,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "WWDC机器学习与产品设计笔记&nbsp;",
+        "boosting系列之NGBoost算法详解&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

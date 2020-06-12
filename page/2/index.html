@@ -145,6 +145,61 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/06/25/Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B(%E7%9C%9F%E6%AD%A3%E7%9A%84)%E7%9A%84%E6%8E%A2%E7%B4%A2/">
+        <p class="h4 index-header">Python中实现多线程(真正的)的探索</p>
+      </a>
+
+      <a href="/2019/06/25/Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B(%E7%9C%9F%E6%AD%A3%E7%9A%84)%E7%9A%84%E6%8E%A2%E7%B4%A2/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">使用Python多线程的人都知道，Python中由于GIL(全局解释锁：Global Interpreter Lock)的存在，在多线程时并没有真正的进行多线程计算。知道Python历史的就知道Python在1989年发布，当时计算机全是基于单核，知道2000多年多核处理器才发布。因此，GIL一致沿用到现在，而且没有非常好的替代方式。如果涉及到计算密集型的任务，在多核CPU的加持下使得效率急速上升，如果是IO密集型的效果可能没有那么明显。这个Python的官网也进行了说明。为了说明Python的多线程问题，下面可以通过一些代码来实现Python多线程的验证。
+Python和C++多线程的对比首先使用Python中的多线程运行，观察CPU的情况，下面定义了一个函数，不进行任何计算，但是一致保持运行即可，再查看CPU的情况，代码如下：
+from concurrent.futures import ThreadPoolExecutor
+
+def f(a):
+    while 1:
+        pass
+
+if __name__ == &#39;__main__&#39;:
+    pool = ThreadPoolExecutor()
+    pool.map(f, range(100))
+
+CPU的情况如下,乐意看出只有其中一个CPU的使用率为100%以上，其他没有使用，而且每次只运行一个线程，所以可以确定Python的多线程并没有利用多核运行。    ...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-06-25&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/c-c/">c/c++</a>&nbsp;
+          
+            <a href="/tags/thread/">thread</a>&nbsp;
+          
+            <a href="/tags/pybind11/">pybind11</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2019/05/01/%E9%AB%98%E6%96%AF%E8%BF%87(Gaussian%20Process)%E7%A8%8B%E7%90%86%E8%A7%A3/">
         <p class="h4 index-header">高斯过程（Gaussian Process）理解</p>
       </a>
@@ -529,13 +584,13 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
         
           <i class="iconfont icon-tag"></i>
           
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
             <a href="/tags/GNN/">GNN</a>&nbsp;
           
             <a href="/tags/generator/">generator</a>&nbsp;
           
             <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
           
             <a href="/tags/discriminator/">discriminator</a>&nbsp;
           
@@ -680,9 +735,9 @@ h(x)=f(x)*g(x)=(f*g)(x)2.2 卷积的物理意义从卷积的定义上可以看�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
             <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
             <a href="/tags/CNN/">CNN</a>&nbsp;
           
@@ -693,58 +748,6 @@ h(x)=f(x)*g(x)=(f*g)(x)2.2 卷积的物理意义从卷积的定义上可以看�
             <a href="/tags/pooling/">pooling</a>&nbsp;
           
             <a href="/tags/BN/">BN</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
-        <p class="h4 index-header">深度学习-详解LSTM网络和TensorFlow实现</p>
-      </a>
-
-      <a href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">LSTM网络是RNN网络中的特殊网络，再RNN文章中已经提到，RNN在时间步过长时，学习不到依赖关系。主要是RNN会引起梯度消失和梯度爆炸这两个问题，因此为了解决问题，研究者们提出了很多方式，其中GRU和LSTM网络就是这样诞生的。LSTM网络在应用中也取得了非凡的成就，特别是在语音识别，语言建模，翻译等等方面。
-1.长期依赖问题RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是time step过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。
-2.什么是LSTM网络LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？
-在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。
-下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，LSTM Cell中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。
-...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2018-06-21&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
-          
-            <a href="/tags/RNN/">RNN</a>&nbsp;
-          
-            <a href="/tags/LSTM/">LSTM</a>&nbsp;
-          
-            <a href="/tags/gate/">gate</a>&nbsp;
           
         
       </div>

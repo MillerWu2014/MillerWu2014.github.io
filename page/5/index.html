@@ -145,6 +145,53 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/09/spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/">
+        <p class="h4 index-header">spark中创建RDD的几种方式</p>
+      </a>
+
+      <a href="/2017/07/09/spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">创建RDD主要有三种方式：从外部数据创建RDD，从另外一个RDD创建，对现有的数据列表或者数据集合进行创建。三种方式均能够创建RDD对象。RDD可以包含Scala，Python，Java的任意类型的对象，因此任何数据均可以创建RDD。spark创建RDD时首先需要通过SpakContext作为对象，创建一个sc对象，再通过sc来创建RDD。sc对象之前可以通过sparkconf对象对SpakContext进行设置。如集群的URL和应用名等等。下面是对SpakContext对象设置。如下：
+from pyspark import SparkContext, SparkConf
+
+conf = SparkConf().setAppName(&quot;test&quot;).setMaster(&quot;local&quot;).setSparkHome(&quot;/opt/spark1.6.0/&quot;)
+sc = SparkContext(conf=conf)
+
+上面通过SparkConf对象设置了conf. 再创建sc对象，并将设置传给sc对象。SparkConf对象的方法有：set(key,value),setIfMissing(key,value),setMaster(value),setAppName(value)，setSparkHome(value)，setExecutorEnv(key=None, value=None, pairs=None)，setAll(pairs)并对应了get方法。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/spark/">spark</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+            <a href="/tags/RDD/">RDD</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2017/07/09/docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
         <p class="h4 index-header">docker部署anaconda开发环境</p>
       </a>

@@ -145,6 +145,53 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2020/06/11/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">boosting系列之NGBoost算法详解</p>
+      </a>
+
+      <a href="/2020/06/11/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+        
+        <div class="index-excerpt" >
+          <div class="index-text mb-1">去年末看过NGBoost的论文，由于时间原因没有仔细的去了解，现在终于可以花点时间来补一下NGBoost，NGBoost是斯坦福的研究团队提出的一种梯度提升方法，解决概率预测中的问题，在现实中预测问题带有很多不确定性，比如天气的预测，顾客流失率，信用等等。传统的机器学习一般是一个点的估计，NGBoost则是对概率预测，可以得到概率分布的预测。
+论文中通过模块化描述了NGBoost模型的整体结构，如下图所示.NGBoost通过自然梯度来实现拟合，其中模块主要包括基础学习器，参数的概率分布，评分规则这三大部分。
+
+通过优化评分规则（例如最大似然估计（MLE）或更稳健的连续排名概率评分（CRPS））</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2020-06-11&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/boosting/">boosting</a>&nbsp;
+          
+            <a href="/tags/catboost/">catboost</a>&nbsp;
+          
+            <a href="/tags/probabilistic/">probabilistic</a>&nbsp;
+          
+            <a href="/tags/gradient/">gradient</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2020/05/28/WWWDC%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%92%8C%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1%E7%AC%94%E8%AE%B0/">
         <p class="h4 index-header">WWDC机器学习与产品设计笔记</p>
       </a>
@@ -522,9 +569,9 @@ Greedy TS类别特征不能直接在boosting中使用，因此需要将类别特
           
             <a href="/tags/boosting/">boosting</a>&nbsp;
           
-            <a href="/tags/target-statistics/">target-statistics</a>&nbsp;
-          
             <a href="/tags/catboost/">catboost</a>&nbsp;
+          
+            <a href="/tags/target-statistics/">target-statistics</a>&nbsp;
           
             <a href="/tags/categorical/">categorical</a>&nbsp;
           
@@ -628,61 +675,6 @@ LightGBM主要针对xgboost或gbdt中特征分裂进行了优化，xgb和其他g
             <a href="/tags/goss/">goss</a>&nbsp;
           
             <a href="/tags/histogram/">histogram</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2019/06/25/Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B(%E7%9C%9F%E6%AD%A3%E7%9A%84)%E7%9A%84%E6%8E%A2%E7%B4%A2/">
-        <p class="h4 index-header">Python中实现多线程(真正的)的探索</p>
-      </a>
-
-      <a href="/2019/06/25/Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B(%E7%9C%9F%E6%AD%A3%E7%9A%84)%E7%9A%84%E6%8E%A2%E7%B4%A2/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">使用Python多线程的人都知道，Python中由于GIL(全局解释锁：Global Interpreter Lock)的存在，在多线程时并没有真正的进行多线程计算。知道Python历史的就知道Python在1989年发布，当时计算机全是基于单核，知道2000多年多核处理器才发布。因此，GIL一致沿用到现在，而且没有非常好的替代方式。如果涉及到计算密集型的任务，在多核CPU的加持下使得效率急速上升，如果是IO密集型的效果可能没有那么明显。这个Python的官网也进行了说明。为了说明Python的多线程问题，下面可以通过一些代码来实现Python多线程的验证。
-Python和C++多线程的对比首先使用Python中的多线程运行，观察CPU的情况，下面定义了一个函数，不进行任何计算，但是一致保持运行即可，再查看CPU的情况，代码如下：
-from concurrent.futures import ThreadPoolExecutor
-
-def f(a):
-    while 1:
-        pass
-
-if __name__ == &#39;__main__&#39;:
-    pool = ThreadPoolExecutor()
-    pool.map(f, range(100))
-
-CPU的情况如下,乐意看出只有其中一个CPU的使用率为100%以上，其他没有使用，而且每次只运行一个线程，所以可以确定Python的多线程并没有利用多核运行。    ...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2019-06-25&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/Python/">Python</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/c-c/">c/c++</a>&nbsp;
-          
-            <a href="/tags/thread/">thread</a>&nbsp;
-          
-            <a href="/tags/pybind11/">pybind11</a>&nbsp;
           
         
       </div>
