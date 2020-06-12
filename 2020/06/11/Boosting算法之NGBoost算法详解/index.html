@@ -174,7 +174,7 @@
 <p><img src="/uploads/model_struct.png" srcset="/img/loading.gif" alt="NGBoost三个模块"></p>
 <p>通过优化评分规则（例如最大似然估计（MLE）或更稳健的连续排名概率评分（CRPS）），对模型进行了训练，以使锐度(sharpness)最大化，并进行校准，最后会得到经过校准的估计。</p>
 <h2 id="自然梯度-Nature-Gradient"><a href="#自然梯度-Nature-Gradient" class="headerlink" title="自然梯度(Nature Gradient)"></a>自然梯度(Nature Gradient)</h2><p>NGBoost是一种概率预测的监督性学习法，通过概率分布的形式将不确定行带入了梯度计算中，再以函数的形式来预测条件概率($P(y|x)$)分布的参数。</p>
-<p>在标准预测中，目标对象是标量函数$E[y|x]$的估计，其中$x$是观察到的特征的向量，$y$是预测目标。 在NGBoost中，通过预测参数$θ∈R$来生成概率密度为$P_θ(y|x)$，$\theta$的概率预测， 相应的累积密度表示为$F_\theta$。</p>
+<p>在标准预测中，目标对象是标量函数$E[y|x]$的估计，其中$x$是观察到的特征的向量，$y$是预测目标。 在NGBoost中，通过预测参数$θ∈R$来生成概率密度为$P<em>θ(y|x)$，$\theta$的概率预测， 相应的累积密度表示为$F</em>\theta$。</p>
 <p>此处会有KL散度来定义预测分布P和真实分布Q之间的距离，通过KL散度来定义规则评分，因此最终的目标就是最小化这个规则评分S。在每次迭代中，参数的更新就会影响分布的更新，从而影响规则评分。因此参数的更新非常重要，即分布的移动和更新，论文中是通过自然梯度解决。</p>
 <h2 id="模块化"><a href="#模块化" class="headerlink" title="模块化"></a>模块化</h2><p>NGBoost主要通过基础学习器，参数概率分布和评分规则三大模块：</p>
 <ul>
@@ -189,7 +189,7 @@
 <p>从算法流程中可以看出模型是按序列学习的，每个阶段都有一组函数$f$和一个缩放因子$\varphi$。算法在开始时，首先会估计一个共同的初始分布$\theta(0)$，并通过训练使它能最小化评分规则$S$，在所有训练样本的影响了变量上的总和，在本质上就是拟合y的边际分布。</p>
 <p>在每次迭代过程中，每批次的样本都会通过评分规则$S$，计算自然梯度$g$，再通过自然梯度在基学习器上进行投影(Projection)，基学习器上投影结果通过缩放因子进行梯度缩放，再引入学习率参数$\eta$等，来更新参数$\theta$：</p>
 <script type="math/tex; mode=display">
-y|x \sim P\_{\theta}(x), \theta = \theta^{(0)}-\eta\sum\_{m=1}^{M}\varphi^{(m)}*f^{(m)}(x)</script><p>其中，$\varphi$为缩放因子，在每次迭代中都会进行更新。</p>
+y|x \sim P_{\theta}(x), \theta = \theta^{(0)}-\eta\sum_{m=1}^{M}\varphi^{(m)}*f^{(m)}(x)</script><p>其中，$\varphi$为缩放因子，在每次迭代中都会进行更新。</p>
 <h3 id="训练过程源码解析"><a href="#训练过程源码解析" class="headerlink" title="训练过程源码解析"></a>训练过程源码解析</h3><p>在官方开源的NGBoost源码中，对训练过程进行了详细的分析，目前的代码主要基于scikit-learn之上实现了NGBoost，目前实现了回归和分类(分类本身具有概率预测，因此一般都用于回归预测)。下面对源码关键部分进行注释，若要更详细了解可以参考官方开源代码：</p>
 <pre><code class="lang-python">def fit(self, X, Y, X_val=None, Y_val=None, sample_weight=None, val_sample_weight=None, train_loss_monitor=None,
         val_loss_monitor=None, early_stopping_rounds=None):
