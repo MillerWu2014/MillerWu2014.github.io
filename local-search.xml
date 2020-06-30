@@ -51,9 +51,9 @@
     
     <tags>
       
-      <tag>产品</tag>
-      
       <tag>机器学习</tag>
+      
+      <tag>产品</tag>
       
     </tags>
     
@@ -494,11 +494,11 @@
     
     <tags>
       
-      <tag>KL散度</tag>
+      <tag>GNN</tag>
       
       <tag>deep learning</tag>
       
-      <tag>GNN</tag>
+      <tag>KL散度</tag>
       
       <tag>JS散度</tag>
       
@@ -527,13 +527,13 @@
     
     <tags>
       
-      <tag>tensorflow</tag>
-      
-      <tag>deep learning</tag>
-      
       <tag>GNN</tag>
       
       <tag>generator</tag>
+      
+      <tag>deep learning</tag>
+      
+      <tag>tensorflow</tag>
       
       <tag>discriminator</tag>
       
@@ -595,9 +595,9 @@
     
     <tags>
       
-      <tag>tensorflow</tag>
-      
       <tag>deep learning</tag>
+      
+      <tag>tensorflow</tag>
       
       <tag>CNN</tag>
       
@@ -632,11 +632,11 @@
     
     <tags>
       
+      <tag>deep learning</tag>
+      
       <tag>tensorflow</tag>
       
       <tag>RNN</tag>
-      
-      <tag>deep learning</tag>
       
       <tag>LSTM</tag>
       
@@ -665,13 +665,13 @@
     
     <tags>
       
+      <tag>deep learning</tag>
+      
       <tag>tensorflow</tag>
       
       <tag>SGD</tag>
       
       <tag>RNN</tag>
-      
-      <tag>deep learning</tag>
       
     </tags>
     
@@ -1001,9 +1001,9 @@
     
     <tags>
       
-      <tag>机器学习</tag>
-      
       <tag>KL散度</tag>
+      
+      <tag>机器学习</tag>
       
       <tag>距离</tag>
       
@@ -1352,9 +1352,9 @@
     
     <tags>
       
-      <tag>boosting</tag>
-      
       <tag>bagging</tag>
+      
+      <tag>boosting</tag>
       
       <tag>randomforest</tag>
       
