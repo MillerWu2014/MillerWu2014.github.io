@@ -145,6 +145,55 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/07/16/boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">boosting系列之LightGBM算法详解</p>
+      </a>
+
+      <a href="/2019/07/16/boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">LightGBM简介LightGBM是由微软团队基于xgboost的缺点新的实现，主要思想还是基于GBDT算法，在细节上进行了优化，在效率和精度方面都超过了xgboost的实现。并且支持分布式并行，包括特征并行，数据并行以及GPU并行计算。下面就对该算法的原理和细节进行详细说明。
+LightGBM主要针对xgboost或gbdt中特征分裂进行了优化，xgb和其他gbdt的实现中都采用了pre-sort，这种方式对内存消耗和训练速度上效率都非常低，还有另外一种实现就是通过直方图算法（histogram-based algorithm）因此，LightGBM采用histogram算法来对每个特征的分裂进行优化。
+另外，为了减小训练数据集，一般是通过下采用，或者通过阈值的方式来过滤掉权重较小的数据。同样，可以通过过滤掉弱特征来减少特征量，从而在每次训练弱分类器的过程中提升模型的训练效率。但是GBDT中并没有样本权重的指标，下面就基于LightGBM论文中提出的点进行详细描述。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-07-16&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/boosting/">boosting</a>&nbsp;
+          
+            <a href="/tags/gbdt/">gbdt</a>&nbsp;
+          
+            <a href="/tags/lightgbm/">lightgbm</a>&nbsp;
+          
+            <a href="/tags/goss/">goss</a>&nbsp;
+          
+            <a href="/tags/histogram/">histogram</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2019/06/25/Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B(%E7%9C%9F%E6%AD%A3%E7%9A%84)%E7%9A%84%E6%8E%A2%E7%B4%A2/">
         <p class="h4 index-header">Python中实现多线程(真正的)的探索</p>
       </a>
@@ -531,9 +580,9 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/KL%E6%95%A3%E5%BA%A6/">KL散度</a>&nbsp;
-          
             <a href="/tags/GNN/">GNN</a>&nbsp;
+          
+            <a href="/tags/KL%E6%95%A3%E5%BA%A6/">KL散度</a>&nbsp;
           
             <a href="/tags/deep-learning/">deep learning</a>&nbsp;
           
@@ -584,13 +633,13 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
         
           <i class="iconfont icon-tag"></i>
           
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
-          
             <a href="/tags/GNN/">GNN</a>&nbsp;
           
-            <a href="/tags/generator/">generator</a>&nbsp;
-          
             <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
+          
+            <a href="/tags/generator/">generator</a>&nbsp;
           
             <a href="/tags/discriminator/">discriminator</a>&nbsp;
           
@@ -686,79 +735,11 @@ Coordinator还支持捕获和报告异常，如try:.......except Exception as er
     </div>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2018/07/03/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
-        <p class="h4 index-header">深度学习-详解CNN网络和TensorFlow实现</p>
-      </a>
-
-      <a href="/2018/07/03/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">1. 卷积神经网络概述卷积神经网络（Convolutional Neural Network, CNN） 也是神经网络中的一种结构，主要针对图像，音频，视频等方面应用。卷积神经网络较早的架构是LeNet，被认为是CNN的开端，当时主要将LeNet应用于字符识别任务，如手写数字的识别等。下面是一个LeNet的网络结构：
-
-1.1 CNN的一般结构从上面LeNet的结构中基本可以看出，CNN的大体结构：卷积层(一个或多个，包括ReLU操作等)，池化或者亚采样，分类(全连接层)几个部分组成。每个部分当然有很多细节的地方。比如卷积是如何计算，卷积核的定义等；池化操作的方式，计算方式等。但CNN模型一般都会存在这几个组件。下面对一些名词进行解释，便于后面的理解：
-
-通道：常用于表示图像的某种组成。一个标准数字相机拍摄的图像会有三通道 - 红、绿和蓝；你可以把它们看作是互相堆叠在一起的二维矩阵（每一个通道代表一个颜色），每个通道的像素值在 0 到 255 的范围内。
-灰度图像，仅仅只有一个通道。在本篇文章中，我们仅考虑灰度图像，这样我们就只有一个二维的矩阵来表示图像。矩阵中各个像素的值在 0 到 255 的范围内——零表示黑色，255 表示白色。 
-
-2.卷积层2.1 卷积的数学定义卷积神经网络中很重要的就是卷积的概念，卷积本身是在泛函分析中的定义：卷积、旋积或摺积(Convolution)是通过两个函数f 和g 生成第三个函数的一种数学算子，表征函数f 与g经过翻转和平移的重叠部分的面积。 
-从定义可以看出，卷积是一种运算，因为从定义上得出的面积，基本可以看出可以通过积分来定义，这个积分就定义 了一个新的函数,如下，就不用数学公式来详细展开了，具体可以参考维基百科上的定义（如：连续定义(积分)和离散定义(求和)）。
-
-h(x)=f(x)*g(x)=(f*g)(x)2.2 卷积的物理意义从卷积的定义上可以看出，卷积主要是进行反转，平移，加权求和(积分)；从定义上比较抽象，不易理解，从物理意义上进行解释便于理解，那么卷积计算的意义是什么呢？
-
-平滑：卷积运算是一种线性运算，比如在图像中，将某个像素点用周围所有点进行加权求和值代替。
-消除”噪声”：在1中的平滑和噪声消除相似，因为卷积本身就是进行加权求和，因此卷积后的值会过滤部分”噪声”。
-空间显著性：卷积是对某一部分值进行操作，体现了空间的特性，能对空间中的特征进行增强。
-空间变换：卷积在空间上有显著性，但是卷积本身是反转平移等操作，相当于进行了空间变换；比如某个物体，无论在空间的某个位置，卷积操作都可以将其特征抽取出来。
-
-卷积在其他领域也有很多应用，比如频谱分析，信号处理等；也有很多其他物理意义，在这儿只是列举了部分具有代表性的物理意义。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2018-07-03&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
-          
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
-            <a href="/tags/CNN/">CNN</a>&nbsp;
-          
-            <a href="/tags/ReLU/">ReLU</a>&nbsp;
-          
-            <a href="/tags/convolution/">convolution</a>&nbsp;
-          
-            <a href="/tags/pooling/">pooling</a>&nbsp;
-          
-            <a href="/tags/BN/">BN</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
 
 
   <nav aria-label="index posts navigation">
     <span class="pagination pg-blue justify-content-center mt-5" id="pagination">
-      <a class="extend prev" rel="prev" href="/"><i class="fas fa-angle-double-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/"><i class="fas fa-angle-double-right"></i></a>
+      <a class="extend prev" rel="prev" href="/"><i class="fas fa-angle-double-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/3/"><i class="fas fa-angle-double-right"></i></a>
     </span>
   </nav>
   

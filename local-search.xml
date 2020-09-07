@@ -4,6 +4,39 @@
   
   
   <entry>
+    <title>MetNet网络对未来降雨量预测</title>
+    <link href="/2020/09/05/MetNet%E9%A2%84%E6%B5%8B%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3/"/>
+    <url>/2020/09/05/MetNet%E9%A2%84%E6%B5%8B%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3/</url>
+    
+    <content type="html"><![CDATA[<p>MetNet是Google提出的用于空间降雨量预测的模型，通过深度学习的方式对未来的降雨量进行预测，可以实现未来8小时的降雨量预测，而且每2分钟更新一次。而模型的最终效果好于传统的传统的方法。</p><h2 id="1-降雨量预测"><a href="#1-降雨量预测" class="headerlink" title="1.降雨量预测"></a>1.降雨量预测</h2><p>主要使用了MRMS的数据和GOES-16的16个波段数据作为输入，覆盖了全美国区域，输入为一个张量，为时空型数据，每个像元代表为1km的空间分辨率。模型输出的张量为一个3维张量，每个值代表了一个时间，一个位置对应的降雨量。</p><h2 id="2-NWMs-Neural-Weather-Models"><a href="#2-NWMs-Neural-Weather-Models" class="headerlink" title="2.NWMs(Neural Weather Models)"></a>2.NWMs(Neural Weather Models)</h2><p>NWMs就是预测在时间T下，$X$条件下的概率$y$，可以见简单的表示为：</p><script type="math/tex; mode=display">p(y|x)=DNN_{\theta}(x)</script><p>其中$p(y|x)$就是基于输入$x$下$y$的概率分布，$\theta$为深度学习要学习到的参数。NWM是通过概率形式计算可能结果的概率分布来说明不确定性，而不是产生单一的确定性输出。模型的整体结构如下图所示：</p><p><img src="/uploads/image-20200715140513390.png" srcset="/img/loading.gif" alt="image-20200715140513390"></p><p>从上面NWMs的整体框架图可以看出模型的输入和输出，整个的结构由<strong>空间下采样器，时间编码器和空间聚合器</strong>三大部分组成。</p><h2 id="3-MetNet架构"><a href="#3-MetNet架构" class="headerlink" title="3.MetNet架构"></a>3.MetNet架构</h2><h3 id="3-1-输入层"><a href="#3-1-输入层" class="headerlink" title="3.1 输入层"></a>3.1 输入层</h3><p>MetNet接收四维的张量$(t,w,h,c)$，分别为时间维度，width，height和通道数。在时间维度上取前90分钟的数据，每15分钟一次。输入的width和height分别为1024，1024。MRMS的雷达图像为单一特征，GOES-16的波段特征为多通道（16个波段）。同时会输入每个位置的经度和纬度数据，每个位置的海拔高度，需要预测的时间（拆分为月，天，小时）。</p><h3 id="3-2-输出层"><a href="#3-2-输出层" class="headerlink" title="3.2 输出层"></a>3.2 输出层</h3><p>MetNet输出一个512个类别的分布，每个类别为从0mm/h-102.4mm/h间隔为0.2mm/h的降雨量。将雨量预测变为了512个类别的分类问题。</p><h3 id="3-3-空间下采样器"><a href="#3-3-空间下采样器" class="headerlink" title="3.3 空间下采样器"></a>3.3 空间下采样器</h3><p>MetNet这一部分主要是压缩输入张量。在空间上使用一系列卷积和池化操作。沿着时间维度进切片，每个切片分别进行处理。每个切片首先被打包成一个空间的输入张量，尺寸为256<em>256，具体打包可以参考下图<em>*打包流程</em></em>。然后，每个切片都被以下神经网络层处理：一个有160个通道的 $3\times3$卷积；一个$2\times2$的max-pooling层，stride为2；3个$3\times3$的256通道卷积；一个$2\times2$最大池化层，stride为2。这些操作产生了空间维度的$64 \times 64$和256通道张量。</p><p><img src="/uploads/image-20200715145510115.png" srcset="/img/loading.gif" alt="打包流程"></p><h3 id="3-4-时间编码器"><a href="#3-4-时间编码器" class="headerlink" title="3.4 时间编码器"></a>3.4 时间编码器</h3><p>这一部分主要是沿时间维度对输入的张量进行编码，将输入到一个convLSTM网络中，该网络的kernel size为$3 \times 3$，输出384个通道数。利用RNN网络在时间序列中动态找出时间维度的模式特征。最终输出一个单向量为$64\times64$，通道数为384的张量。再将结果输入到下一步骤中。convLSTM结构（FC-LSTM的改进）参考如下：</p><p><img src="/uploads/image-20200715162343841.png" srcset="/img/loading.gif" alt="image-20200715162343841"></p><p>其中，<code>*</code>为卷积运算，<code>o</code>为Hadamard乘积。</p><h3 id="3-5-空间聚合器"><a href="#3-5-空间聚合器" class="headerlink" title="3.5 空间聚合器"></a>3.5 空间聚合器</h3><p>MetNet在这部分主要通过<code>self-attention blocks</code>进行操作，包含8个轴注意力网络，其中4个是沿宽度操作的，4个是沿高度操作的。这8个网络的作用是使MetNet的接收域涵盖全局信。每个<code>self-attention blocks</code>有2048个通道和16个<code>attention heads</code>。</p><h2 id="4-效果"><a href="#4-效果" class="headerlink" title="4.效果"></a>4.效果</h2><p>最终效果远超过物理模型，谷歌的神经天气模型的一个显著优点是，它是为密集并行计算而优化的，并且非常适合在专用硬件（如 TPU）上运行。无论是针对纽约市这样的特定地点还是针对整个美国，预测可以在几秒钟内并行进行。而物理模型在超级计算机上的运行时间约为一小时。和NOAA的HRRR系统进行了对比，通过F1指标对比如下，其结果MetNet始终是优于HRRR模型。</p><p><img src="/uploads/image-20200715160040183.png" srcset="/img/loading.gif" alt="image-20200715160040183"></p><h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5.总结"></a>5.总结</h2><ol><li><p>该模型在预测降雨时输入的数据主要包括了雷达数据，GEOS-16的16个波段数据（波段数据主要是能反映气象信息，如云，地表属性，间接性温度等等），高程（海拔)，这些数据都是时空型数据。另外加入了将要预测的日期(月，天，小时)和经纬度。</p></li><li><p>降雨量预测本质还是时空型数据预测问题，因此MetNet使用了卷积对空间特征进行提取，再使用LSTM对时间维度上的模型进行提取，最后加入Attention综合全局信息，对降雨量进行预测。</p></li><li><p>在对目标的处理上，将降雨量以0.2mm进行分割为512个类别。这种处理方式直接将预测变为分类问题，在应用中是非常可取的。</p></li><li><p>存在的几个疑问：</p><ul><li><strong>为什么不直接使用历史的降雨量数据作为输入？</strong>（可能是因为降雨本身也是通过云图等产生的，通过雷达图推断出来的降雨。另外就是降雨量的历史真真实数据收集存在误差，NOAA的结果也是存在较大误差。作为输入存在问题，作为目标是可以的。）</li><li><strong>预测未来某个t+k时刻的降雨，并未使用t+k-1时刻的预测值？</strong>（传统的时间序列问题，在预测未来某个时刻会使用前一个时刻的结果，作为张量处理的时候直接采用了端到端的结构，直接预测未来一段时间。）</li></ul></li></ol>]]></content>
+    
+    
+    <categories>
+      
+      <category>deeplearning</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>gradient</tag>
+      
+      <tag>attention</tag>
+      
+      <tag>last</tag>
+      
+      <tag>deep-learning</tag>
+      
+      <tag>convLSTM</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>boosting系列之NGBoost算法详解</title>
     <link href="/2020/06/11/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/"/>
     <url>/2020/06/11/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/</url>
@@ -219,9 +252,9 @@
       
       <tag>boosting</tag>
       
-      <tag>catboost</tag>
-      
       <tag>target-statistics</tag>
+      
+      <tag>catboost</tag>
       
       <tag>categorical</tag>
       
@@ -494,9 +527,9 @@
     
     <tags>
       
-      <tag>KL散度</tag>
-      
       <tag>GNN</tag>
+      
+      <tag>KL散度</tag>
       
       <tag>deep learning</tag>
       
@@ -527,13 +560,13 @@
     
     <tags>
       
-      <tag>tensorflow</tag>
-      
       <tag>GNN</tag>
       
-      <tag>generator</tag>
-      
       <tag>deep learning</tag>
+      
+      <tag>tensorflow</tag>
+      
+      <tag>generator</tag>
       
       <tag>discriminator</tag>
       
@@ -595,9 +628,9 @@
     
     <tags>
       
-      <tag>tensorflow</tag>
-      
       <tag>deep learning</tag>
+      
+      <tag>tensorflow</tag>
       
       <tag>CNN</tag>
       
@@ -632,9 +665,9 @@
     
     <tags>
       
-      <tag>tensorflow</tag>
-      
       <tag>deep learning</tag>
+      
+      <tag>tensorflow</tag>
       
       <tag>RNN</tag>
       
@@ -665,11 +698,11 @@
     
     <tags>
       
+      <tag>deep learning</tag>
+      
       <tag>tensorflow</tag>
       
       <tag>SGD</tag>
-      
-      <tag>deep learning</tag>
       
       <tag>RNN</tag>
       
@@ -974,9 +1007,9 @@
     
     <tags>
       
-      <tag>SGD</tag>
-      
       <tag>梯度下降</tag>
+      
+      <tag>SGD</tag>
       
     </tags>
     
@@ -1001,9 +1034,9 @@
     
     <tags>
       
-      <tag>机器学习</tag>
-      
       <tag>KL散度</tag>
+      
+      <tag>机器学习</tag>
       
       <tag>距离</tag>
       

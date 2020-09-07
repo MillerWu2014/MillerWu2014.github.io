@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>MetNet网络对未来降雨量预测 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/SpainSurfer_EN-AU11271138486_1920x1080.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 九月 5日 2020, 10:08 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      5 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>MetNet是Google提出的用于空间降雨量预测的模型，通过深度学习的方式对未来的降雨量进行预测，可以实现未来8小时的降雨量预测，而且每2分钟更新一次。而模型的最终效果好于传统的传统的方法。</p>
+<h2 id="1-降雨量预测"><a href="#1-降雨量预测" class="headerlink" title="1.降雨量预测"></a>1.降雨量预测</h2><p>主要使用了MRMS的数据和GOES-16的16个波段数据作为输入，覆盖了全美国区域，输入为一个张量，为时空型数据，每个像元代表为1km的空间分辨率。模型输出的张量为一个3维张量，每个值代表了一个时间，一个位置对应的降雨量。</p>
+<h2 id="2-NWMs-Neural-Weather-Models"><a href="#2-NWMs-Neural-Weather-Models" class="headerlink" title="2.NWMs(Neural Weather Models)"></a>2.NWMs(Neural Weather Models)</h2><p>NWMs就是预测在时间T下，$X$条件下的概率$y$，可以见简单的表示为：</p>
+<script type="math/tex; mode=display">
+p(y|x)=DNN_{\theta}(x)</script><p>其中$p(y|x)$就是基于输入$x$下$y$的概率分布，$\theta$为深度学习要学习到的参数。NWM是通过概率形式计算可能结果的概率分布来说明不确定性，而不是产生单一的确定性输出。模型的整体结构如下图所示：</p>
+<p><img src="/uploads/image-20200715140513390.png" srcset="/img/loading.gif" alt="image-20200715140513390"></p>
+<p>从上面NWMs的整体框架图可以看出模型的输入和输出，整个的结构由<strong>空间下采样器，时间编码器和空间聚合器</strong>三大部分组成。</p>
+<h2 id="3-MetNet架构"><a href="#3-MetNet架构" class="headerlink" title="3.MetNet架构"></a>3.MetNet架构</h2><h3 id="3-1-输入层"><a href="#3-1-输入层" class="headerlink" title="3.1 输入层"></a>3.1 输入层</h3><p>MetNet接收四维的张量$(t,w,h,c)$，分别为时间维度，width，height和通道数。在时间维度上取前90分钟的数据，每15分钟一次。输入的width和height分别为1024，1024。MRMS的雷达图像为单一特征，GOES-16的波段特征为多通道（16个波段）。同时会输入每个位置的经度和纬度数据，每个位置的海拔高度，需要预测的时间（拆分为月，天，小时）。</p>
+<h3 id="3-2-输出层"><a href="#3-2-输出层" class="headerlink" title="3.2 输出层"></a>3.2 输出层</h3><p>MetNet输出一个512个类别的分布，每个类别为从0mm/h-102.4mm/h间隔为0.2mm/h的降雨量。将雨量预测变为了512个类别的分类问题。</p>
+<h3 id="3-3-空间下采样器"><a href="#3-3-空间下采样器" class="headerlink" title="3.3 空间下采样器"></a>3.3 空间下采样器</h3><p>MetNet这一部分主要是压缩输入张量。在空间上使用一系列卷积和池化操作。沿着时间维度进切片，每个切片分别进行处理。每个切片首先被打包成一个空间的输入张量，尺寸为256<em>256，具体打包可以参考下图<em>*打包流程</em></em>。然后，每个切片都被以下神经网络层处理：一个有160个通道的 $3\times3$卷积；一个$2\times2$的max-pooling层，stride为2；3个$3\times3$的256通道卷积；一个$2\times2$最大池化层，stride为2。这些操作产生了空间维度的$64 \times 64$和256通道张量。</p>
+<p><img src="/uploads/image-20200715145510115.png" srcset="/img/loading.gif" alt="打包流程"></p>
+<h3 id="3-4-时间编码器"><a href="#3-4-时间编码器" class="headerlink" title="3.4 时间编码器"></a>3.4 时间编码器</h3><p>这一部分主要是沿时间维度对输入的张量进行编码，将输入到一个convLSTM网络中，该网络的kernel size为$3 \times 3$，输出384个通道数。利用RNN网络在时间序列中动态找出时间维度的模式特征。最终输出一个单向量为$64\times64$，通道数为384的张量。再将结果输入到下一步骤中。convLSTM结构（FC-LSTM的改进）参考如下：</p>
+<p><img src="/uploads/image-20200715162343841.png" srcset="/img/loading.gif" alt="image-20200715162343841"></p>
+<p>其中，<code>*</code>为卷积运算，<code>o</code>为Hadamard乘积。</p>
+<h3 id="3-5-空间聚合器"><a href="#3-5-空间聚合器" class="headerlink" title="3.5 空间聚合器"></a>3.5 空间聚合器</h3><p>MetNet在这部分主要通过<code>self-attention blocks</code>进行操作，包含8个轴注意力网络，其中4个是沿宽度操作的，4个是沿高度操作的。这8个网络的作用是使MetNet的接收域涵盖全局信。每个<code>self-attention blocks</code>有2048个通道和16个<code>attention heads</code>。</p>
+<h2 id="4-效果"><a href="#4-效果" class="headerlink" title="4.效果"></a>4.效果</h2><p>最终效果远超过物理模型，谷歌的神经天气模型的一个显著优点是，它是为密集并行计算而优化的，并且非常适合在专用硬件（如 TPU）上运行。无论是针对纽约市这样的特定地点还是针对整个美国，预测可以在几秒钟内并行进行。而物理模型在超级计算机上的运行时间约为一小时。和NOAA的HRRR系统进行了对比，通过F1指标对比如下，其结果MetNet始终是优于HRRR模型。</p>
+<p><img src="/uploads/image-20200715160040183.png" srcset="/img/loading.gif" alt="image-20200715160040183"></p>
+<h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5.总结"></a>5.总结</h2><ol>
+<li><p>该模型在预测降雨时输入的数据主要包括了雷达数据，GEOS-16的16个波段数据（波段数据主要是能反映气象信息，如云，地表属性，间接性温度等等），高程（海拔)，这些数据都是时空型数据。另外加入了将要预测的日期(月，天，小时)和经纬度。</p>
+</li>
+<li><p>降雨量预测本质还是时空型数据预测问题，因此MetNet使用了卷积对空间特征进行提取，再使用LSTM对时间维度上的模型进行提取，最后加入Attention综合全局信息，对降雨量进行预测。</p>
+</li>
+<li><p>在对目标的处理上，将降雨量以0.2mm进行分割为512个类别。这种处理方式直接将预测变为分类问题，在应用中是非常可取的。</p>
+</li>
+<li><p>存在的几个疑问：</p>
+<ul>
+<li><strong>为什么不直接使用历史的降雨量数据作为输入？</strong>（可能是因为降雨本身也是通过云图等产生的，通过雷达图推断出来的降雨。另外就是降雨量的历史真真实数据收集存在误差，NOAA的结果也是存在较大误差。作为输入存在问题，作为目标是可以的。）</li>
+<li><strong>预测未来某个t+k时刻的降雨，并未使用t+k-1时刻的预测值？</strong>（传统的时间序列问题，在预测未来某个时刻会使用前一个时刻的结果，作为张量处理的时候直接采用了端到端的结构，直接预测未来一段时间。）</li>
+</ul>
+</li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deeplearning/">deeplearning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/gradient/">gradient</a>
+                    
+                      <a class="hover-with-bg" href="/tags/attention/">attention</a>
+                    
+                      <a class="hover-with-bg" href="/tags/last/">last</a>
+                    
+                      <a class="hover-with-bg" href="/tags/deep-learning/">deep-learning</a>
+                    
+                      <a class="hover-with-bg" href="/tags/convLSTM/">convLSTM</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/06/11/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+                        <span class="hidden-mobile">boosting系列之NGBoost算法详解</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "MetNet网络对未来降雨量预测&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
+
+
+
+  
+  
+    <script type="text/javascript">
+      //定义获取词语下标
+      var a_idx = 0;
+      jQuery(document).ready(function ($) {
+        //点击body时触发事件
+        $("body").click(function (e) {
+          //需要显示的词语
+          var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正", "法治", "爱国", "敬业", "诚信", "友善");
+          //设置词语给span标签
+          var $i = $("<span/>").text(a[a_idx]);
+          //下标等于原来下标+1  余 词语总数
+          a_idx = (a_idx + 1) % a.length;
+          //获取鼠标指针的位置，分别相对于文档的左和右边缘。
+          //获取x和y的指针坐标
+          var x = e.pageX, y = e.pageY;
+          //在鼠标的指针的位置给$i定义的span标签添加css样式
+          $i.css({
+            "z-index": 999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": rand_color()
+          });
+          // 随机颜色
+          function rand_color() {
+            return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")"
+          }
+          //在body添加这个标签
+          $("body").append($i);
+          //animate() 方法执行 CSS 属性集的自定义动画。
+          //该方法通过CSS样式将元素从一个状态改变为另一个状态。CSS属性值是逐渐改变的，这样就可以创建动画效果。
+          //详情请看http://www.w3school.com.cn/jquery/effect_animate.asp
+          $i.animate({
+            //将原来的位置向上移动180
+            "top": y - 180,
+            "opacity": 0
+            //1500动画的速度
+          }, 1500, function () {
+            //时间到了自动删除
+            $i.remove();
+          });
+        });
+      })
+      ;
+    </script>
+  
+
+
+
+
+
+
+
+
+</body>
+</html>
