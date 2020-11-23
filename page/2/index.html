@@ -145,6 +145,68 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/08/04/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">boosting系列之CatBoost算法详解</p>
+      </a>
+
+      <a href="/2019/08/04/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">CatBoost是由俄罗斯的搜索公司Yandex提出的一类boosting集成学习算法，该算法主要是解决类别型特征的学习，可以直接对字符型类别特征进行处理和学习，使用非常简单，实用。因此算法名称也叫做CatBoost（categorical和boosting两者的结合）,该算法支持GPU，以及训练过程可视化等，支持Python，R等建模，也支持其他语言的部署。官方的论文结构如下，本文主要对3，4两个部分进行说明。
+---- 1.Introduction
+---- 2.Background
+---- 3.Categorical feature
+--------Target statistics: Greedy TS, Holdout TS, Leave-one-out TS, Ordered TS
+---- 4.Prediction shift and ordered boosting
+--------Prediction shift
+--------Ordered boosting
+---- 5.Practical implementation of ordered boosting
+
+Categorical features(类别特征)这部分主要是对类别特征转化为数值型特征，一般类别特征的最简单的方式就是通过对应标签的平均值来代替，而CatBoost则使用了自己设定的方式来进行转换，而且会进行特征组合，生成新的特征。
+Greedy TS类别特征不能直接在boosting中使用，因此需要将类别特征转换为数值型特征，CatBoost处理Categorical features的方式有别于其他方式，首先会计算TS(target statistics)，而传统的方式是：
+
+\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right] \cdot Y_{i}}{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right]}CatBoost对该方法进行了优化，采用Greedy TS，添加先验分布项，这样可以减少噪声和低频率数据对于数据分布的影响（这个公式写的很奇怪，可能是俄罗斯人思维方式和我们的差异）：
+
+\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right] Y_{\sigma, j}+a \cdot P}{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right]}其中，$a$为大于0的参数，$P$一般是target值得均值(添加的先验项)。其中方括弧中即满足条件为1，否则为0。但是上面得式子会出现一个问题就是greedy导致target leakage，$\hat{x}_{k}^{i}$的计算需要使用$y_k$和$x_k$，这样会出现target leakage，即$E\left(\hat{x}^{i} | y=v\right)=E\left(\hat{x}_{k}^{i} | y_{k}=v\right)$不成立。解决办法就是去掉$x_k$：D\_{k} \subset D-\left\{x\_{k}\right\}的样本来估计$\hat{x}_{k}^{i}$的值，不使用全部数据集合$D$。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-08-04&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/boosting/">boosting</a>&nbsp;
+          
+            <a href="/tags/target-statistics/">target-statistics</a>&nbsp;
+          
+            <a href="/tags/catboost/">catboost</a>&nbsp;
+          
+            <a href="/tags/categorical/">categorical</a>&nbsp;
+          
+            <a href="/tags/feature/">feature</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2019/07/20/%E8%BD%A8%E8%BF%B9%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93/">
         <p class="h4 index-header">基于轨迹的数据挖掘相关技术总结</p>
       </a>
@@ -639,59 +701,6 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
             <a href="/tags/JS%E6%95%A3%E5%BA%A6/">JS散度</a>&nbsp;
           
             <a href="/tags/Wasserstein/">Wasserstein</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2018/11/06/GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
-        <p class="h4 index-header">深度学习-GAN网络详解及TensorFlow实现</p>
-      </a>
-
-      <a href="/2018/11/06/GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">GAN的基本介绍2014 年，Ian Goodfellow 及其蒙特利尔大学的同事引入了生成对抗网络（GAN）。这是一种学习数据的基本分布的全新方法，让生成出的人工对象可以和真实对象之间达到惊人的相似度。
-基本概念GAN（Generative Adversarial Networks），是一种生成式的，对抗网络。再具体一点，就是通过对抗的方式，去学习数据分布的生成式模型。所谓的对抗，指的是生成网络和判别网络的互相对抗。生成网络尽可能生成逼真样本，判别网络则尽可能去判别该样本是真实样本，还是生成的假样本。示意图如下：
-
-基本原理生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器$G$的目标是基于噪声变量$z$生成一个对象$x^{‘}$，并使其看起来和真的$x$一样。而判别器$D$的目标就是找到生成出的结果和真实$x$之间的差异，差异越小越好。如上图所示。隐变量$ z $（通常为服从高斯分布的随机噪声）通过 Generator 生成 $X_{fake}$, 判别器负责判别输入的 data 是生成的样本 $X{fake}$还是真实样本 $X\{real}$。通过公式描述如下所示：
-
-\min _{G} \max _{D} V(D, G)=\mathbb{E}_{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}_{\boldsymbol{z} \sim p_{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]对于判别器 $D$ 来说，这是一个二分类问题，$V(D,G)$ 为二分类问题中常见的交叉熵损失。对于生成器 $G$ 来说，为了尽可能欺骗 $D$，所以需要最大化生成样本的判别概率 $D(G(z))$，即最小化 $log(1-D(G(z)))$，注意：$log(D(x))$ 一项与生成器 $G$ 无关，所以可以忽略。
-实际训练时，生成器和判别器采取交替训练，即先训练 $D$，然后训练 $G$，不断往复。值得注意的是，对于生成器，其最小化的是$\max\ _{D} V(D, G)$，即最小化$V(D,G)$ 的最大值，这样形成一个对抗的过程。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2018-11-06&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/GNN/">GNN</a>&nbsp;
-          
-            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
-          
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
-          
-            <a href="/tags/generator/">generator</a>&nbsp;
-          
-            <a href="/tags/discriminator/">discriminator</a>&nbsp;
           
         
       </div>

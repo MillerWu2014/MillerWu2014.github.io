@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="Miller Wu">
   <meta name="keywords" content="">
-  <title>归档 - Miller&#39;s Blog</title>
+  <title>Convolutional Pose Machines论文记录 - Miller&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
@@ -111,7 +111,7 @@
 </nav>
 
     <div class="view intro-2" id="background" parallax=true
-         style="background: url('/img/OceanCurrents_ZH-CN13704695457_1920x1080.jpg') no-repeat center center;
+         style="background: url('/img/SpainSurfer_EN-AU11271138486_1920x1080.jpg') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask rgba-black-light flex-center">
@@ -120,6 +120,33 @@
               
             </span>
 
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期日, 九月 27日 2020, 9:45 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    605 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      2 分钟
+                  </span>
+                
+
+                
+              </p>
             
           </div>
 
@@ -131,37 +158,113 @@
 
   <main>
     
-      <div class="container nopadding-md">
-        <div class="py-5 z-depth-3" id="board"
-          >
-          
-          <div class="container">
-            <div class="row">
-              <div class="col-12 col-md-10 m-auto">
-                
-
-<div class="list-group">
-  <p class="h4">共计 53 篇文章</p>
-  <hr>
-  
-    
       
-      <p class="h5">2019</p>
-    
-    <a href="/2019/05/01/%E9%AB%98%E6%96%AF%E8%BF%87(Gaussian%20Process)%E7%A8%8B%E7%90%86%E8%A7%A3/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">高斯过程（Gaussian Process）理解</span>
-      <span style="float: right;">05-01</span>
-    </a>
-  
-</div>
 
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <p>CPM模型的结构如下图所示。主要分为了不同的Stage。在<strong>stage1</strong>中，输入图片368×368，卷积层不改变feature maps的width和height，经三次 pooling 层，输出的feature maps大小46×46，共P+1个feature maps。stage≥2时，输入包括3部分，原始图片的特征X_z,前一stage输出的局部置信图(belief maps)和生成的center的Gaussian中心约束；网络的输出是一致的，都是46×46×(P+1)的feature maps。</p>
+<p><img src="/uploads/cpm_struct.png" srcset="/img/loading.gif" alt="./CPM"></p>
+<p><img src="/uploads/cpm_cnn.png" srcset="/img/loading.gif" alt="CPM_CNN"></p>
+<p>Stage1：input是原始图像，经过全卷机网络，输出是一个P+1层的2Dmap。其中，全卷积网络中有7个卷积层，3个池化层，原始输入图片是 368<em>368 ，经过3次池化后得到 46</em>46 大小。又因为这里使用的数据库是半身结构，只有9个关节点，因此加上背景，输出的响应图大小应该是46<em>46</em>10。<a id="more"></a></p>
+<p>Stage2：input是 Stage1 的 Output 响应谱，并且加上原始图像通过几层网络后的特征谱 feature map。输出是一个P+1层的2Dmap。其中，stage 2 融合了三部分的信息–一是stage1的响应图，二是原始图像的图像特征，三是高斯模版生成的中心约束。图像深度变为10+32+1=43。</p>
+<p>Stage3：及其后面各个阶段的网络结构和 Stage 2 相似为了防止训练时出现梯度消失的问题：论文采用了中层监督（加入中层loss），加强反向传播。</p>
+<ul>
+<li>center map为一个高斯响应,因为cpm处理的是单人pose的问题，如果图片中有多人，那么center map可以告诉网络，目前要处理的那个人的位置。因为这样的设置，cpm也可以自底向上地处理多人pose的问题。</li>
+</ul>
+<h2 id="关键点"><a href="#关键点" class="headerlink" title="关键点"></a>关键点</h2><ol>
+<li>在Stage2中将原始的图像X进行了变换，生成了X‘，再将X‘输入到stage≥2的网络中。</li>
+<li>Center Map(生成的Center的Gaussian中心约束)是怎么样生成的？高斯模版生成的中心约束</li>
+<li>图像增强处理：随机旋转图片 [-40, 40]，图片缩放 [0.7, 1.3]，水平翻转</li>
+<li>中继监督：每个stage都进行loss计算，最终将每个stage的loss进行求和，作为总的loss。防止梯度小时，保证底层参数正常更新。</li>
+</ol>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/qq_36165459/article/details/78321054" target="_blank" rel="noopener">论文阅读：《Convolutional Pose Machines》CVPR 2016_青青韶华-CSDN博客</a></p>
+<p><a href="https://blog.csdn.net/u010579901/article/details/79606257" target="_blank" rel="noopener">论文阅读笔记: 2016 cvpr Convolutional Pose Machines_ProYH-CSDN博客</a></p>
 
-
-              </div>
             </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/deep-learning/">deep-learning</a>
+                    
+                      <a class="hover-with-bg" href="/tags/CNN/">CNN</a>
+                    
+                      <a class="hover-with-bg" href="/tags/convolution/">convolution</a>
+                    
+                      <a class="hover-with-bg" href="/tags/HPE/">HPE</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/10/24/%E6%99%BA%E8%83%BD%E9%99%B7%E8%BF%9B%E8%A7%82%E5%90%8E%E6%84%9F/">
+                        <i class="fa fa-chevron-left"></i>
+                        <span class="hidden-mobile">智能陷进观后感</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/09/05/MetNet%E9%A2%84%E6%B5%8B%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3/">
+                        <span class="hidden-mobile">MetNet网络对未来降雨量预测</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
           </div>
         </div>
       </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
     
   </main>
 
@@ -226,6 +329,59 @@
 
 
 
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
 
 
   <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
@@ -257,7 +413,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "归档&nbsp;",
+        "Convolutional Pose Machines论文记录&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

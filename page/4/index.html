@@ -145,6 +145,54 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/10/13/%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C/">
+        <p class="h4 index-header">使用python连接hive数据库并进行数据操作</p>
+      </a>
+
+      <a href="/2017/10/13/%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">在数据抽取或者数据存取过程中难免会遇到用其他语言对hive数据库进行操作。如python远程对hive数据库进行操作，需要通过thrift服务进行操作。本文的环境是python==3.6.1， hive==1.1.0，thfit==0.10.0
+ThriftServer介绍客户端对hive数据库进行操作可以通过Cli进行，在本地这种方式较好，但是在远程操作时会很麻烦，因此提供了hiveserver和hiveserver2，在不启动cli的情况下对hive进行操作，可以在远程通过其他语言(java, python, php等)向hive请求并返回结果。也就是利用thrift进行整个过程操作。
+hiveserver2主要是向远程调用提供了接口，通过thrift rpc实现，进行远程的操作。可以实现远程并行操作hive数据库。启动hiveserver2如下：
+nohup hive --service hiveserver2 &amp;
+
+在启动后hiveserver2默认监听的端口为10000，可以在hive的配置文件(hive-site.xml)中查看或者修改该端口。可以通过命令查看该端口是否被监听：netstat -antp | grep 10000...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-10-13&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/python/">python</a>&nbsp;
+          
+            <a href="/tags/hive/">hive</a>&nbsp;
+          
+            <a href="/tags/thrift/">thrift</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2017/10/10/%E5%AF%B9pyc%E5%92%8Cpyo%E6%96%87%E4%BB%B6%E7%9A%84%E7%90%86%E8%A7%A3/">
         <p class="h4 index-header">对pyc和pyo文件的理解</p>
       </a>
@@ -560,47 +608,6 @@ class loadData {
             <a href="/tags/%E4%BC%98%E5%8C%96/">优化</a>&nbsp;
           
             <a href="/tags/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D/">梯度下降</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2017/07/09/numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C/">
-        <p class="h4 index-header">numba加速python程序运行</p>
-      </a>
-
-      <a href="/2017/07/09/numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">python作为一个动态语言，在运行效率上为一大缺陷，但是作为一门成熟的语言，有很多方式可以提高python的运行效率，如:cpython, pypy,numba,LLVMPy。个人主要用户python处理数据和写一些数据挖掘方面的算法，因此使用numba较为方便。因此对numba说明下，并作为笔记记录以便以后查阅。numba的来源主要，NumPy的创始人Travis Oliphant在离开Enthought之后，创建了CONTINUUM，致力于将Python大数据处理方面的应用。最近推出的Numba项目能够将处理NumPy数组的Python函数JIT编译为机器码执行，从而上百倍的提高程序的运算速度。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-09&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/Python/">Python</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/numba/">numba</a>&nbsp;
-          
-            <a href="/tags/numpy/">numpy</a>&nbsp;
           
         
       </div>

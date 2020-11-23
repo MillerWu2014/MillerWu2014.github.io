@@ -188,6 +188,54 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2020/09/27/ConvolutionalPoseMachines%E8%AE%BA%E6%96%87%E8%AE%B0%E5%BD%95/">
+        <p class="h4 index-header">Convolutional Pose Machines论文记录</p>
+      </a>
+
+      <a href="/2020/09/27/ConvolutionalPoseMachines%E8%AE%BA%E6%96%87%E8%AE%B0%E5%BD%95/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">CPM模型的结构如下图所示。主要分为了不同的Stage。在stage1中，输入图片368×368，卷积层不改变feature maps的width和height，经三次 pooling 层，输出的feature maps大小46×46，共P+1个feature maps。stage≥2时，输入包括3部分，原始图片的特征X_z,前一stage输出的局部置信图(belief maps)和生成的center的Gaussian中心约束；网络的输出是一致的，都是46×46×(P+1)的feature maps。
+
+
+Stage1：input是原始图像，经过全卷机网络，输出是一个P+1层的2Dmap。其中，全卷积网络中有7个卷积层，3个池化层，原始输入图片是 368368 ，经过3次池化后得到 4646 大小。又因为这里使用的数据库是半身结构，只有9个关节点，因此加上背景，输出的响应图大小应该是464610。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2020-09-27&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/deep-learning/">deep learning</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/deep-learning/">deep-learning</a>&nbsp;
+          
+            <a href="/tags/CNN/">CNN</a>&nbsp;
+          
+            <a href="/tags/convolution/">convolution</a>&nbsp;
+          
+            <a href="/tags/HPE/">HPE</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2020/09/05/MetNet%E9%A2%84%E6%B5%8B%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3/">
         <p class="h4 index-header">MetNet网络对未来降雨量预测</p>
       </a>
@@ -607,68 +655,6 @@ Let’s get started....</div>
             <a href="/tags/%E9%9D%99/">静</a>&nbsp;
           
             <a href="/tags/%E7%94%9F%E6%B4%BB/">生活</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2019/08/04/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
-        <p class="h4 index-header">boosting系列之CatBoost算法详解</p>
-      </a>
-
-      <a href="/2019/08/04/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">CatBoost是由俄罗斯的搜索公司Yandex提出的一类boosting集成学习算法，该算法主要是解决类别型特征的学习，可以直接对字符型类别特征进行处理和学习，使用非常简单，实用。因此算法名称也叫做CatBoost（categorical和boosting两者的结合）,该算法支持GPU，以及训练过程可视化等，支持Python，R等建模，也支持其他语言的部署。官方的论文结构如下，本文主要对3，4两个部分进行说明。
----- 1.Introduction
----- 2.Background
----- 3.Categorical feature
---------Target statistics: Greedy TS, Holdout TS, Leave-one-out TS, Ordered TS
----- 4.Prediction shift and ordered boosting
---------Prediction shift
---------Ordered boosting
----- 5.Practical implementation of ordered boosting
-
-Categorical features(类别特征)这部分主要是对类别特征转化为数值型特征，一般类别特征的最简单的方式就是通过对应标签的平均值来代替，而CatBoost则使用了自己设定的方式来进行转换，而且会进行特征组合，生成新的特征。
-Greedy TS类别特征不能直接在boosting中使用，因此需要将类别特征转换为数值型特征，CatBoost处理Categorical features的方式有别于其他方式，首先会计算TS(target statistics)，而传统的方式是：
-
-\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right] \cdot Y_{i}}{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right]}CatBoost对该方法进行了优化，采用Greedy TS，添加先验分布项，这样可以减少噪声和低频率数据对于数据分布的影响（这个公式写的很奇怪，可能是俄罗斯人思维方式和我们的差异）：
-
-\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right] Y_{\sigma, j}+a \cdot P}{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right]}其中，$a$为大于0的参数，$P$一般是target值得均值(添加的先验项)。其中方括弧中即满足条件为1，否则为0。但是上面得式子会出现一个问题就是greedy导致target leakage，$\hat{x}_{k}^{i}$的计算需要使用$y_k$和$x_k$，这样会出现target leakage，即$E\left(\hat{x}^{i} | y=v\right)=E\left(\hat{x}_{k}^{i} | y_{k}=v\right)$不成立。解决办法就是去掉$x_k$：D\_{k} \subset D-\left\{x\_{k}\right\}的样本来估计$\hat{x}_{k}^{i}$的值，不使用全部数据集合$D$。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2019-08-04&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/boosting/">boosting</a>&nbsp;
-          
-            <a href="/tags/target-statistics/">target-statistics</a>&nbsp;
-          
-            <a href="/tags/catboost/">catboost</a>&nbsp;
-          
-            <a href="/tags/categorical/">categorical</a>&nbsp;
-          
-            <a href="/tags/feature/">feature</a>&nbsp;
           
         
       </div>
