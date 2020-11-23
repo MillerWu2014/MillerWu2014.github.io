@@ -145,6 +145,69 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/06/06/%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95__getattr__%E5%92%8C__getattribute__%E7%9A%84%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">魔法方法__getattr__和__getattribute__的详解</p>
+      </a>
+
+      <a href="/2017/06/06/%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95__getattr__%E5%92%8C__getattribute__%E7%9A%84%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">__getattr__() 和 __getattribute__()的定义python在属性访问上定义了__getattr__() 和 __getattribute__()两种方法。区别是很小，但是必须了解他们之间的区别，否则在使用的过程中会导致严重的后果。首先看这两个方法的定义：
+
+如果在类中定义了__getattr__()这个方法，那么在对象查询属性时,如果这个属性在类中定义了，如一个已经实例化的对象x定义了属性name，那么在使用x.name时就不会调用__getattr__(name)；会直接返回name已经定义好的值。简单的说：__getattr__()会在对象中不存在这个属性时被调用。
+如果在类定义了__getattribute__()方法，那么它无条件被调用。当实例化的对象每次引用属性和方法时都会先调用它。如果属性查找不到那么就会引发AttributeError的异常。除非在类中同时定义了__getattribute__()和__getattr__()两个方法。
+
+下面来看一个__setattr__的实例：
+class MagicTest(object):
+    def __init__(self):
+        self.name = &quot;Miller&quot;
+        self.age = 25
+
+    def __getattr__(self, name):
+        return None
+
+if __name__ == &quot;__main__&quot;:
+    magic = MagicTest()
+    print magic.name
+    print magic.age
+    print magic.sex
+
+# ouput
+Miller
+25
+None
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-06-06&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/python/">python</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2017/06/06/nohup%E5%91%BD%E4%BB%A4%E5%8F%8A%E5%85%B6%E8%BE%93%E5%87%BA%E6%96%87%E4%BB%B6/">
         <p class="h4 index-header">nohup命令及其输出文件</p>
       </a>

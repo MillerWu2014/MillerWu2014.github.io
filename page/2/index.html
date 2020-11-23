@@ -145,6 +145,56 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/07/20/%E8%BD%A8%E8%BF%B9%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93/">
+        <p class="h4 index-header">基于轨迹的数据挖掘相关技术总结</p>
+      </a>
+
+      <a href="/2019/07/20/%E8%BD%A8%E8%BF%B9%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">之前项目中接触到了轨迹数据挖掘领域，始终都没有时间对轨迹数据挖掘进行整体的梳理和总结，现在抽几天时间来进行总结并进行记录。
+目前非常多的数据都是轨迹数据，如共享单车骑行的数据，手机GPS导航的数据，定位数据，一些传感器数据等等。在未来5G的发展下，相信轨迹数据或时空类型的数据会更多，而且会更加的复杂。
+以前接触的数据大多没有空间的概念，都是一些普通的数据样本。这些数据可以认为是空间独立的，因此在数据分析或挖掘时，使用起来更加的方便，其技术也相对于成熟。而轨迹数据不同，它同时具有时间和空间双维度，在建模的时候很多传统算法在应用时都存在一定的问题，如轨迹的距离度量，这么一个简单问题，在轨迹里面都会变得复杂。
+通过本次项目的实施，也对轨迹数据涉及到的主要问题进行了梳理，一些涉及到的技术栈进行了总结，便于后面项目中遇到该类问题时进查阅，同时增加自己的理解。
+轨迹数据涉及的技术栈轨迹数据的技术栈基本和普通的技术栈涉及到的过程一致，但是过程中某个部分具有很大的差异，下图是经过梳理得到的整个轨迹数据的涉及到的技术栈，其中每个部分都含有很多部分。具体如下图所示：
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-07-20&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/trajectory/">trajectory</a>&nbsp;
+          
+            <a href="/tags/cluster/">cluster</a>&nbsp;
+          
+            <a href="/tags/partition/">partition</a>&nbsp;
+          
+            <a href="/tags/spatial/">spatial</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2019/07/16/boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
         <p class="h4 index-header">boosting系列之LightGBM算法详解</p>
       </a>
@@ -642,93 +692,6 @@ KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得�
             <a href="/tags/generator/">generator</a>&nbsp;
           
             <a href="/tags/discriminator/">discriminator</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2018/10/26/TensorFlow%E4%B8%AD%E7%9A%84KeyPoint/">
-        <p class="h4 index-header">TensorFlow中的KeyPoint</p>
-      </a>
-
-      <a href="/2018/10/26/TensorFlow%E4%B8%AD%E7%9A%84KeyPoint/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">1.线程，队列和流水线在TensorFlow中也会使用线程和队列，主要在模型开始训练时对数据的处理时，通过多线程来读取数据，一个线程来消费数据(模型训练)。在TensorFlow中的线程主要通过Coordinator和QueueRunner来进行配合管理，队列Queue主要有四种队列。
-一句话概括就是：Queue-&gt;（构建图阶段）创建队列；QueueRunner-&gt;（构建图阶段）创建线程进行入队操作；f.train.start_queue_runners()-&gt;（执行图阶段）填充队列；tf.train.Coordinator() 在线程出错时关闭之。 
-1.1 线程管理-CoordinatorCoordinator类主要对多线程进行同步停止。它和TensorFlow内的队列没有必然关系，可以和python的线程(threading)配合使用。Coordinator类主要有三个方法：
-
-tf.train.Coordinator.should_stop：如果线程停止，则返回True。
-tf.train.Coordinator.request_stop：请求线程停止。
-tf.train.Coordinator.join：等待直到指定的线程停止。
-
-在使用Coordinator时，首先创建一个Coordinator对象，再创建一些Coordinator使用的线程。线程通常一直循环运行，直到should_stop()返回True时停止。任何线程也可以被请求停止，只需要Coordinator对象调用request_stop方法，调用该方法时，其他线程下的should_stop都被返回为True，其他线程停止。如下，通过Coordinator管理python的线程：
-# -*- coding: utf-8 -*-
-import tensorflow as tf
-import threading
-
-
-def thread_func(coord, id_num):
-    &quot;&quot;&quot;
-    :param coord: tensorflow Coordinator object.
-    :param id_num: int, the constant number
-    :return:
-        id_num, int
-    &quot;&quot;&quot;
-    while not coord.should_stop():
-        print(&quot;This thread id is %d&quot; % id_num)
-        if id_num &gt;= 9:
-            print(&quot;Stop thread id is %d&quot; % id_num)
-            coord.request_stop()
-
-
-# init coord object
-coord_object = tf.train.Coordinator()
-
-# create 10 threads and run thread function
-threads = [threading.Thread(target=thread_func, args=(coord_object, num)) for num in range(10)]
-for t in threads:
-    t.start()
-
-coord_object.join()
-
-Coordinator还支持捕获和报告异常，如try:.......except Exception as error: coord.request_stop(errr) finally: coord.request_stop()。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2018-10-26&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/tensorflow/">tensorflow</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/tensorflow/">tensorflow</a>&nbsp;
-          
-            <a href="/tags/Queue/">Queue</a>&nbsp;
-          
-            <a href="/tags/Coordinator/">Coordinator</a>&nbsp;
-          
-            <a href="/tags/Dataset/">Dataset</a>&nbsp;
-          
-            <a href="/tags/collection/">collection</a>&nbsp;
-          
-            <a href="/tags/%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F/">共享变量</a>&nbsp;
           
         
       </div>

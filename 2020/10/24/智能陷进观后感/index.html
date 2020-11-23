@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="Miller Wu">
   <meta name="keywords" content="">
-  <title>MetNet网络对未来降雨量预测 - Miller&#39;s Blog</title>
+  <title>智能陷进观后感 - Miller&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
@@ -124,7 +124,7 @@
               
                 <p class="mt-3 post-meta">
                   <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  星期六, 九月 5日 2020, 10:08 晚上
+                  星期六, 十月 24日 2020, 10:08 晚上
                 </p>
               
 
@@ -133,7 +133,7 @@
                   
                   <span class="post-meta">
                     <i class="far fa-chart-bar"></i>
-                    1.5k 字
+                    1.4k 字
                   </span>
                 
 
@@ -141,7 +141,7 @@
                   
                   <span class="post-meta">
                       <i class="far fa-clock"></i>
-                      5 分钟
+                      4 分钟
                   </span>
                 
 
@@ -169,37 +169,18 @@
           <div class="post-content mx-auto" id="post">
             
             <div class="markdown-body">
-              <p>MetNet是Google提出的用于空间降雨量预测的模型，通过深度学习的方式对未来的降雨量进行预测，可以实现未来8小时的降雨量预测，而且每2分钟更新一次。而模型的最终效果好于传统的传统的方法。</p>
-<h2 id="1-降雨量预测"><a href="#1-降雨量预测" class="headerlink" title="1.降雨量预测"></a>1.降雨量预测</h2><p>主要使用了MRMS的数据和GOES-16的16个波段数据作为输入，覆盖了全美国区域，输入为一个张量，为时空型数据，每个像元代表为1km的空间分辨率。模型输出的张量为一个3维张量，每个值代表了一个时间，一个位置对应的降雨量。</p>
-<h2 id="2-NWMs-Neural-Weather-Models"><a href="#2-NWMs-Neural-Weather-Models" class="headerlink" title="2.NWMs(Neural Weather Models)"></a>2.NWMs(Neural Weather Models)</h2><p>NWMs就是预测在时间T下，$X$条件下的概率$y$，可以见简单的表示为：</p>
-<script type="math/tex; mode=display">
-p(y|x)=DNN_{\theta}(x)</script><p>其中$p(y|x)$就是基于输入$x$下$y$的概率分布，$\theta$为深度学习要学习到的参数。NWM是通过概率形式计算可能结果的概率分布来说明不确定性，而不是产生单一的确定性输出。模型的整体结构如下图所示：</p>
-<p><img src="/uploads/image-20200715140513390.png" srcset="/img/loading.gif" alt="image-20200715140513390"></p>
-<p>从上面NWMs的整体框架图可以看出模型的输入和输出，整个的结构由<strong>空间下采样器，时间编码器和空间聚合器</strong>三大部分组成。</p>
-<h2 id="3-MetNet架构"><a href="#3-MetNet架构" class="headerlink" title="3.MetNet架构"></a>3.MetNet架构</h2><h3 id="3-1-输入层"><a href="#3-1-输入层" class="headerlink" title="3.1 输入层"></a>3.1 输入层</h3><p>MetNet接收四维的张量$(t,w,h,c)$，分别为时间维度，width，height和通道数。在时间维度上取前90分钟的数据，每15分钟一次。输入的width和height分别为1024，1024。MRMS的雷达图像为单一特征，GOES-16的波段特征为多通道（16个波段）。同时会输入每个位置的经度和纬度数据，每个位置的海拔高度，需要预测的时间（拆分为月，天，小时）。</p>
-<h3 id="3-2-输出层"><a href="#3-2-输出层" class="headerlink" title="3.2 输出层"></a>3.2 输出层</h3><p>MetNet输出一个512个类别的分布，每个类别为从0mm/h-102.4mm/h间隔为0.2mm/h的降雨量。将雨量预测变为了512个类别的分类问题。</p>
-<h3 id="3-3-空间下采样器"><a href="#3-3-空间下采样器" class="headerlink" title="3.3 空间下采样器"></a>3.3 空间下采样器</h3><p>MetNet这一部分主要是压缩输入张量。在空间上使用一系列卷积和池化操作。沿着时间维度进切片，每个切片分别进行处理。每个切片首先被打包成一个空间的输入张量，尺寸为256<em>256，具体打包可以参考下图<em>*打包流程</em></em>。然后，每个切片都被以下神经网络层处理：一个有160个通道的 $3\times3$卷积；一个$2\times2$的max-pooling层，stride为2；3个$3\times3$的256通道卷积；一个$2\times2$最大池化层，stride为2。这些操作产生了空间维度的$64 \times 64$和256通道张量。</p>
-<p><img src="/uploads/image-20200715145510115.png" srcset="/img/loading.gif" alt="打包流程"></p>
-<h3 id="3-4-时间编码器"><a href="#3-4-时间编码器" class="headerlink" title="3.4 时间编码器"></a>3.4 时间编码器</h3><p>这一部分主要是沿时间维度对输入的张量进行编码，将输入到一个convLSTM网络中，该网络的kernel size为$3 \times 3$，输出384个通道数。利用RNN网络在时间序列中动态找出时间维度的模式特征。最终输出一个单向量为$64\times64$，通道数为384的张量。再将结果输入到下一步骤中。convLSTM结构（FC-LSTM的改进）参考如下：</p>
-<p><img src="/uploads/image-20200715162343841.png" srcset="/img/loading.gif" alt="image-20200715162343841"></p>
-<p>其中，<code>*</code>为卷积运算，<code>o</code>为Hadamard乘积。</p>
-<h3 id="3-5-空间聚合器"><a href="#3-5-空间聚合器" class="headerlink" title="3.5 空间聚合器"></a>3.5 空间聚合器</h3><p>MetNet在这部分主要通过<code>self-attention blocks</code>进行操作，包含8个轴注意力网络，其中4个是沿宽度操作的，4个是沿高度操作的。这8个网络的作用是使MetNet的接收域涵盖全局信。每个<code>self-attention blocks</code>有2048个通道和16个<code>attention heads</code>。</p>
-<h2 id="4-效果"><a href="#4-效果" class="headerlink" title="4.效果"></a>4.效果</h2><p>最终效果远超过物理模型，谷歌的神经天气模型的一个显著优点是，它是为密集并行计算而优化的，并且非常适合在专用硬件（如 TPU）上运行。无论是针对纽约市这样的特定地点还是针对整个美国，预测可以在几秒钟内并行进行。而物理模型在超级计算机上的运行时间约为一小时。和NOAA的HRRR系统进行了对比，通过F1指标对比如下，其结果MetNet始终是优于HRRR模型。</p>
-<p><img src="/uploads/image-20200715160040183.png" srcset="/img/loading.gif" alt="image-20200715160040183"></p>
-<h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5.总结"></a>5.总结</h2><ol>
-<li><p>该模型在预测降雨时输入的数据主要包括了雷达数据，GEOS-16的16个波段数据（波段数据主要是能反映气象信息，如云，地表属性，间接性温度等等），高程（海拔)，这些数据都是时空型数据。另外加入了将要预测的日期(月，天，小时)和经纬度。</p>
-</li>
-<li><p>降雨量预测本质还是时空型数据预测问题，因此MetNet使用了卷积对空间特征进行提取，再使用LSTM对时间维度上的模型进行提取，最后加入Attention综合全局信息，对降雨量进行预测。</p>
-</li>
-<li><p>在对目标的处理上，将降雨量以0.2mm进行分割为512个类别。这种处理方式直接将预测变为分类问题，在应用中是非常可取的。</p>
-</li>
-<li><p>存在的几个疑问：</p>
-<ul>
-<li><strong>为什么不直接使用历史的降雨量数据作为输入？</strong>（可能是因为降雨本身也是通过云图等产生的，通过雷达图推断出来的降雨。另外就是降雨量的历史真真实数据收集存在误差，NOAA的结果也是存在较大误差。作为输入存在问题，作为目标是可以的。）</li>
-<li><strong>预测未来某个t+k时刻的降雨，并未使用t+k-1时刻的预测值？</strong>（传统的时间序列问题，在预测未来某个时刻会使用前一个时刻的结果，作为张量处理的时候直接采用了端到端的结构，直接预测未来一段时间。）</li>
-</ul>
-</li>
-</ol>
+              <p>智能陷进是NetfFix推出的一步对于科技对人类负面影响的记录片，片中讲述的主要是社交网络或媒体对于人类的影响，影响包括多方面的：行为上，语言上，思想上，道德上等等。整个影片分2段进行，第一部分主要是对个人的影响，第二部分讲述对整个社会，国家及人类的影响。我对文中提到的一些点感到非常震撼。</p>
+<h2 id="人类期货"><a href="#人类期货" class="headerlink" title="人类期货"></a>人类期货</h2><p>其实像Facebook，IG，Twitter等这样的社交媒体，他们的终极产品是“人”，而不是所谓的内容，他们通过不断的吸取用户的关注，对人进行交易。背后的资本主义的产品是人，他们可以通过内容，算法来引导人的行为，预测人的行为，控制人的行为。这种控制和传统意义的控制差别很大，是乐于被控制，无形中被控制。人只是一个商品甚至行尸走肉的商品。</p>
+<h2 id="二级分化和极端性"><a href="#二级分化和极端性" class="headerlink" title="二级分化和极端性"></a>二级分化和极端性</h2><p>影片中提到了现在社会分化严重，如美国目前的选举，要么选A，要么选B；没有中间地带选择，再比如香港时间。这些只需要背后的”金主“操控给人们看什么，就会影响人的行为。同时人们的行为也更加分化，极端。如影片中统计的青少年自杀的人数和方式，从社交网络开始青少年自杀的人数就开始上升。其实这些行为主要是受到了智能引擎(算法)的影响，通过算法能预测用户的行为，向用户推送用户可能想看到的内容，这样人一直都会关注上面的信息(榨取人的专注力和时间)，而推送的东西随时间会对人的思想产生影响，在潜意识里会改变你的思想，甚至驯化你的思想。比如看到了某些负面的消息，后续可能一直推送的负面消息，这样会将你的负面情绪快速的，无限的放大。</p>
+<blockquote>
+<p>它针对的是人类的生物算法（<strong>多巴胺奖赏回路</strong>），信息茧房效应诱导的后真相和观点极化，已是铁板钉钉无远弗届的现实</p>
+</blockquote>
+<h2 id="信息的真假"><a href="#信息的真假" class="headerlink" title="信息的真假"></a>信息的真假</h2><p>互联网上的消息人们无法辨别真假，连FB，IG，Twitter，Tiktok这些平台也无法辨别真假，人们一般会将假消息当成真消息。这是对人来说是非常讽刺的，而假消息可能对人们的行为影响非常大，对人们的思想影响非常大，从而出现极端行为，分化严重。</p>
+<h2 id="思想停滞"><a href="#思想停滞" class="headerlink" title="思想停滞"></a>思想停滞</h2><p>当我们浏览某个媒体上的内容是，不断又新的内容推荐给我们，这些内容的很多是没有深度的和很多价值的，但是基于兴趣和人性的弱点我们还是会看，看了之后我们只会有一些简单的判断或思想的镜像(就像抄袭了别人的想法)，我们可能没有时间，没有专注力，没有深度思考其内容。这样往复循环，我们的专注力和时间被这些社交网络，繁杂的信息所榨取，抢劫。我们并未对一些内容进行深度的思考，我们的思想未进化，思想停滞。</p>
+<p>有时我们陷入了看手机→空虚→看手机的循环中，这就是一个巨大的黑洞。现在年轻人大部分都离不开手机，他们的专注力不在工作，不在生活，而在于FB，TikTok这些APP上。长时间，会导致有些人患上抑郁症，人们变得浮躁，人们变得傻瓜式等。最近几年我们国家自杀的人数也是急剧上升，社会上的企业，个人都变得更加浮躁都体现了出来。其实，这可能不是人的问题，就像影片中说到利用了人性的弱点，触动了你灵魂深处的，已经超过人的极限。就像以前我身边只有3个人年薪百万，但是现在通过这些APP工具看到了100个，甚至1000个普通人都是年薪百万（且这些人说的真假还无从判定），能不浮躁吗？这已经超过了人的极限。</p>
+<h2 id="批判者才是真正的乐观主义者"><a href="#批判者才是真正的乐观主义者" class="headerlink" title="批判者才是真正的乐观主义者"></a>批判者才是真正的乐观主义者</h2><p>任何时代都应该出现批判者，批判者会推动社会以及技术的发展。如果缺少或没有批判者说明整个系统出现了问题。事物在批判和被批判会在相互作用下逐渐成熟，完美。</p>
+<h2 id="根源"><a href="#根源" class="headerlink" title="根源"></a>根源</h2><p>大部分人还是认为这些工具的初衷是好的，只是社会黑暗的一部分利用工具(app, 大数据, 算法等)来操纵。还包括了一些其他原因，如：信息的真实性无从确定，监管的不健全等等。那怎么去解决这样的问题呢？</p>
+<p>在纪录片中没有标准答案，也没有人知道如何解决，但也不是没有可以做的。比如我们可以加强自身的自制力，有这样的意识，控制自己接触手机电脑的时间。同时政府也可以进行监管，出台相应的政策来辅助等等。</p>
 
             </div>
             <hr>
@@ -209,7 +190,7 @@ p(y|x)=DNN_{\theta}(x)</script><p>其中$p(y|x)$就是基于输入$x$下$y$的�
                   <span>
                 <i class="iconfont icon-inbox"></i>
                     
-                      <a class="hover-with-bg" href="/categories/deeplearning/">deeplearning</a>
+                      <a class="hover-with-bg" href="/categories/%E7%94%B5%E5%BD%B1/">电影</a>
                       &nbsp;
                     
                   </span>&nbsp;&nbsp;
@@ -218,15 +199,11 @@ p(y|x)=DNN_{\theta}(x)</script><p>其中$p(y|x)$就是基于输入$x$下$y$的�
                   <span>
                 <i class="iconfont icon-tag"></i>
                     
-                      <a class="hover-with-bg" href="/tags/gradient/">gradient</a>
+                      <a class="hover-with-bg" href="/tags/%E6%80%9D%E8%80%83/">思考</a>
                     
-                      <a class="hover-with-bg" href="/tags/attention/">attention</a>
+                      <a class="hover-with-bg" href="/tags/%E7%94%9F%E6%B4%BB/">生活</a>
                     
-                      <a class="hover-with-bg" href="/tags/last/">last</a>
-                    
-                      <a class="hover-with-bg" href="/tags/deep-learning/">deep-learning</a>
-                    
-                      <a class="hover-with-bg" href="/tags/convLSTM/">convLSTM</a>
+                      <a class="hover-with-bg" href="/tags/%E7%94%B5%E5%BD%B1/">电影</a>
                     
                   </span>
                 
@@ -239,18 +216,12 @@ p(y|x)=DNN_{\theta}(x)</script><p>其中$p(y|x)$就是基于输入$x$下$y$的�
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/10/24/%E6%99%BA%E8%83%BD%E9%99%B7%E8%BF%9B%E8%A7%82%E5%90%8E%E6%84%9F/">
-                        <i class="fa fa-chevron-left"></i>
-                        <span class="hidden-mobile">智能陷进观后感</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-6">
                     
                     
-                      <a href="/2020/06/11/Boosting%E7%AE%97%E6%B3%95%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/">
-                        <span class="hidden-mobile">boosting系列之NGBoost算法详解</span>
+                      <a href="/2020/09/05/MetNet%E9%A2%84%E6%B5%8B%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3/">
+                        <span class="hidden-mobile">MetNet网络对未来降雨量预测</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="fa fa-chevron-right"></i>
                       </a>
@@ -429,7 +400,7 @@ p(y|x)=DNN_{\theta}(x)</script><p>其中$p(y|x)$就是基于输入$x$下$y$的�
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "MetNet网络对未来降雨量预测&nbsp;",
+        "智能陷进观后感&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
