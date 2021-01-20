@@ -181,7 +181,7 @@
 <h3 id="深度可分离卷积-Depthwise-Separable-Convolutions"><a href="#深度可分离卷积-Depthwise-Separable-Convolutions" class="headerlink" title="深度可分离卷积(Depthwise Separable Convolutions)"></a>深度可分离卷积(Depthwise Separable Convolutions)</h3><p>该方法主要用来减少网络的参数数量和计算量，在轻量级网络中可以采用深度可分离卷积来设计轻量级结构，主要是将一个原始的标准卷积核$w\in \R ^ {k \times k \times c \times {c’}}$分解为点卷积核深度卷积：$w=u \times v$，其中：</p>
 <p>$u \in \R ^ {1 \times 1 \times c \times {c’}}$为一个点卷积，为通道维度上的卷积；$ v \in \R ^ {k \times k \times 1 \times {c’}}$为一个深度卷积，在feature map上用感受视野k来聚合局部信息。其结构对比如下图所示，标准3*3的卷积进行分离后：</p>
 <p><img src="/uploads/deep-seg-struct.png" srcset="/img/loading.gif" style="zoom:70%;" /></p>
-<p>假设一张图片的大小为w,h,那么标准卷积的参数量为$h \times w \times k \times k \times c \times c’$,在使用分离卷积后参数量变为$h \times w \times (k \times k+c) \times c’$（此处省略了偏置项），参数量会成倍的减少，作者称<code>Lite3 \times 3</code>。还值得注意的是<strong>作者在此处先用的点卷积再使用的深度卷积</strong>。</p>
+<p>假设一张图片的大小为w,h,那么标准卷积的参数量为$h \times w \times k \times k \times c \times c’$,在使用分离卷积后参数量变为$h \times w \times (k \times k+c) \times c’$（此处省略了偏置项），参数量会成倍的减少，作者称<code>Lite3x3</code>。还值得注意的是<strong>作者在此处先用的点卷积再使用的深度卷积</strong>。</p>
 <h3 id="全尺度残差块"><a href="#全尺度残差块" class="headerlink" title="全尺度残差块"></a>全尺度残差块</h3><p>该部分主要是利用不同尺度的卷积流提取不同尺度的特征，并将不同尺度的特征进行融合。作者提出了一种<code>residual bottleneck</code>结构，是基于<code>baseline residual bottleneck</code>结构进行创建。如下图所示。</p>
 <p><img src="/uploads/redidual_bottleneck.png" srcset="/img/loading.gif" style="zoom:70%;" /></p>
 <p><code>baseline residual bottleneck</code>（如上图如(a)）在输入$x$后，而bottleneck结构学习残差部分$\bar x$，公式如下，其中$F$主要学习单尺度的特征(scale=3)，其中$1 \times 1$的layer主要用于操作特征的维度，对空间信息没有作用。</p>
