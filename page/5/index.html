@@ -145,6 +145,47 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/14/%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95/">
+        <p class="h4 index-header">最优化-梯度下降算法</p>
+      </a>
+
+      <a href="/2017/07/14/%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">梯度下降算法是最优化算法之一，在大量的机器学习算法和深度学习中都会被用到。优化是指当改变$x$以最小化或最大化某个函数$f(x)$，该函数一般为算法中的目标函数或损失函数，或者称为代价函数、误差函数等。在优化过程中需要通过导数$f’(x)$或$\frac{dy}{dx}$来描述缩放$x$对输出$f(x)$的变化:$f(x+\theta) \approx f(x)+\theta f’(x)$。对于任意小的$\eta$使得$f(x-\eta sign(f’(x))) \lt f(x)$，因此可以将$x$往导数的相反方向移动一小步来减小$f(x)$，这个过程就是梯度下降。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-14&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/%E4%BC%98%E5%8C%96/">优化</a>&nbsp;
+          
+            <a href="/tags/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D/">梯度下降</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2017/07/09/numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C/">
         <p class="h4 index-header">numba加速python程序运行</p>
       </a>
@@ -583,63 +624,6 @@ res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,
           <i class="iconfont icon-tag"></i>
           
             <a href="/tags/spark/">spark</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2017/06/12/Bootstrap-Boosting-Bagging-Randforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D/">
-        <p class="h4 index-header">Bootstrap,Boosting,Bagging,Randforest几种方法介绍</p>
-      </a>
-
-      <a href="/2017/06/12/Bootstrap-Boosting-Bagging-Randforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">bagging, boosting, random forest和boosting算法介绍这两天在看关于boosting算法时，看到一篇不错的文章讲bootstrap, jackknife, bagging, boosting, random forest都有介绍，以下是搜索得到的原文，没找到博客作者的地址，在这里致谢作者的研究。 一并列出一些找到的介绍boosting算法的资源:
-
-视频讲义，介绍boosting算法，主要介绍AdaBoosing
-在这个网站的资源项里列出了对于boosting算法来源介绍的几篇文章，可以下载
-一个博客介绍了许多视觉中常用算法，作者的实验和理解，这里附录的链接是关于使用opencv进行人脸检测的过程和代码，可以帮助理解训练过程是如何完成的
-这里是一个台湾的电子期刊上关于AdaBoost的介绍 —- Jackknife，Bootstraping, bagging, boosting, AdaBoosting, Rand forest 和 gradient boosting这些术语，我经常搞混淆，现在把它们放在一起，以示区别。(部分文字来自网络，由于是之前记的笔记，忘记来源了，特此向作者抱歉） 
-
-Bootstraping: 名字来自成语pull up by your own bootstraps，意思是依靠你自己的资源，称为自助法，它是一种有放回的抽样方法，它是非参数统计中一种重要的估计统计量方差进而进行区间估计的统计方法。其核心思想和基本步骤如下： 
-
-采用重抽样技术从原始样本中抽取一定数量（自己给定）的样本，此过程允许重复抽样。
-根据抽出的样本计算给定的统计量T。 
-重复上述N次（一般大于1000），得到N个统计量T。 
-计算上述N个统计量T的样本方差，得到统计量的方差。 
-
-应该说Bootstrap是现代统计学较为流行的一种统计方法，在小样本时效果很好。通过方差的估计可以构造置信区间等，其运用范围得到进一步延伸。Jackknife： 和上面要介绍的Bootstrap功能类似，只是有一点细节不一样，即每次从样本中抽样时候只是去除几个样本（而不是抽样），就像小刀一样割去一部分。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2017-06-12&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/boosting/">boosting</a>&nbsp;
-          
-            <a href="/tags/bagging/">bagging</a>&nbsp;
-          
-            <a href="/tags/randomforest/">randomforest</a>&nbsp;
           
         
       </div>

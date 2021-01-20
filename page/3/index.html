@@ -145,6 +145,65 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/11/24/KL%E6%95%A3%E5%BA%A6,JS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB/">
+        <p class="h4 index-header">KL散度,JS散度和wasserstein距离</p>
+      </a>
+
+      <a href="/2018/11/24/KL%E6%95%A3%E5%BA%A6,JS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">最初了解信息度量是通过熵的概念，比如信息增益，GINI等都是基于熵。而这三者也是基于信息熵，在信息论中主要对分布的相似度（距离的度量），但是三者差异性也是很强的；对这三种信息度量的方式进行详细的说明。
+1.KL散度KL散度又称为相对熵，信息散度，信息增益。KL散度是是两个概率分布P和Q 差别的非对称性的度量。 KL散度是用来 度量使用基于Q的编码来编码来自P的样本平均所需的额外的位元数。 典型情况下，P表示数据的真实分布，Q表示数据的理论分布，模型分布，或P的近似分布。在之前了解KL散度的时候也写过KL散度的博文.
+
+DL(p||q)=\sum_{i=1}^{n} p(x) \log{\frac{p(x)}{q(x)}}KL散度性质：
+
+因为对数函数是凸函数，所以KL散度的值为非负数。
+KL散度不是对称的。
+KL散度不满足三角不等式。
+
+2.JS（Jensen-Shannon）散度JS散度度量了两个概率分布的相似度，基于KL散度的变体，解决了KL散度非对称的问题。一般地，JS散度是对称的，其取值是0到1之间。定义如下：
+
+JS(P_1||P_2)={\frac {1} {2}} KL(P_1 || \frac {P_1+P_2} {2})+{\frac {1} {2}} KL(P_2 || \frac {P_1+P_2} {2}）如果P1，P2完全相同那么JS散度的值为0，否则为1. JS散度的时对称的而且是有界的[0, 1]。在深度学习中的GAN网络中会有JS散度的概念。
+KL散度和JS散度度量的时候有一个问题：如果两个分配P,Q离得很远，完全没有重叠的时候，那么KL散度值是没有意义的，而JS散度值是一个常数。这在学习算法中是比较致命的，这就意味这这一点的梯度为0。梯度消失了。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-11-24&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/GNN/">GNN</a>&nbsp;
+          
+            <a href="/tags/KL%E6%95%A3%E5%BA%A6/">KL散度</a>&nbsp;
+          
+            <a href="/tags/deep-learning/">deep learning</a>&nbsp;
+          
+            <a href="/tags/JS%E6%95%A3%E5%BA%A6/">JS散度</a>&nbsp;
+          
+            <a href="/tags/Wasserstein/">Wasserstein</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2018/11/06/GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/">
         <p class="h4 index-header">深度学习-GAN网络详解及TensorFlow实现</p>
       </a>
@@ -643,51 +702,6 @@ Refrence
             <a href="/tags/cython/">cython</a>&nbsp;
           
             <a href="/tags/cuda/">cuda</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2018/01/22/Youth%E9%9D%92%E6%98%A5-%E5%A1%9E%E7%BC%AA%E5%B0%94%C2%B7%E5%8E%84%E5%B0%94%E6%9B%BC/">
-        <p class="h4 index-header">Youth青春-塞缪尔·厄尔曼</p>
-      </a>
-
-      <a href="/2018/01/22/Youth%E9%9D%92%E6%98%A5-%E5%A1%9E%E7%BC%AA%E5%B0%94%C2%B7%E5%8E%84%E5%B0%94%E6%9B%BC/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">
-青春不是年华，而是心境；青春不是桃面、红唇、柔膝，而是坚强的意志、恢宏的想象、炽热的感情；青春是生命深泉的自在涌流。
-青春气贯长虹，勇锐盖过怯弱，进取压倒苟安。如此锐气，二十后生有之，六旬男子则更多见。年岁有加，并非垂老；理想丢弃，方堕暮年。
-岁月悠悠，衰微只及肌肤；热忱抛却，颓废必致灵魂。忧烦、惶恐、丧失自信，定使心灵扭曲，意气如灰。
-无论年届花甲，抑或二八芳龄，心中皆有生命之欢乐，好奇之冲动，孩童般天真久盛不衰。
-你我心中都有一台天线，只要你从天上、人间接受美好、希望、欢乐、勇气和力量的信号，你就会青春永驻，风华常存。
- 一旦天线坠下，锐气便被冰雪覆盖，玩世不恭、自暴自弃油然而生，即使年方二十，实则垂垂老矣；然而只要竖起天线，捕捉乐观信号，即使八十高龄，行将告别尘寰，你也会觉得年轻依旧，希望永存。...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2018-01-22&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/%E8%AF%97%E6%AD%8C/">诗歌</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/%E8%AF%97%E6%AD%8C/">诗歌</a>&nbsp;
           
         
       </div>
