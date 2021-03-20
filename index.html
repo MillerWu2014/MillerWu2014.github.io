@@ -145,6 +145,59 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2021/03/19/Win%E5%B9%B3%E5%8F%B0python%E7%9A%84web(uvicorn)%E6%9C%8D%E5%8A%A1%E5%8C%96/">
+        <p class="h4 index-header">Win平台python的web(uvicorn)服务化</p>
+      </a>
+
+      <a href="/2021/03/19/Win%E5%B9%B3%E5%8F%B0python%E7%9A%84web(uvicorn)%E6%9C%8D%E5%8A%A1%E5%8C%96/">
+        
+        
+          
+        
+        <div class="index-excerpt" >
+          <div class="index-text mb-1">这两天遇到将python的深度学习模型检测的api服务转换为在win平台上后台服务。通过调研发现可以通过pywin32进行封装，转化为服务。转化后可以实现开机自启动，通过net管理服务。因此进行了初步测试。首先通过fastAPI初步构建了一个简单web接口:
+#filename: uvicorn_wrap_api.py
+import uvicorn
+
+from fastapi import FastAPI
+
+
+app = FastAPI(title=&quot;reid&quot;)
+
+@app.get(&quot;/&quot;)
+def read_root():
+    return {&</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2021-03-19&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/python3/">python3</a>&nbsp;
+          
+            <a href="/tags/uvicorn/">uvicorn</a>&nbsp;
+          
+            <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%8C%96/">服务化</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2021/01/03/reid%E7%9A%84osnet%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3/">
         <p class="h4 index-header">ReID的OSnet网络详解</p>
       </a>
@@ -604,52 +657,6 @@ Let’s get started....</div>
             <a href="/tags/%E6%80%9D%E8%80%83/">思考</a>&nbsp;
           
             <a href="/tags/note/">note</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2019/10/21/%E7%94%9F%E5%91%BD%E5%BD%A2%E6%80%81%E7%9A%84%E6%80%9D%E8%80%83/">
-        <p class="h4 index-header">生命形态的思考</p>
-      </a>
-
-      <a href="/2019/10/21/%E7%94%9F%E5%91%BD%E5%BD%A2%E6%80%81%E7%9A%84%E6%80%9D%E8%80%83/">
-        
-        
-          
-        
-        <div class="index-excerpt" >
-          <div class="index-text mb-1">生命的定义在我们的意识中非常简单，生命是基于生物的，生物又必须依赖于生命的存在，从百科上主要解释为2点：1.生物生存，生物所具备活动，意识等的能力；2.指事物皆以生存的根本条件。如果从严格上来讲，目前的定较为官方的应该是下面的定义：
-
-生命泛指一类具有稳定的物质和能量代谢现象并且能回应刺激、能进行自我复制（繁殖）的半开放物质系统。简单来说，也就是具有生命机制的物体。生命个体一定会经历出生、成长、衰老和死亡。
-
-其实，生命是没有准确定义的，没有公认的定义，不同的科学家都有自己的各种定义。那么生命的形态也就存在了很多的不同的理解！目前我们一般认识中，生命的形态有🐒动物，🌳植物，👬人类，细菌�</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2019-10-21&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/%E6%80%9D%E8%80%83/">思考</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/%E6%80%9D%E8%80%83/">思考</a>&nbsp;
-          
-            <a href="/tags/%E7%94%9F%E5%91%BD%E5%BD%A2%E6%80%81/">生命形态</a>&nbsp;
-          
-            <a href="/tags/%E6%84%8F%E8%AF%86/">意识</a>&nbsp;
           
         
       </div>

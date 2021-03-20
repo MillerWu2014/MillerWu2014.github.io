@@ -145,6 +145,49 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/20/abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8/">
+        <p class="h4 index-header">abc中的元类和six模块配合使用</p>
+      </a>
+
+      <a href="/2017/07/20/abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">metaclass是类的类或者元类，秉承Python一切皆对象的理念，Python中的类也是一类对象，metaclass的实例就是类(class)，自己写metaclass时需要让其继承自type对象。关于metaclass的介绍，可以看python学习手册中的元类概念部分。ABC（抽象基类），主要定义了基本类和最基本的抽象方法，可以为子类定义共有的API，不需要具体实现。abc模块，Python对于ABC的支持模块，定义了一个特殊的metaclass-ABCMeta 还有一些装饰器— @abstractmethod和@abstarctproperty 。abc.ABCMeta 是一个metaclass，用于在Python程序中创建抽象基类。...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-20&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/six/">six</a>&nbsp;
+          
+            <a href="/tags/metaclass/">metaclass</a>&nbsp;
+          
+            <a href="/tags/abc/">abc</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2017/07/14/%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95/">
         <p class="h4 index-header">最优化-梯度下降算法</p>
       </a>
@@ -564,66 +607,6 @@ object testParseTimeSeries {
             <a href="/tags/spark/">spark</a>&nbsp;
           
             <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2017/07/03/spark%E7%AE%97%E5%AD%90aggregate-fold-lookup%E8%AF%A6%E8%A7%A3/">
-        <p class="h4 index-header">spark算子aggregate,fold,lookup详解</p>
-      </a>
-
-      <a href="/2017/07/03/spark%E7%AE%97%E5%AD%90aggregate-fold-lookup%E8%AF%A6%E8%A7%A3/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">aggregate定义如下：def aggregate[U](zeroValue: U)(seqOp: (U, T) ⇒ U, combOp: (U, U) ⇒ U)(implicit arg0: ClassTag[U]): Uaggregate用户聚合RDD中的元素，先使用seqOp将RDD中每个分区中的T类型元素聚合成U类型，再使用combOp将之前每个分区聚合后的U类型聚合成U类型，特别注意seqOp和combOp都会使用zeroValue的值，zeroValue的类型为U。
-var rdd1 = sc.makeRDD(1 to 10,2)
-rdd1.mapPartitionsWithIndex {
-        (partIdx,iter) =&gt; {
-          var part_map = scala.collection.mutable.Map[String,List[Int]]()
-            while(iter.hasNext){
-              var part_name = &quot;part_&quot; + partIdx;
-              var elem = iter.next()
-              if(part_map.contains(part_name)) {
-                var elems = part_map(part_name)
-                elems ::= elem
-                part_map(part_name) = elems
-              } else {
-                part_map(part_name) = List[Int]{elem}
-              }
-            }
-            part_map.iterator
-
-        }
-      }.collect
-res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,List(10, 9, 8, 7, 6)))
-...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-03&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/spark/">spark</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/spark/">spark</a>&nbsp;
           
         
       </div>

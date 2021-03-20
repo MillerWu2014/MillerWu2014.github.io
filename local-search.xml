@@ -4,6 +4,35 @@
   
   
   <entry>
+    <title>Win平台python的web(uvicorn)服务化</title>
+    <link href="/2021/03/19/Win%E5%B9%B3%E5%8F%B0python%E7%9A%84web(uvicorn)%E6%9C%8D%E5%8A%A1%E5%8C%96/"/>
+    <url>/2021/03/19/Win%E5%B9%B3%E5%8F%B0python%E7%9A%84web(uvicorn)%E6%9C%8D%E5%8A%A1%E5%8C%96/</url>
+    
+    <content type="html"><![CDATA[<p>这两天遇到将python的深度学习模型检测的api服务转换为在win平台上后台服务。通过调研发现可以通过pywin32进行封装，转化为服务。转化后可以实现开机自启动，通过net管理服务。因此进行了初步测试。首先通过fastAPI初步构建了一个简单web接口:</p><pre><code class="lang-python">#filename: uvicorn_wrap_api.pyimport uvicornfrom fastapi import FastAPIapp = FastAPI(title=&quot;reid&quot;)@app.get(&quot;/&quot;)def read_root():    return {&quot;Hello&quot;: &quot;World&quot;}if __name__ == &quot;__main__&quot;:    uvicorn.run(&quot;uvicorn_wrap_api:app&quot;, host=&quot;127.0.0.1&quot;, port=8889, log_level=&quot;info&quot;)</code></pre><h2 id="使用pywin32封装上面的接口服务"><a href="#使用pywin32封装上面的接口服务" class="headerlink" title="使用pywin32封装上面的接口服务"></a>使用pywin32封装上面的接口服务</h2><p>首先安装pywin32包，可以通过pip直接进行安装。基于pywin32封装主要是继承<code>win32serviceutil.ServiceFramework</code>l类，并实现<code>SvcDoRun</code>,<code>SvcStop</code>这两个方法。在<code>SvcDoRun</code>中实现自己服务的启动。再通过<code>HandleCommandLine</code>来调用自己定义的类即可。具体的代码实现如下所示：</p><pre><code class="lang-python"># filename: py2winservice.pyimport osimport syssys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))sys.path.insert(0, &quot;C:\\Users\\Miller\\AppData\\Roaming\\Python\\Python38\\site-packages\\win32&quot;)sys.path.insert(0, &quot;C:\\Users\\Miller\\AppData\\Roaming\\Python\\Python38\\site-packages\\win32\\lib&quot;)sys.path.insert(0, &quot;C:\\Users\\Miller\\AppData\\Roaming\\Python\\Python38\\site-packages\\win32\\scripts&quot;)import win32serviceutilimport win32eventimport win32serviceimport socketimport servicemanagerimport uvicornclass UvicornService(win32serviceutil.ServiceFramework):    _svc_name_ = &quot;UvicornService&quot;  # 定义服务名称    _svc_display_name_ = &quot;UvicornService&quot;  # 服务在windows系统中显示的名称    _svc_description_ = &quot;PythonService&quot;  # 服务的描述    def __init__(self, *args) -&gt; None:        win32serviceutil.ServiceFramework.__init__(self, *args)        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)        socket.setdefaulttimeout(100)    def SvcStop(self):        &quot;&quot;&quot;服务停止&quot;&quot;&quot;        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)        win32event.SetEvent(self.hWaitStop)        self.ReportServiceStatus(win32service.SERVICE_STOPPED)    def SvcDoRun(self):        &quot;&quot;&quot;服务启动&quot;&quot;&quot;        servicemanager.LogMsg(            servicemanager.EVENTLOG_INFORMATION_TYPE,            servicemanager.PYS_SERVICE_STARTED,            (self._svc_name_, &#39;&#39;)        )        self.main()    def main(self):        uvicorn.run(&quot;uvicorn_wrap_api:app&quot;, host=&quot;127.0.0.1&quot;, port=8889, log_level=&quot;info&quot;)  # &quot;py2winservice:app&quot;if __name__ == &quot;__main__&quot;:    win32serviceutil.HandleCommandLine(UvicornService)</code></pre><p>实现完上面的代码后就可以进行下一步的install和start操作，具体的服务管理有以下方法：install，start，stop，remove等等。首先应进行第一步install，将服务安装到win上：<code>python .\py2winservice.py install</code>。</p><pre><code class="lang-shell">python .\py2winservice.py install      # install服务python .\py2winservice.py --startup auto install　　# 服务自启动python .\py2winservice.py start        # 启动服务python .\py2winservice.py restart      # 重启服务python .\py2winservice.py stop         # 停止服务python .\py2winservice.py remove       # 移除服务</code></pre><p>在install时如果出现了错误： <code>Error installing service: 拒绝访问。 (5)</code>，解决方案为：==以管理员身份运行, 如vscode中启动则vscode以管理员身份运行；在cmd中操作则cmd以管理员身份运行==。</p><p>在instal成功后就可以在”任务管理器-&gt;服务”中找到自己的服务，如我的服务名称为<code>UvicornService</code>，可以在服务中看见自己的服务。下面可以对服务进行启动，启动可以直接在服务中启动服务，也可以通过命令：<code>python .\py2winservice.py start</code>。在服务启动中我遇到了2次错误：</p><ol><li><code>Error starting service: 服务没有及时响应启动或控制请求。</code>引起该错误的原因主要是<code>pythonxx.dll</code>无法找到。可以将python所在的根目录加入到系统的PATH中。</li><li>start命令会调用<code>pythonservice.exe</code>的命令，该命令在python的site-packages下的win32目录下，因此可以将win32的路径加入到系统PATH中。再运行<code>pythonservice.exe</code>命令查看其错误信息。</li><li>我在调用时<code>pythonservice.exe</code>时出现<code>由于找不到pywintypes38.dll&quot;无法继续运行</code>的错误。因此找到pywintypes38.dll所在的目录，加入到系统PATH下，pywintypes38.dll文件在python安装的<code>site-packages\pywin32_system32</code>目录下。如果还出现该错误，直接将site-packages\pywin32_system32下的所有文件拷贝到python.exe所在的文件目录下。</li></ol><p>上面的错误解决后基本就可以启动了，但是服务运行可能还是没有成功，比如我在启动时还是出现了错误，错误信息可以通过windows的事件管理日志进行查看：计算机管理-&gt;事件查看器-&gt;Windows日志-&gt;应用日志，可以找到自己服务的日志，我的错误错误信息如下：</p><pre><code>Traceback (most recent call last):  File &quot;C:\Users\Miller\AppData\Roaming\Python\Python38\site-packages\win32\lib\win32serviceutil.py&quot;, line 839, in SvcRun    self.SvcDoRun()  File &quot;C:\Users\Miller\Desktop\reid\py2winservice.py&quot;, line 39, in SvcDoRun    self.main()  File &quot;C:\Users\Miller\Desktop\reid\py2winservice.py&quot;, line 42, in main    uvicorn.run(&quot;uvicorn_wrap_api:app&quot;, host=&quot;127.0.0.1&quot;, port=8889)  # &quot;py2winservice:app&quot;  File &quot;D:\Programs\Python38\lib\site-packages\uvicorn\main.py&quot;, line 366, in run    config = Config(app, **kwargs)  File &quot;D:\Programs\Python38\lib\site-packages\uvicorn\config.py&quot;, line 198, in __init__    self.configure_logging()  File &quot;D:\Programs\Python38\lib\site-packages\uvicorn\config.py&quot;, line 241, in configure_logging    logging.config.dictConfig(self.log_config)  File &quot;D:\Programs\Python38\Lib\logging\config.py&quot;, line 808, in dictConfig    dictConfigClass(config).configure()  File &quot;D:\Programs\Python38\Lib\logging\config.py&quot;, line 545, in configure    raise ValueError(&#39;Unable to configure &#39;ValueError: Unable to configure formatter &#39;default&#39;</code></pre><p>通过一番Google之后，没有找到解决方法，目前也停留在此处，无法解决。希望有人能解决。</p><h2 id="NSSM工具"><a href="#NSSM工具" class="headerlink" title="NSSM工具"></a>NSSM工具</h2><p>在使用pywin32失败之后尝试了NSSM工具，该工具有官网主页：<a href="https://nssm.cc/usage，通过教程一步一步进行即可，简单易用。但是在cmd或其他工具下操作必须以管理员身份进行。第一步也是进行install，再进行start。下面是我使用的命令：" target="_blank" rel="noopener">https://nssm.cc/usage，通过教程一步一步进行即可，简单易用。但是在cmd或其他工具下操作必须以管理员身份进行。第一步也是进行install，再进行start。下面是我使用的命令：</a></p><pre><code class="lang-shell">nssm.exe install &quot;UvicornService&quot; &quot;D:\Programs\Python38\python.exe&quot; &quot;C:\Users\Miller\Desktop\reid\uvicorn_wrap_api.py&quot;nssm.exe start &quot;UvicornService&quot;</code></pre><p>然后通过web访问API接口服务正常，因此通过NSSM工具是成功了。</p><p>类似NSSM的工具还有微软自己出的srvany工具，不过srvany是比较早的工具，似乎不支持win10及windows server。另外还有alwaysup工具，但是为收费工具。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Python</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>python3</tag>
+      
+      <tag>uvicorn</tag>
+      
+      <tag>服务化</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>ReID的OSnet网络详解</title>
     <link href="/2021/01/03/reid%E7%9A%84osnet%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3/"/>
     <url>/2021/01/03/reid%E7%9A%84osnet%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3/</url>

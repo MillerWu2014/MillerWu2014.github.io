@@ -145,6 +145,66 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/03/spark%E7%AE%97%E5%AD%90aggregate-fold-lookup%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">spark算子aggregate,fold,lookup详解</p>
+      </a>
+
+      <a href="/2017/07/03/spark%E7%AE%97%E5%AD%90aggregate-fold-lookup%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">aggregate定义如下：def aggregate[U](zeroValue: U)(seqOp: (U, T) ⇒ U, combOp: (U, U) ⇒ U)(implicit arg0: ClassTag[U]): Uaggregate用户聚合RDD中的元素，先使用seqOp将RDD中每个分区中的T类型元素聚合成U类型，再使用combOp将之前每个分区聚合后的U类型聚合成U类型，特别注意seqOp和combOp都会使用zeroValue的值，zeroValue的类型为U。
+var rdd1 = sc.makeRDD(1 to 10,2)
+rdd1.mapPartitionsWithIndex {
+        (partIdx,iter) =&gt; {
+          var part_map = scala.collection.mutable.Map[String,List[Int]]()
+            while(iter.hasNext){
+              var part_name = &quot;part_&quot; + partIdx;
+              var elem = iter.next()
+              if(part_map.contains(part_name)) {
+                var elems = part_map(part_name)
+                elems ::= elem
+                part_map(part_name) = elems
+              } else {
+                part_map(part_name) = List[Int]{elem}
+              }
+            }
+            part_map.iterator
+
+        }
+      }.collect
+res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,List(10, 9, 8, 7, 6)))
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-03&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/spark/">spark</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2017/06/12/Bootstrap-Boosting-Bagging-Randforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D/">
         <p class="h4 index-header">Bootstrap,Boosting,Bagging,Randforest几种方法介绍</p>
       </a>
