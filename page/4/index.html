@@ -145,6 +145,48 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
+        <p class="h4 index-header">AWS上EC2主机(ubuntu)下对某个端口的开放</p>
+      </a>
+
+      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">首先用telnet来看下本地的端口是否开启：telnet ip 7711，如果是正常的那么需要对该端口进行开放。首先需要对本地的防火墙端口进行开放。其他需要对AWS上的安全组进行设置，设置为对应的端口或所有端口开放权限。本文中不对AWS安全组的设置说明，自行google即可。
+iptables-save &gt; /${DIR_PATH)}/iptables.rules
+
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2018-04-18&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/linux/">linux</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/ubuntu/">ubuntu</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2018/04/14/python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F/">
         <p class="h4 index-header">python科学计算加速</p>
       </a>
@@ -544,79 +586,6 @@ DL(p||q)=\sum{_{i=1}^{n}} p(x) \log{\frac{p(x)}{q(x)}}在一定程度上，KL散
             <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>&nbsp;
           
             <a href="/tags/%E8%B7%9D%E7%A6%BB/">距离</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2017/07/24/spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/">
-        <p class="h4 index-header">spark中遇到的问题汇总</p>
-      </a>
-
-      <a href="/2017/07/24/spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">
-出现“org.apache.spark.SparkException: Task not serializable”这个错误
-
-在编写spark程序是出现了org.apache.spark.SparkException: Task not serializable错误，由于在操作RDD算子map中使用到了类中定义的其他函数或者定义的其他变量，而引发的未序列化问题。在实际开发过程中难免会引用定义的其他函数或者变量进行操作。为了解决为序列化的问题需要对类进行序列化处理。下面的代码是未序列化之前：
-case class TypeMatched(label: Boolean, features:Array[Int])
-
-class loadData {
-    /*
-    * Created by Miller on 17-7-17.
-    * Load sandbox&#39;s bson data from location and transform to rdd type
-    * Use spark analysis data and static data
-    * */
-
-    val dataPath: String = &quot;/opt/Project/spark_project/data/sbx_data/text_data_by_spark.csv&quot;
-    val sc: SparkContext = new SparkContext(new SparkConf().setMaster(&quot;local[*]&quot;).setAppName(&quot;LoadSandboxData&quot;))
-
-    // This method use to generate RDD
-    def toRDD: RDD[Array[Int]] = {
-        sc.textFile(dataPath).map(line =&gt; line.split(&quot;,&quot;).map(x =&gt; x.toInt))
-    }
-
-    private def IntToBoolean(s: Int): Boolean = if (s &gt; 0) true else false
-
-    def toTypeData(rdds: RDD[Array[Int]]) = {
-        rdds.map(array =&gt; {
-            val _label_ = IntToBoolean(array(0))
-            val _features_ = array.slice(0, array.length)
-            TypeMatched(_label_, _features_)
-        })
-    }
-}
-
-...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-24&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/spark/">spark</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/spark/">spark</a>&nbsp;
-          
-            <a href="/tags/RDD/">RDD</a>&nbsp;
           
         
       </div>

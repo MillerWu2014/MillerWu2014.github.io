@@ -145,6 +145,101 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2017/07/03/%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC/">
+        <p class="h4 index-header">用spark对时间数据进行分组求平均值</p>
+      </a>
+
+      <a href="/2017/07/03/%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">实现过程数据格式为key,timestrap,value。需求是按照key并对timestrap固定时间间隔计算，再将key和时间间隔作为key进行分组统计value的均值。其中利用了spark的gourpbykey操作，并对时间进行了转换。实现过程如下：
+package org.app.spark
+
+/**
+  * Created by root on 17-7-2.
+  */
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
+import java.text.SimpleDateFormat
+import java.util.{Calendar, Date}
+
+import scala.collection.mutable.ArrayBuffer
+
+
+class ParseTimeSeries(path: String) {
+    val conf = new SparkConf().setAppName(&quot;ParseSeries&quot;).setMaster(&quot;local[2]&quot;)
+    val sc = new SparkContext(conf)
+
+    def getData: RDD[(String, Date, Int)] = {
+        val line: RDD[Array[String]] = sc.textFile(path).map(s =&gt; s.split(&quot;,&quot;))
+        val newLine = line.map(line =&gt; {
+            val timeString = line.apply(1)
+            val tf: SimpleDateFormat = new SimpleDateFormat(&quot;yyyy/MM/dd HH:mm&quot;)
+            val timeFormat: Date = tf.parse(timeString)
+            (line.apply(0), timeFormat, line.apply(2).toInt)
+        })
+        newLine
+    }
+
+    def processSeriesByKey(rdd: RDD[(String, Date, Int)]): RDD[(String, Int, Int)] = {
+        val toCalendar = Calendar.getInstance()
+        val array = new ArrayBuffer[(String, Int, Int)]()
+        for (x &lt;- rdd.collect()) {
+            toCalendar.setTime(x._2)
+            val day = toCalendar.get(Calendar.HOUR_OF_DAY)
+            val flag = day / 10
+            array.+=((x._1, flag, x._3))
+        }
+        sc.parallelize(array)
+    }
+}
+
+object testParseTimeSeries {
+    def main(args: Array[String]): Unit = {
+        val file: String = &quot;/opt/Project/spark_project/data/TimeValue.csv&quot;
+        val parse = new ParseTimeSeries(file)
+        val new_rdd = parse.processSeriesByKey(parse.getData)
+        new_rdd.collect().foreach(println)
+        val other = new_rdd.keyBy(x =&gt; (x._1, x._2)).map(x =&gt; (x._1, x._2._3)).groupByKey().
+            map(x =&gt; (x._1, x._2.sum/x._2.count(x=&gt;true).toDouble))
+        other.foreach(println)
+        other.aggregate()
+    }
+}
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2017-07-03&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/spark/">spark</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/spark/">spark</a>&nbsp;
+          
+            <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2017/07/03/spark%E7%AE%97%E5%AD%90aggregate-fold-lookup%E8%AF%A6%E8%A7%A3/">
         <p class="h4 index-header">spark算子aggregate,fold,lookup详解</p>
       </a>

@@ -145,6 +145,64 @@
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a href="/2019/04/09/python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3/">
+        <p class="h4 index-header">python中的元类编程详解</p>
+      </a>
+
+      <a href="/2019/04/09/python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3/">
+        
+        
+          
+          
+        
+        <div class="index-excerpt" style="max-height: none;">
+          <div class="index-text mb-1">类是动态创建的我们知道Python 里一切都是对象，那么是对象就有对应的“类(Class)”，或称“类型(type)”。 Python 中可以用 type(obj) 来得到对象的“类”。既然一切都是对象，一个“类(class)”也可以认为是一个对象，那么类的“类型(type)”是什么呢？“类(class)”的类型(type) 都是 type。那 type 的类型又是什么呢？抱歉，type 的类型还是 type，是一个递归的类型。“普通类(class)”可以用来生成实例(instance)，同样的，元类 (meta-class)也可以生成实例，生成的实例就是“普通类”了。类(class)可以有多个实例(instance)。而创建实例的方法就是调用类的构造函数(constructor)：
+class Spam(object):
+    def __init__(self, name):
+        self.name = name
+        spam = Spam(&#39;name&#39;)
+
+上例我们定义了一个类，并调用类的构造函数创建了该类的一个实例。我们知道类也可以看作类 type 的一个实例，那么如何用 type 的构造函数来动态创建一个类呢？我们先看看type的构造函数：class type(name, bases, dict)
+
+name: 字符串类型，存放新类的名字
+bases: 元组(tuple)类型，指定类的基类/父类
+dict: 字典类型，存放该类的所有属性(attributes)和方法(method)
+
+&gt;&gt;&gt; class X:
+        a = 1
+&gt;&gt;&gt; X = type(&#39;X&#39;, (object,), dict(a=1))
+...</div>
+        </div>
+      </a>
+
+      <div class="index-btm">
+        
+          <i class="iconfont icon-riqi2"></i>&nbsp;2019-04-09&nbsp;&nbsp;
+        
+        
+          <i class="iconfont icon-inbox"></i>
+          
+            <a href="/categories/Python/">Python</a>&nbsp;
+          &nbsp;
+        
+        
+          <i class="iconfont icon-tag"></i>
+          
+            <a href="/tags/python3/">python3</a>&nbsp;
+          
+            <a href="/tags/metaclass/">metaclass</a>&nbsp;
+          
+            <a href="/tags/%E5%85%83%E7%B1%BB/">元类</a>&nbsp;
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a href="/2019/01/21/pyarrow%E5%88%9D%E6%8E%A2/">
         <p class="h4 index-header">arrow的性能分析及在python中的使用</p>
       </a>
@@ -654,48 +712,6 @@ name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以
             <a href="/tags/gpu/">gpu</a>&nbsp;
           
             <a href="/tags/deeplearning/">deeplearning</a>&nbsp;
-          
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
-        <p class="h4 index-header">AWS上EC2主机(ubuntu)下对某个端口的开放</p>
-      </a>
-
-      <a href="/2018/04/18/AWS%E4%B8%8AEC2%E4%B8%BB%E6%9C%BA%E4%B8%8B%E5%AF%B9%E6%9F%90%E4%B8%AA%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%BC%80%E6%94%BE/">
-        
-        
-          
-          
-        
-        <div class="index-excerpt" style="max-height: none;">
-          <div class="index-text mb-1">首先用telnet来看下本地的端口是否开启：telnet ip 7711，如果是正常的那么需要对该端口进行开放。首先需要对本地的防火墙端口进行开放。其他需要对AWS上的安全组进行设置，设置为对应的端口或所有端口开放权限。本文中不对AWS安全组的设置说明，自行google即可。
-iptables-save &gt; /${DIR_PATH)}/iptables.rules
-
-...</div>
-        </div>
-      </a>
-
-      <div class="index-btm">
-        
-          <i class="iconfont icon-riqi2"></i>&nbsp;2018-04-18&nbsp;&nbsp;
-        
-        
-          <i class="iconfont icon-inbox"></i>
-          
-            <a href="/categories/linux/">linux</a>&nbsp;
-          &nbsp;
-        
-        
-          <i class="iconfont icon-tag"></i>
-          
-            <a href="/tags/ubuntu/">ubuntu</a>&nbsp;
           
         
       </div>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>基于DNN的多维时间异常检测 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/SpainSurfer_EN-AU11271138486_1920x1080.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期五, 四月 16日 2021, 8:30 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    1.3k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      4 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h1 id="多维时间异常检测方法"><a href="#多维时间异常检测方法" class="headerlink" title="多维时间异常检测方法"></a>多维时间异常检测方法</h1><p>论文名称为<Outlier Detection for Multidimensional Time Series using Deep Neural Networks>，提出了一种多维时间序列异常检测的深度学习框架，首先提出了一种基于原始多维时间序列生成统计特征的方法，丰富原始时间序列的特征空间，然后利用<code>AE</code>重建特征空间丰富后的时间序列; 作者利用<code>AE</code>对丰富后的特征空间进行降维，基于低维度特征来重建序列, 则重建后的序列是捕捉到代表性特征(异常往往具有非代表性特征). 因此重建前后的偏差(可以理解为异常分数)可以作为异常的时间序列的判定依据. 作者还提出了基于<code>CNN</code>的<code>AE</code>和基于<code>LSTM</code>的<code>AE</code>模型,  以及结合上下文信息到框架中. </p>
+<h2 id="1-引入"><a href="#1-引入" class="headerlink" title="1.引入"></a>1.引入</h2><h3 id="1-1多维时间序列定义"><a href="#1-1多维时间序列定义" class="headerlink" title="1.1多维时间序列定义"></a>1.1多维时间序列定义</h3><p>多维时间序列是一个序列向量, 其中一个向量代表了一个时间点的特殊状态及信息. 定义如下:</p>
+<script type="math/tex; mode=display">
+T = <S_1, S_2, S3, ...S_i ... S_C></script><p>其中$S_i$是一个在时间$t_i$处k维度的向量:</p>
+<script type="math/tex; mode=display">
+S_i = (s_i^1, s_i^2, s_i^3, ..., s_i^k)</script><h3 id="1-2问题定义"><a href="#1-2问题定义" class="headerlink" title="1.2问题定义"></a>1.2问题定义</h3><p>给定一个k维的$T = <S_1, S_2, S_3, ...S_i ... S_C>$, 目的在于找到一个$S_i$的异常分数，可以通过该异常分数对该序列进行排序，从而是实现对异常序列的判定。</p>
+<h3 id="1-3自编码器-AE"><a href="#1-3自编码器-AE" class="headerlink" title="1.3自编码器(AE)"></a>1.3自编码器(AE)</h3><p>自编码器在异常序列检测中非常适合，目的是通过输出向量来近似输入向量，AE通过对输入序列的特征降维，在低维空间重建输入序列，实现对代表性特征的捕捉。AE主要由2部分组成：编码器(Encoder)和解码器(Decoder):</p>
+<script type="math/tex; mode=display">
+\hat{X} = \varphi(\phi(X))</script><h3 id="1-4异常分数"><a href="#1-4异常分数" class="headerlink" title="1.4异常分数"></a>1.4异常分数</h3><p>异常分数主要基于重建前后的序列进行计算，如通过<code>Loss</code>函数进行计算：$E(X,\hat{X})=||X-\hat{X}||<em>2^2=\sum</em>{i=1}^{m}{(x_i-\hat{x_i})^2}$, 而在应用时异常分数的取值可以根据训练时的最小E值作为阈值。因此AE可以重构正常的时间学列，对于非正常的时间序列重构的误差较大。因此AE可以对异常序列进行处理。</p>
+<h2 id="2-框架"><a href="#2-框架" class="headerlink" title="2.框架"></a>2.框架</h2><h3 id="2-1基础框架"><a href="#2-1基础框架" class="headerlink" title="2.1基础框架"></a>2.1基础框架</h3><p>下图为基础框架，输入为原始的多维时间序列(被称为<code>Raw Time Series</code>)，输入被一个<code>Time Series Enrichment</code>模块进行扩展，每个维度特征被丰富为一个wide的多维时间序列(被称为<code>Enriched Time Series</code>)。</p>
+<p><img src="/uploads/image-20210428090107683.png" srcset="/img/loading.gif" alt="image-20210428090107683" style="zoom: 67%;" /></p>
+<p>然后，<code>Enriched Time Series</code>被输入到AE的模型中，作者提出了基于2DCNN-AE和LSTM-AE，输出重建后的<code>Enriched Time Series</code>，再计算异常分数，根据异常分数来判定异常。</p>
+<h3 id="2-2Time-Series-Enrichment模块"><a href="#2-2Time-Series-Enrichment模块" class="headerlink" title="2.2Time Series Enrichment模块"></a>2.2<code>Time Series Enrichment</code>模块</h3><p>通过滑动窗口考虑依赖关系，并生成统计特征。丰富后的特征比原始时间序列有更大的特征空间，能帮助AE识别小空间中更具有代表性的特征。作者通过两个步骤进行：</p>
+<ul>
+<li><p><strong>Step-1</strong>: 给定一个滑动窗口<code>b</code>，窗口之间的重叠为$[\frac{b}{2}]$，因此，对一个长度为$C$的序列，生成$C^”=[\frac{2·C-b}{b}]$个窗口。示例如下图所示，C=14，窗口设置为4，就得到了$([t_1, t_4],[t_3,t_6], [t_5, t_8]…)$，总共得到$C^”=6$窗口。</p>
+<p><img src="/uploads/image-20210428093236825.png" srcset="/img/loading.gif" alt="image-20210428093236825" style="zoom:80%;" /></p>
+</li>
+</ul>
+<p>再对于每个窗口每个特征计算其衍生特征，作者定义了2个衍生特征:<code>norm</code>($NOR$)和<code>difference of norm</code>($DON$)，其中$NOR$对于第$j$个特征的窗口序列的计算方式为：</p>
+<script type="math/tex; mode=display">
+NOR^j(wd_i^j)=||wd_i^j||_2=\sqrt{(s_i^j)^2+(s_{i+1}^j)^2+(s_{i+2}^j)^2+...+(s_{i+b-1}^j)^2}</script><p>而$DON$对于第$j$个特征下的某个窗口计算：</p>
+<script type="math/tex; mode=display">
+DON^j(wd_i)=norm^j(wd_i)-norm^j(wd_{i-1})</script><p>这儿为什么要这样去计算衍生变量，作者主要说了2个目的：</p>
+<ol>
+<li>$nor$特征主要是计算特征再时间窗口内的大小；</li>
+<li>$don$特征是$nor$的差异计算，主要计算特征在两个时间窗口上的幅度变换，捕捉时间上的依赖性。</li>
+</ol>
+<p>计算概述流程如下图所示，但是值得注意的是特征空间的变化，假设原始序列为$k=3$的维度，在经过<code>Step1</code>后变为$2 \times 3$的大小。</p>
+<p><img src="/uploads/image-20210428094815578.png" srcset="/img/loading.gif" alt="image-20210428094815578" style="zoom:67%;" /></p>
+<ul>
+<li><strong>Step-2</strong>:在Step-1的基础之上，计算$e$个统计特征，作者提出了8个统计特征，分布为：均值，最小值，最大值，下四分位数，中位数，上四分位数，标准差和极值。统计特征是分别在$NOR$和$DON$特征上进行计算，这样特征空间如上图所示，就变为了$2 \times 8 \times 3$的大小。</li>
+</ul>
+<p>注意：以上计算在时间维度上的长度只是变化了一次，有原始的$C$经过窗口参数$b$，变为了$C^”$。</p>
+<h3 id="2-3基于DNN的AE"><a href="#2-3基于DNN的AE" class="headerlink" title="2.3基于DNN的AE"></a>2.3基于DNN的AE</h3><h3 id="2-3-1基于二维卷积的AE2DCNN-AE"><a href="#2-3-1基于二维卷积的AE2DCNN-AE" class="headerlink" title="2.3.1基于二维卷积的AE2DCNN-AE"></a>2.3.1基于二维卷积的AE<code>2DCNN-AE</code></h3><p>将二维卷积和AE进行结合，整个模型结构如下图所示。主要使用的卷积，最大池化(作为下采样方法)，上采样。下面主要对输入数据进行说明。输入数据为特征空间丰富后的时间序列数据：</p>
+<script type="math/tex; mode=display">
+T^"=<H_1,H_2,H_3,...,H_{C^"}>\\
+H_i=\R^{(d \times e) \times k}</script><p>其中$H_i$是一个2D矩阵，因此可以使用2D卷积。在encoder中，基于最大池化进行下采样，一般在非重叠区域进行操作，捕捉特征的异常。在decoder中，使用多个卷积和上采样层，恢复到原始的序列。</p>
+<p><img src="/uploads/image-20210428102708808.png" srcset="/img/loading.gif" alt="image-20210428102708808" style="zoom:67%;" /></p>
+<h3 id="2-3-2基于LSTM的AE：LSTM-AE"><a href="#2-3-2基于LSTM的AE：LSTM-AE" class="headerlink" title="2.3.2基于LSTM的AE：LSTM-AE"></a>2.3.2基于LSTM的AE：<code>LSTM-AE</code></h3><p><code>LSTM-AE</code>在encoder和decoder两个阶段均使用LSTM，在模型输入时将$H_i=\R^{(d \times e) \times k}$进行转换为$d \times e \times k$的tensor输入。在进入<code>LSTM-AE</code>时以$C^”$的固定长度$l$的子序列进行训练，如下图以$l=5$的子序列训练。</p>
+<p><img src="/uploads\image-20210428102803554.png" srcset="/img/loading.gif" alt="image-20210428102803554" style="zoom:67%;" /></p>
+<p>2.3.4引入上下文信息</p>
+<p>有时数值的急剧变化不一定时异常值，比如随外部环境的变化，例如驾驶车辆由于路况的变化，外部车辆的影响；再比如用电由于天气的，断电等情况的变化。因此，在框架中加入上下文信息是非常有价值的。</p>
+<p>在时间序列中，非连续数值的一般为类别型特征，因此坐车提出了one-hot编码和embedding层，将离散型的特征加入到框架中，进行合并，再通过全连接层重构序列。整个架构如下图所示：</p>
+<p><img src="/uploads/image-20210428102947618.png" srcset="/img/loading.gif" alt="image-20210428102947618" style="zoom: 67%;" /></p>
+<h2 id="3-效果评估"><a href="#3-效果评估" class="headerlink" title="3.效果评估"></a>3.效果评估</h2><p>作者使用了2个传统的算法(OC-SVM，LOF)，原始序列的LSTM-AE，2DCNN-AE，LSTM-AE和LSTM-AE-ADV，并使用了3个数据集进行了评估，总体而言LSTM-AE-ADV效果最好，当然在不同的数据集上效果有一些差异。</p>
+<h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4.总结"></a>4.总结</h2><ol>
+<li>整体思路还是基于AE算法进行异常检测模式，但是作者对原始多维时间序列进行了人工特征提取(2范数，范数差，统计特征)，并结合AE框架进行异常检测。</li>
+<li>作者将传统机器学习和深度学习进行了结合：(1).特征空间丰富模块；(2).引入上下文信息部分</li>
+<li>在引入上下文信息时，可以视为通过一些条件对AE重构的结果进行修正，加入非时间序列的特征，经过回归输出重构结果。</li>
+<li>作者未提出如何对异常分数的阈值定义。</li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/LSTM/">LSTM</a>
+                    
+                      <a class="hover-with-bg" href="/tags/CNN/">CNN</a>
+                    
+                      <a class="hover-with-bg" href="/tags/AE/">AE</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Anomaly-Detection/">Anomaly Detection</a>
+                    
+                      <a class="hover-with-bg" href="/tags/MTS/">MTS</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2021/03/19/Win%E5%B9%B3%E5%8F%B0python%E7%9A%84web(uvicorn)%E6%9C%8D%E5%8A%A1%E5%8C%96/">
+                        <span class="hidden-mobile">Win平台python的web(uvicorn)服务化</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "基于DNN的多维时间异常检测&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
+
+
+
+  
+  
+    <script type="text/javascript">
+      //定义获取词语下标
+      var a_idx = 0;
+      jQuery(document).ready(function ($) {
+        //点击body时触发事件
+        $("body").click(function (e) {
+          //需要显示的词语
+          var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正", "法治", "爱国", "敬业", "诚信", "友善");
+          //设置词语给span标签
+          var $i = $("<span/>").text(a[a_idx]);
+          //下标等于原来下标+1  余 词语总数
+          a_idx = (a_idx + 1) % a.length;
+          //获取鼠标指针的位置，分别相对于文档的左和右边缘。
+          //获取x和y的指针坐标
+          var x = e.pageX, y = e.pageY;
+          //在鼠标的指针的位置给$i定义的span标签添加css样式
+          $i.css({
+            "z-index": 999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": rand_color()
+          });
+          // 随机颜色
+          function rand_color() {
+            return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")"
+          }
+          //在body添加这个标签
+          $("body").append($i);
+          //animate() 方法执行 CSS 属性集的自定义动画。
+          //该方法通过CSS样式将元素从一个状态改变为另一个状态。CSS属性值是逐渐改变的，这样就可以创建动画效果。
+          //详情请看http://www.w3school.com.cn/jquery/effect_animate.asp
+          $i.animate({
+            //将原来的位置向上移动180
+            "top": y - 180,
+            "opacity": 0
+            //1500动画的速度
+          }, 1500, function () {
+            //时间到了自动删除
+            $i.remove();
+          });
+        });
+      })
+      ;
+    </script>
+  
+
+
+
+
+
+
+
+
+</body>
+</html>
