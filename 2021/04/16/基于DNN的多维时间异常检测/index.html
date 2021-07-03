@@ -174,10 +174,12 @@
 <script type="math/tex; mode=display">
 T = <S_1, S_2, S3, ...S_i ... S_C></script><p>其中$S_i$是一个在时间$t_i$处k维度的向量:</p>
 <script type="math/tex; mode=display">
-S_i = (s_i^1, s_i^2, s_i^3, ..., s_i^k)</script><h3 id="1-2问题定义"><a href="#1-2问题定义" class="headerlink" title="1.2问题定义"></a>1.2问题定义</h3><p>给定一个k维的$T = <S\_1, S\_2, S\_3, ..., S\_C>$, 目的在于找到一个$S_i$的异常分数，可以通过该异常分数对该序列进行排序，从而是实现对异常序列的判定。</p>
+S_i = (s_i^1, s_i^2, s_i^3, ..., s_i^k)</script><h3 id="1-2问题定义"><a href="#1-2问题定义" class="headerlink" title="1.2问题定义"></a>1.2问题定义</h3><p>给定一个k维的$T = {S_1, S_2, S_3, …, S_C}$, 目的在于找到一个$S_i$的异常分数，可以通过该异常分数对该序列进行排序，从而是实现对异常序列的判定。</p>
 <h3 id="1-3自编码器-AE"><a href="#1-3自编码器-AE" class="headerlink" title="1.3自编码器(AE)"></a>1.3自编码器(AE)</h3><p>自编码器在异常序列检测中非常适合，目的是通过输出向量来近似输入向量，AE通过对输入序列的特征降维，在低维空间重建输入序列，实现对代表性特征的捕捉。AE主要由2部分组成：编码器(Encoder)和解码器(Decoder):</p>
 <script type="math/tex; mode=display">
-\hat{X} = \varphi(\phi(X))</script><h3 id="1-4异常分数"><a href="#1-4异常分数" class="headerlink" title="1.4异常分数"></a>1.4异常分数</h3><p>异常分数主要基于重建前后的序列进行计算，如通过<code>Loss</code>函数进行计算：$E(X,\hat{X})=||X-\hat{X}||<em>2^2=\sum\</em>{i=1}^{m}{(x_i-\hat{x_i})^2}$, 而在应用时异常分数的取值可以根据训练时的最小E值作为阈值。因此AE可以重构正常的时间学列，对于非正常的时间序列重构的误差较大。因此AE可以对异常序列进行处理。</p>
+\hat{X} = \varphi(\phi(X))</script><h3 id="1-4异常分数"><a href="#1-4异常分数" class="headerlink" title="1.4异常分数"></a>1.4异常分数</h3><p>异常分数主要基于重建前后的序列进行计算，如通过<code>Loss</code>函数进行计算：</p>
+<script type="math/tex; mode=display">
+E(X,\hat{X})=||X-\hat{X}||_2^2=\sum_{i=1}^{m}{(x_i-\hat{x_i})^2}</script><p>而在应用时异常分数的取值可以根据训练时的最小E值作为阈值。因此AE可以重构正常的时间学列，对于非正常的时间序列重构的误差较大。因此AE可以对异常序列进行处理。</p>
 <h2 id="2-框架"><a href="#2-框架" class="headerlink" title="2.框架"></a>2.框架</h2><h3 id="2-1基础框架"><a href="#2-1基础框架" class="headerlink" title="2.1基础框架"></a>2.1基础框架</h3><p>下图为基础框架，输入为原始的多维时间序列(被称为<code>Raw Time Series</code>)，输入被一个<code>Time Series Enrichment</code>模块进行扩展，每个维度特征被丰富为一个wide的多维时间序列(被称为<code>Enriched Time Series</code>)。</p>
 <p><img src="/uploads/image-20210428090107683.png" srcset="/img/loading.gif" alt="image-20210428090107683" style="zoom: 67%;" /></p>
 <p>然后，<code>Enriched Time Series</code>被输入到AE的模型中，作者提出了基于2DCNN-AE和LSTM-AE，输出重建后的<code>Enriched Time Series</code>，再计算异常分数，根据异常分数来判定异常。</p>
