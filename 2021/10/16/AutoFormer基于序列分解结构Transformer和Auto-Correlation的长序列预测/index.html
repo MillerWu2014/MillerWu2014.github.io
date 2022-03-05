@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Miller Wu">
+  <meta name="keywords" content="">
+  <title>Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测 - Miller&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/5.12.1/css/all.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/mdbootstrap/4.13.0/css/mdb.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/3.0.1/github-markdown.min.css" />
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1067060_qzomjdt8bmp.css">
+
+
+
+  <link  rel="stylesheet" href="/lib/prettify/tomorrow-night-eighties.min.css" />
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link defer rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Miller's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">首页</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">归档</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">分类</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">标签</a>
+          </li>
+        
+          
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/SpainSurfer_EN-AU11271138486_1920x1080.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask rgba-black-light flex-center">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <p class="mt-3 post-meta">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  星期六, 十月 16日 2021, 8:30 晚上
+                </p>
+              
+
+              <p class="mt-1">
+                
+                  
+                  <span class="post-meta">
+                    <i class="far fa-chart-bar"></i>
+                    4.1k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta">
+                      <i class="far fa-clock"></i>
+                      14 分钟
+                  </span>
+                
+
+                
+              </p>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5 z-depth-3" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <div class="markdown-body">
+              <h1 id="Autoformer-基于序列分解结构Transformer和Auto-Correlation的长序列预测"><a href="#Autoformer-基于序列分解结构Transformer和Auto-Correlation的长序列预测" class="headerlink" title="Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测"></a>Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测</h1><p>​    长序列预测在实际应用中是非常多且重要的需求，例如极端天气预警、长期能源消耗规划，在这样的背景下，Autoformer主要是研究时间序列的长期预测问题。在Autoformer之前的长序列预测问题主要基于attention来解决序列的长期依赖性。然而，未来长期的、复杂的时间模式阻碍了模型找到可靠的依赖关系。 Transformer的网络可以一定程度上的解决长期依赖问题，但是必须采用Point Wise的稀疏性自注意力机制，在信息利用上也存在一定的瓶颈(长序列预测的效果较差)。为了超越之前的一些模型，作者提出了基于自相关机制的Transformer架构的长序列预测网络，主要有2个方面的改进或创新：</p>
+<ol>
+<li>渐进分解的模型结构，使得网络对长序列进行渐进分解的能力，可将序列分解为趋势部分和周期部分。</li>
+<li>series-wise的自相关机制，可以实现子序列的层级的自相关性，以取代attention机制，而且在效率和效果上均好于自相关机制。</li>
+</ol>
+<p>​    作者对效果进行了简要说明，该模型在长序列预测方面，在6个基准的数据集上进行测试，模型精度均提高了很多，可以应用于很多领域的长序列预测问题上。源代码进行了开源：<a href="https://github.com/thuml/Autoformer" target="_blank" rel="noopener">https://github.com/thuml/Autoformer</a>.</p>
+<p>​    时间序列预测被广泛应用于能源消耗，气象，经济计划，交通，疾病传播等领域。在实际应用中，主要是时间序列的预测问题，它对未来的计划或提前的预警等非常有指导意义。本文中基于时间序列预测中的长序列预测问题提出，而最近关于这方面的研究也有很多进展，特别是得益于自注意力机制的transformer架构的模型。</p>
+<p>​    然而，长序列的预测任务及具有挑战性。首先，直接从长期时间序列中发现时间依赖关系不可靠，依赖关系会因为交错的时间模式而变得非常复杂。其次，由于Transformer中的自主意机制具有序列长度的二次复杂度，而无法用于长期预测。以往的基于Transformer的预测模型主要将自注意力转换为稀疏版本。虽然性能得到了显著改进，但这些模型仍然利用了逐点聚合的表示，导致在提高效率的过程中会因稀疏的点聚合而牺牲某些信息，成为长序列预测的瓶颈。</p>
+<p>​    基于时间模式的错综复杂，尝试提出了时间序列分解结构，这也是时间序列分析的标准方法。它可以用来处理复杂的时间序列，提取出可预测的成分。但传统的时间序列分解主要用于预处理阶段，它在深度学习中的应用被限制，因此我们提出了在深度学习中进行序列分解的通用结构，实现在深度网络中对序列的逐渐分解。作者试图利用序列的周期性来更新自注意中的逐点连接。通过数据的观察时间序列在不同时段中，同一相位的子序列往往表现出相似的时间过程。因此，尝试基于序列周期性的过程相似度构造一个序列级连接。</p>
+<p>基于以上动机，提出了基于Transformer的长序列预测网络Autoformer。是基于residual和encoder-decoder的tansformer网络结构，它包含了时间序列分解的结构。另外提出了一种自相关机制来替代注意力机制，这种机制可以根据序列的周期性发现相似的子序列，从而聚焦相似的子序列，series-wise机制的时间复杂度可以达到$O(LlogL)$。最后对本文的贡献进行了总结：</p>
+<ol>
+<li>Autoformer的时间序列分解架构，以实现深度预测模型的渐进分解能力。</li>
+<li>提出了自相关机制，它可以实现序列级的依赖关系发现和信息聚合，而且效果也超过了自相关机制的相关结构。</li>
+<li>总的来说，Autoformer在6个数据集下平均提升了38%，涵盖多个行业的应用。</li>
+</ol>
+<h2 id="1-结论"><a href="#1-结论" class="headerlink" title="1.结论"></a>1.结论</h2><p>​    实验中的Autoformer实现包含了2个encoder和1个decoder层，训练过程中使用10个epochs，loss选取L2，优化器使用Adam，学习率使用0.0001。在效果对比中分别和深度学习模型和传统的统计模型进行了对比。</p>
+<p>​    模型的效果评估主要基于<code>ETT</code>,<code>Electricity</code>,<code>Exchange</code>,<code>Traffic</code>,<code>Weather</code>,<code>ILI</code>这6个数据集（这些数据集涵盖了能源，交通，气象，经融等行业）通过MAE和MSE指标进行评估，并和其他深度学习模型(包括Informer，LogTrans，Reformer，LSTNet，LSTM，TCN)进行了比较。以96的长度作为输入，输出长度分别为(96，192，336，720)效果如下表，从效果上可以看出Autoformer在所有数据集上的MAE和MSE值均低于其他模型，模型效果最佳。</p>
+<p><img src="/uploads/截屏2022-01-15 10.04.08.png" srcset="/img/loading.gif" alt="Autoformer" style="zoom: 50%;" /></p>
+<h3 id="1-1主要结论"><a href="#1-1主要结论" class="headerlink" title="1.1主要结论"></a>1.1主要结论</h3><p>作者对比了不同预测长度（96，192，336，720）的结果，主要从多变量和单变量长序列预测的角度进行对比，最终Autoformer的效果均好于其他模型。多变量的结果中，最低提升了15%的，最高提升了74%；单变量的预测结果，最低提升了14%，最高提升了17%。说明autoformer在长序列的预测上效果较好，可以应用于多个领域的长序列预测。</p>
+<h3 id="1-2消融实验"><a href="#1-2消融实验" class="headerlink" title="1.2消融实验"></a>1.2消融实验</h3><p>主要对文章中提出的2个创新点进行消融实验，均是基于<strong>ETT数据集</strong>和<strong>MSE指标</strong>进行。首先是分解结构进行消融实验，其次是对自相关机制进行消融实验，并和其他模型对比，得出两个创新点的有效性。下图是两个实验得到的结果，从结果中可以看出无论是分解结构还是自相关机制效果均是最好的。</p>
+<p><img src="/uploads/截屏2022-01-15 10.30.50.png" srcset="/img/loading.gif" alt="截屏2022-01-15 10.30.50" style="zoom:50%;" /></p>
+<p><img src="/uploads/截屏2022-01-15 10.31.08.png" srcset="/img/loading.gif" alt="截屏2022-01-15 10.31.08" style="zoom:50%;" /></p>
+<h3 id="1-3模型分析"><a href="#1-3模型分析" class="headerlink" title="1.3模型分析"></a>1.3模型分析</h3><ul>
+<li>时间序列分解</li>
+</ul>
+<p>如果没有时间序列分解blocks，模型不能捕获到趋势特征和周期性部分特征，当增加了时间序列blocks后，模型可以分别学习到趋势部分和周期部分特征，特别是对周期部分的预测有非常好的效果提升，对于尖峰和低谷学习的更好。</p>
+<ul>
+<li>依赖性学习</li>
+</ul>
+<p>多个滞后项（类似注意力机制中的多头机制）自相关机制，它可以引导模型学习到相似的子序列和相邻的周期性序列特征，用于最终的长序列预测。</p>
+<ul>
+<li>复杂周期模型</li>
+</ul>
+<p>作者将自相关机制中的lag值提取出来后进行了可视化，发现学习到的lag值基本为日，周，月，年等这种周期性值，进一步说明自相关机制能将周期的特征进行充分的学习。</p>
+<h2 id="2-相关工作"><a href="#2-相关工作" class="headerlink" title="2.相关工作"></a>2.相关工作</h2><h3 id="2-1时间序列预测模型"><a href="#2-1时间序列预测模型" class="headerlink" title="2.1时间序列预测模型"></a>2.1时间序列预测模型</h3><p>​    因为时间序列预测的重要性，各类模型都有很好的发展。从经典的统计模型开始，如AR，MA，ARIMA等。使用RNN进行时间序列的预测，对时间序列的依赖性进行建模，如DeepAR，DA-RNN等。基于CNN的时间序列预测，如TCN，LSTNet，FCN等。而最近出现可很多基于Transformer的时间序列预测模型，主要使用自注意力机制来解决时间依赖性，但是时间复杂度和预测效率上有很大的问题。但也有基于自注意力机制的改进方法，如：LogSparse注意力，local-sensitive hashing (LSH) 注意力，ProbSparse注意力等。这些注意力机制还是point-wise的依赖和聚合，本文主要是series-wise的依赖和聚合。</p>
+<h3 id="2-2时间序列分解"><a href="#2-2时间序列分解" class="headerlink" title="2.2时间序列分解"></a>2.2时间序列分解</h3><p>​    时间序列分解是时间序列分析的一种标准方法，一般将时间序列分解为几个组件，每个组件代表一种可预测的模式，主要用于探索随时间推移的变化模式。对于预测任务，在预测未来序列之前，通常使用分解作为对历史序列的预处理，如具有趋势-季节性分解的Prophet、具有基展开的N-BEATS和具有矩阵分解的DeepGLO。但这种预处理受限于历史序列的分解效果，忽略了未来序列底层模式的交互。本文的Autoformer利用分解作为深层模型的内部块，它可以在整个预测过程中逐步分解隐藏的序列，包括历史序列和预测结果。</p>
+<h2 id="3-Autoformer"><a href="#3-Autoformer" class="headerlink" title="3.Autoformer"></a>3.Autoformer</h2><p>​    时间序列预测问题是一个历史尝试为I的序列预测未来长度为O的序列，即I-输入O-输出的问题。Autoformer主要就是针对这一问题进行解决。Autoformer的整体结构如下所示：</p>
+<p><img src="/uploads/截屏2022-01-23 20.42.20.png" srcset="/img/loading.gif" style="zoom:60%;" /></p>
+<h3 id="3-1模型结构"><a href="#3-1模型结构" class="headerlink" title="3.1模型结构"></a>3.1模型结构</h3><h4 id="3-1-1序列分解结构"><a href="#3-1-1序列分解结构" class="headerlink" title="3.1.1序列分解结构"></a>3.1.1序列分解结构</h4><p>传统的时间序列分析会分解为趋势(Trend)和周期(Seasonal)两部分，而autoformer中借鉴时间序列分解，但是将分解部分形成了一个<code>series decomposition block</code>,通过移动平均实现分解block，具体如下：</p>
+<p><img src="/uploads/截屏2022-01-23 20.49.37.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p>其中，$X_t$和$X_s$分别为周期和趋势部分。通过平均池化(<code>AvgPool</code>)来替代移动平均。该部分用函数：$X_t,X_s=SeriesDeomp(X)$进行表示。</p>
+<h4 id="3-1-2模型输入"><a href="#3-1-2模型输入" class="headerlink" title="3.1.2模型输入"></a>3.1.2模型输入</h4><p>​    模型的输入主要分为2部分，一部分为encoder的输入，另外一部分为decoder的输入。在encoder部分主要是历史的$I$时间步的输入$X_{en} \in \R^{I \times d}$。在Decoder部分，包含了趋势和周期2部分的输入，$X_{des} \in \R^{(\frac{I}{2} +o) \times d}$和$X_{det} \in \R^{(\frac{I}{2} +o) \times d}$，其中$\frac{I}{2}$为encoder输入部分的最近输入信息，docoder部分的输入通过公式表示为如下：</p>
+<script type="math/tex; mode=display">
+X_{ens},X_{ent} = SeriesDecomp(X_{en \frac{I}{2}:I}) \\
+X_{des} = Concat{X_{ens},X_0} \\
+X_{det} = Concat{X_{ent},X_{mean}}</script><p>其中，$X_0$和$X_{mean}$各自为周期项和趋势项在decoder部分的占位符，在模型训练中不断的更新，通过训练被学习到。</p>
+<h4 id="3-1-3编码器-Encoder"><a href="#3-1-3编码器-Encoder" class="headerlink" title="3.1.3编码器(Encoder)"></a>3.1.3编码器(Encoder)</h4><p>encoder主要专注序列的周期性部分的学习，该部分主要输出历史的周期信息并将被用于改善decoder部分的预测结果。并支持<code>N-encoder-layers</code>，可以描述为$X<em>{en}^{l}=Encoder(X\</em>{en}^{l-1})$，详细过程如下：</p>
+<script type="math/tex; mode=display">
+S_{en}^{l,1},\_=SeriesDecomp(AutoCorrelation(X_{en}^{l-1})+X_{en}^{l-1}) \\
+S_{en}^{l,2},\_=SeriesDecomp(FeedForward(S_{en}^{l,1})+S_{en}^{l,1})</script><p>其中<code>_</code>可以认为是历史的趋势部分，被排除掉。该部分的输出即为$X_{en}^{l}=S_{en}^{l,2}$，而最开始的输入即为$X_{en}^{0}=Embedding(X_{en})$。是对最原始的输入经过了Embedding操作后。</p>
+<h4 id="3-1-4解码器-Decoder"><a href="#3-1-4解码器-Decoder" class="headerlink" title="3.1.4解码器(Decoder)"></a>3.1.4解码器(Decoder)</h4><p>Deocder包含两个部分：对trend-cyclical的累加结构和周期部分的自相关机制的stack结构。每个decoder包含了内在的自相关和encoder-decoder交叉的自相关，可改善预测结果并利用历史的周期信息。在decoder过程从中间隐藏变量中提取潜在趋势，逐步改善趋势预测并消除干扰信息，并通过自相关机制来发现基于周期的依赖关系。该结构支持多层的decoder，其中的隐藏信息来自encoder的输出$X_{en}{N}$，可以描述为$X_{de}^{l}=Decoder(X_{de}^{l-1},X_{de}^{N})$，详细表示如下:</p>
+<p><img src="/uploads/截屏2022-01-23 21.43.19.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p>其中$X_{de}^{l}=S_{de}^{l,3}$，$X_{de}^{0}$是$X<em>{des}$的embedding输出。最终的预测结果是2部分的结果，可以表示为$W_s * X\</em>{de}^{M}+T_{de}^{M}$，其趋势部分的权重主要是将趋势部分的结果映射到目标维度上。</p>
+<h3 id="3-2自相关机制-Auto-Correlation"><a href="#3-2自相关机制-Auto-Correlation" class="headerlink" title="3.2自相关机制(Auto-Correlation)"></a>3.2自相关机制(Auto-Correlation)</h3><p>作者提出了基于自相关的类似Attention的机制，自相关机制主要是<code>series-wise</code>的信息连接和使用模式，主要通过相关系数来发现周期性依赖，并对相似的子序列进行聚合。其结构如下图所示：</p>
+<p><img src="/uploads/截屏2022-01-23 21.55.42.png" srcset="/img/loading.gif" style="zoom:60%;" /></p>
+<h4 id="3-2-1周期性依赖"><a href="#3-2-1周期性依赖" class="headerlink" title="3.2.1周期性依赖"></a>3.2.1周期性依赖</h4><p>不同周期相同位置的子序列必然非常相似，受随机过程理论的启发，对于离散的时间过程，可以将两个周期子序列之间的相关性通过如下方式表示：</p>
+<p><img src="/uploads/截屏2022-01-24 20.15.01.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p>R反应了序列$X_t$和滞后$T$的序列$X_{t-T}$之间的相似性，如上图中的$R(T)$表示。然后取前$k$个最相关的周期长度$T$，周期的依赖关系来自于上面周期的估计。</p>
+<h4 id="3-2-2时间聚合"><a href="#3-2-2时间聚合" class="headerlink" title="3.2.2时间聚合"></a>3.2.2时间聚合</h4><p>基于周期的依赖关系将估计后的周期之间的子序列连接起来。作者提出了基于时间滞后的聚合块(如上图)，该块可以根据所选时延序列($1,..,k$)进行roll操作。该操作可以将相似的子序列排列在估计周期的同一位置，并利用softmax归一化后对子序列进行聚合。可以通过如下公式表示：</p>
+<p><img src="/uploads/截屏2022-01-24 20.28.13.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p>其中，$Top(·)$主要是对自相关值取top-k，其中$k=c \times logL$，其中c是一个超参数，在代码中默认为1.$Roll(X,T)$是对序列$X$进行延迟$T$操作，位置超过第一个位置的元素在最后一个位置重新引入。</p>
+<p>自相关机制可以无缝取代自注意力机制，和自注意力机制的输入和输出保持一致，实现无缝替换。而且自相关机制也支持多头机制，可以通过如下表示：</p>
+<p><img src="/uploads/截屏2022-01-24 20.38.59.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<h4 id="3-2-3有效计算"><a href="#3-2-3有效计算" class="headerlink" title="3.2.3有效计算"></a>3.2.3有效计算</h4><p>在实现过程中，为了提升计算效率，降低时间复杂度，使用了基于快速傅立叶变换(FFT)再逆变换的方式计算序列的自相关，基于Wiener-Khinchin定理可以证明。</p>
+<h4 id="3-2-4自相关机制-vs-自注意机制"><a href="#3-2-4自相关机制-vs-自注意机制" class="headerlink" title="3.2.4自相关机制 vs 自注意机制"></a>3.2.4自相关机制 vs 自注意机制</h4><p>与逐点的自注意族不同，自相关表示逐序列的之间的联系，如下图所示。对于时间的依赖，作者发现子序列之间的依赖关系是基于周期性的。相反，自注意力是计算离散点之间的关系。虽然一些自自注意力方法考虑了局部信息，但它们只是利用这一点来帮助发现逐点之间的依赖性。在信息聚合上，作者采用时间延迟块来聚合来自底层周期的相似子序列。而自注意力机制通过点积的方式对所选的点进行聚合。</p>
+<p><img src="/uploads/截屏2022-01-24 20.43.40.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4.总结"></a>4.总结</h2><p>​    本文研究了时间序列的长期预测问题，这是一个实际应用的问题。然而，复杂的时间模式阻碍了模型学习可靠的依赖关系。我们提出Autoformer作为一个分解体系结构，通过嵌入序列分解块作为内部结构，可以逐步聚合中期预测的长期趋势部分。此外，我们设计了一种有效的自相关机制来进行序列级的依赖关系发现和信息聚合，与自注意机制有明显的区别。自相关机制可以达到$O(LlogL)$的时间复杂度，并在广泛的真实数据集中有最好的性能。通过对整个论文和代码的阅读总结如下：</p>
+<ol>
+<li>Autoformer主要是基于序列级发现时间维度上的依赖，通过自相关机制实现。</li>
+<li>由于是序列级依赖，因此对周期明显的序列预测有较好的效果。而对于一些突变的点或周期不是非常明显序列，效果并不好。</li>
+<li>整个网络结构主要强调的是对周期性的学习，趋势部分的学习力度不够，在趋势上变化较大的序列，效果可能不好。</li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <p>
+                
+                  <span>
+                <i class="iconfont icon-inbox"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/deep-learning/">deep learning</a>
+                      &nbsp;
+                    
+                  </span>&nbsp;&nbsp;
+                
+                
+                  <span>
+                <i class="iconfont icon-tag"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Transformer/">Transformer</a>
+                    
+                      <a class="hover-with-bg" href="/tags/MTSF/">MTSF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Attention/">Attention</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Forecasting/">Forecasting</a>
+                    
+                  </span>
+                
+              </p>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2021/04/16/%E5%9F%BA%E4%BA%8EDNN%E7%9A%84%E5%A4%9A%E7%BB%B4%E6%97%B6%E9%97%B4%E5%BC%82%E5%B8%B8%E6%A3%80%E6%B5%8B/">
+                        <span class="hidden-mobile">基于DNN的多维时间异常检测</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="fa fa-chevron-right"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+              
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc-start"></div>
+<div id="toc">
+  <p class="h5"><i class="far fa-list-alt"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a class="z-depth-1" id="scroll-top-button" href="#" role="button">
+      <i class="fa fa-chevron-up scroll-top-arrow" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><b>Hexo</b></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"> <b>Fluid</b></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="https://cdn.staticfile.org/mdbootstrap/4.13.0/js/mdb.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.10.0/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var navHeight = $('#navbar').height();
+      var toc = $('#toc');
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+      var tocLimMax = 2 * boardTop + boardCtn.height();
+
+      $(window).scroll(function () {
+        var tocLimMin = $('#toc-start').offset().top - navHeight;
+        var scroH = document.body.scrollTop + document.documentElement.scrollTop;
+
+        if (tocLimMin <= scroH && scroH <= tocLimMax) {
+          toc.css({
+            'display': 'block',
+            'position': 'fixed',
+            'top': navHeight,
+          });
+        } else if (scroH <= tocLimMin) {
+          toc.css({
+            'position': '',
+            'top': '',
+          });
+        } else if (scroH > tocLimMax) {
+          toc.css('display', 'none');
+        }
+      });
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc > p').css('visibility', 'visible');
+      }
+      var offset = boardCtn.css('margin-right')
+      $('#toc-ctn').css({
+        'right': offset
+      })
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/prettify/188.0.0/prettify.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      $('pre').addClass('prettyprint  linenums');
+      prettyPrint();
+    })
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <script>
+    $("#post img:not(.no-zoom img, img[no-zoom])").each(
+      function () {
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "images");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+  
+
+  
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+              processEscapes: true,
+              skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+          }
+      });
+      MathJax.Hub.Register.StartupHook("End Jax",function () {
+        var BROWSER = MathJax.Hub.Browser;
+        var jax = "HTML-CSS";
+        if (BROWSER.isMSIE && BROWSER.hasMathPlayer) jax = "NativeMML";
+        return MathJax.Hub.setRenderer(jax);
+      });
+      MathJax.Hub.Queue(function() {
+          var all = MathJax.Hub.getAllJax(), i;
+          for(i=0; i < all.length; i += 1) {
+              all[i].SourceElement().parentNode.className += ' has-jax';
+          }
+      });
+
+    </script>
+
+    <script  src="https://cdn.staticfile.org/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+
+  
+
+
+
+  
+  
+    <script type="text/javascript">
+      //定义获取词语下标
+      var a_idx = 0;
+      jQuery(document).ready(function ($) {
+        //点击body时触发事件
+        $("body").click(function (e) {
+          //需要显示的词语
+          var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正", "法治", "爱国", "敬业", "诚信", "友善");
+          //设置词语给span标签
+          var $i = $("<span/>").text(a[a_idx]);
+          //下标等于原来下标+1  余 词语总数
+          a_idx = (a_idx + 1) % a.length;
+          //获取鼠标指针的位置，分别相对于文档的左和右边缘。
+          //获取x和y的指针坐标
+          var x = e.pageX, y = e.pageY;
+          //在鼠标的指针的位置给$i定义的span标签添加css样式
+          $i.css({
+            "z-index": 999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": rand_color()
+          });
+          // 随机颜色
+          function rand_color() {
+            return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")"
+          }
+          //在body添加这个标签
+          $("body").append($i);
+          //animate() 方法执行 CSS 属性集的自定义动画。
+          //该方法通过CSS样式将元素从一个状态改变为另一个状态。CSS属性值是逐渐改变的，这样就可以创建动画效果。
+          //详情请看http://www.w3school.com.cn/jquery/effect_animate.asp
+          $i.animate({
+            //将原来的位置向上移动180
+            "top": y - 180,
+            "opacity": 0
+            //1500动画的速度
+          }, 1500, function () {
+            //时间到了自动删除
+            $i.remove();
+          });
+        });
+      })
+      ;
+    </script>
+  
+
+
+
+
+
+
+
+
+</body>
+</html>
