@@ -174,9 +174,9 @@
 <h2 id="2-什么是LSTM网络"><a href="#2-什么是LSTM网络" class="headerlink" title="2.什么是LSTM网络"></a>2.什么是LSTM网络</h2><p>LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？</p>
 <p>在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。</p>
 <p>下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，<code>LSTM Cell</code>中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。</p>
-<p><img src="\uploads\LSTM.png" srcset="/img/loading.gif" style="zoom:30" /><br><a id="more"></a></p>
+<p><img src="\uploads\LSTM.png" srcset="/img/loading.gif" style="zoom:22" /><br><a id="more"></a></p>
 <h2 id="3-LSTM结构详解"><a href="#3-LSTM结构详解" class="headerlink" title="3.LSTM结构详解"></a>3.LSTM结构详解</h2><p>从上面中也提出了<code>LSTM Cell</code>中主要通过gate的方式在RNN基础上进行变换的。具体<code>LSTM Cell</code>的结构如下所示，主要通过三道<code>gate</code>（门）来控制输入，输出等，这个门来选择性的控制信息的是否通过。主要是通过sigmod神经网络层和一个元素的乘积实现门的控制。</p>
-<p><img src="\uploads\lstm_cell.png" srcset="/img/loading.gif" style="zoom:50%" /></p>
+<p><img src="\uploads\lstm_cell.png" srcset="/img/loading.gif" style="zoom:40%" /></p>
 <h3 id="3-1-LSTM分步详解"><a href="#3-1-LSTM分步详解" class="headerlink" title="3.1 LSTM分步详解"></a>3.1 LSTM分步详解</h3><p><code>LSTM Cell</code>的整体输入有：$X_t$，$h_{t-1}$，$c_{t-1}$，而整体输出和RNN的输出一致，主要是$h_t$，$z_t$；而$c_t$主要是在循环过程中使用。而<code>LSTM Cell</code>中最关键的就是<code>gate</code>实现，而<code>LSTM</code>的三道门主要作用是不一样的，分别为”遗忘门”，”输入门”，”输出门”；下面分别对这三道门进行分别详细说明。</p>
 <h4 id="3-1-1-Forget-Gate"><a href="#3-1-1-Forget-Gate" class="headerlink" title="3.1.1 Forget Gate"></a>3.1.1 Forget Gate</h4><p>遗忘门主要对$h_{t-1}$和$x_t$进行观察，对记忆单元$C_{t-1}$的元素选择性的遗忘，遗忘门输出的是0-1的数，1表示完全保留该消息，0表示遗忘该消息。遗忘门输出一个$f_t$，公式为：</p>
 <script type="math/tex; mode=display">

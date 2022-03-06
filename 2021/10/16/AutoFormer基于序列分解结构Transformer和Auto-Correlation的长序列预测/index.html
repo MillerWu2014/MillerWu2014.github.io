@@ -186,11 +186,11 @@
 </ol>
 <h2 id="1-结论"><a href="#1-结论" class="headerlink" title="1.结论"></a>1.结论</h2><p>​    实验中的Autoformer实现包含了2个encoder和1个decoder层，训练过程中使用10个epochs，loss选取L2，优化器使用Adam，学习率使用0.0001。在效果对比中分别和深度学习模型和传统的统计模型进行了对比。</p>
 <p>​    模型的效果评估主要基于<code>ETT</code>,<code>Electricity</code>,<code>Exchange</code>,<code>Traffic</code>,<code>Weather</code>,<code>ILI</code>这6个数据集（这些数据集涵盖了能源，交通，气象，经融等行业）通过MAE和MSE指标进行评估，并和其他深度学习模型(包括Informer，LogTrans，Reformer，LSTNet，LSTM，TCN)进行了比较。以96的长度作为输入，输出长度分别为(96，192，336，720)效果如下表，从效果上可以看出Autoformer在所有数据集上的MAE和MSE值均低于其他模型，模型效果最佳。</p>
-<p><img src="/uploads/截屏2022-01-15 10.04.08.png" srcset="/img/loading.gif" alt="Autoformer" style="zoom: 50%;" /></p>
+<p><img src="/uploads/20220115 10.04.08.png" srcset="/img/loading.gif" alt="Autoformer" style="zoom: 50%;" /></p>
 <h3 id="1-1主要结论"><a href="#1-1主要结论" class="headerlink" title="1.1主要结论"></a>1.1主要结论</h3><p>作者对比了不同预测长度（96，192，336，720）的结果，主要从多变量和单变量长序列预测的角度进行对比，最终Autoformer的效果均好于其他模型。多变量的结果中，最低提升了15%的，最高提升了74%；单变量的预测结果，最低提升了14%，最高提升了17%。说明autoformer在长序列的预测上效果较好，可以应用于多个领域的长序列预测。</p>
 <h3 id="1-2消融实验"><a href="#1-2消融实验" class="headerlink" title="1.2消融实验"></a>1.2消融实验</h3><p>主要对文章中提出的2个创新点进行消融实验，均是基于<strong>ETT数据集</strong>和<strong>MSE指标</strong>进行。首先是分解结构进行消融实验，其次是对自相关机制进行消融实验，并和其他模型对比，得出两个创新点的有效性。下图是两个实验得到的结果，从结果中可以看出无论是分解结构还是自相关机制效果均是最好的。</p>
-<p><img src="/uploads/截屏2022-01-15 10.30.50.png" srcset="/img/loading.gif" alt="截屏2022-01-15 10.30.50" style="zoom:50%;" /></p>
-<p><img src="/uploads/截屏2022-01-15 10.31.08.png" srcset="/img/loading.gif" alt="截屏2022-01-15 10.31.08" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220115 10.30.50.png" srcset="/img/loading.gif" alt="/uploads/20220115 10.30.50" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220115 10.31.08.png" srcset="/img/loading.gif" alt="/uploads/20220115 10.31.08" style="zoom:50%;" /></p>
 <h3 id="1-3模型分析"><a href="#1-3模型分析" class="headerlink" title="1.3模型分析"></a>1.3模型分析</h3><ul>
 <li>时间序列分解</li>
 </ul>
@@ -206,9 +206,9 @@
 <h2 id="2-相关工作"><a href="#2-相关工作" class="headerlink" title="2.相关工作"></a>2.相关工作</h2><h3 id="2-1时间序列预测模型"><a href="#2-1时间序列预测模型" class="headerlink" title="2.1时间序列预测模型"></a>2.1时间序列预测模型</h3><p>​    因为时间序列预测的重要性，各类模型都有很好的发展。从经典的统计模型开始，如AR，MA，ARIMA等。使用RNN进行时间序列的预测，对时间序列的依赖性进行建模，如DeepAR，DA-RNN等。基于CNN的时间序列预测，如TCN，LSTNet，FCN等。而最近出现可很多基于Transformer的时间序列预测模型，主要使用自注意力机制来解决时间依赖性，但是时间复杂度和预测效率上有很大的问题。但也有基于自注意力机制的改进方法，如：LogSparse注意力，local-sensitive hashing (LSH) 注意力，ProbSparse注意力等。这些注意力机制还是point-wise的依赖和聚合，本文主要是series-wise的依赖和聚合。</p>
 <h3 id="2-2时间序列分解"><a href="#2-2时间序列分解" class="headerlink" title="2.2时间序列分解"></a>2.2时间序列分解</h3><p>​    时间序列分解是时间序列分析的一种标准方法，一般将时间序列分解为几个组件，每个组件代表一种可预测的模式，主要用于探索随时间推移的变化模式。对于预测任务，在预测未来序列之前，通常使用分解作为对历史序列的预处理，如具有趋势-季节性分解的Prophet、具有基展开的N-BEATS和具有矩阵分解的DeepGLO。但这种预处理受限于历史序列的分解效果，忽略了未来序列底层模式的交互。本文的Autoformer利用分解作为深层模型的内部块，它可以在整个预测过程中逐步分解隐藏的序列，包括历史序列和预测结果。</p>
 <h2 id="3-Autoformer"><a href="#3-Autoformer" class="headerlink" title="3.Autoformer"></a>3.Autoformer</h2><p>​    时间序列预测问题是一个历史尝试为I的序列预测未来长度为O的序列，即I-输入O-输出的问题。Autoformer主要就是针对这一问题进行解决。Autoformer的整体结构如下所示：</p>
-<p><img src="/uploads/截屏2022-01-23 20.42.20.png" srcset="/img/loading.gif" style="zoom:60%;" /></p>
+<p><img src="/uploads/20220123 20.42.20.png" srcset="/img/loading.gif" style="zoom:60%;" /></p>
 <h3 id="3-1模型结构"><a href="#3-1模型结构" class="headerlink" title="3.1模型结构"></a>3.1模型结构</h3><h4 id="3-1-1序列分解结构"><a href="#3-1-1序列分解结构" class="headerlink" title="3.1.1序列分解结构"></a>3.1.1序列分解结构</h4><p>传统的时间序列分析会分解为趋势(Trend)和周期(Seasonal)两部分，而autoformer中借鉴时间序列分解，但是将分解部分形成了一个<code>series decomposition block</code>,通过移动平均实现分解block，具体如下：</p>
-<p><img src="/uploads/截屏2022-01-23 20.49.37.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220123 20.49.37.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
 <p>其中，$X_t$和$X_s$分别为周期和趋势部分。通过平均池化(<code>AvgPool</code>)来替代移动平均。该部分用函数：$X_t,X_s=SeriesDeomp(X)$进行表示。</p>
 <h4 id="3-1-2模型输入"><a href="#3-1-2模型输入" class="headerlink" title="3.1.2模型输入"></a>3.1.2模型输入</h4><p>​    模型的输入主要分为2部分，一部分为encoder的输入，另外一部分为decoder的输入。在encoder部分主要是历史的$I$时间步的输入$X_{en} \in \R^{I \times d}$。在Decoder部分，包含了趋势和周期2部分的输入，$X_{des} \in \R^{(\frac{I}{2} +o) \times d}$和$X_{det} \in \R^{(\frac{I}{2} +o) \times d}$，其中$\frac{I}{2}$为encoder输入部分的最近输入信息，docoder部分的输入通过公式表示为如下：</p>
 <script type="math/tex; mode=display">
@@ -220,21 +220,21 @@ X_{det} = Concat{X_{ent},X_{mean}}</script><p>其中，$X_0$和$X_{mean}$各自�
 S_{en}^{l,1},\_=SeriesDecomp(AutoCorrelation(X_{en}^{l-1})+X_{en}^{l-1}) \\
 S_{en}^{l,2},\_=SeriesDecomp(FeedForward(S_{en}^{l,1})+S_{en}^{l,1})</script><p>其中<code>_</code>可以认为是历史的趋势部分，被排除掉。该部分的输出即为$X_{en}^{l}=S_{en}^{l,2}$，而最开始的输入即为$X_{en}^{0}=Embedding(X_{en})$。是对最原始的输入经过了Embedding操作后。</p>
 <h4 id="3-1-4解码器-Decoder"><a href="#3-1-4解码器-Decoder" class="headerlink" title="3.1.4解码器(Decoder)"></a>3.1.4解码器(Decoder)</h4><p>Deocder包含两个部分：对trend-cyclical的累加结构和周期部分的自相关机制的stack结构。每个decoder包含了内在的自相关和encoder-decoder交叉的自相关，可改善预测结果并利用历史的周期信息。在decoder过程从中间隐藏变量中提取潜在趋势，逐步改善趋势预测并消除干扰信息，并通过自相关机制来发现基于周期的依赖关系。该结构支持多层的decoder，其中的隐藏信息来自encoder的输出$X_{en}{N}$，可以描述为$X_{de}^{l}=Decoder(X_{de}^{l-1},X_{de}^{N})$，详细表示如下:</p>
-<p><img src="/uploads/截屏2022-01-23 21.43.19.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220123 21.43.19.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
 <p>其中$X_{de}^{l}=S_{de}^{l,3}$，$X_{de}^{0}$是$X<em>{des}$的embedding输出。最终的预测结果是2部分的结果，可以表示为$W_s * X\</em>{de}^{M}+T_{de}^{M}$，其趋势部分的权重主要是将趋势部分的结果映射到目标维度上。</p>
 <h3 id="3-2自相关机制-Auto-Correlation"><a href="#3-2自相关机制-Auto-Correlation" class="headerlink" title="3.2自相关机制(Auto-Correlation)"></a>3.2自相关机制(Auto-Correlation)</h3><p>作者提出了基于自相关的类似Attention的机制，自相关机制主要是<code>series-wise</code>的信息连接和使用模式，主要通过相关系数来发现周期性依赖，并对相似的子序列进行聚合。其结构如下图所示：</p>
-<p><img src="/uploads/截屏2022-01-23 21.55.42.png" srcset="/img/loading.gif" style="zoom:60%;" /></p>
+<p><img src="/uploads/20220123 21.55.42.png" srcset="/img/loading.gif" style="zoom:60%;" /></p>
 <h4 id="3-2-1周期性依赖"><a href="#3-2-1周期性依赖" class="headerlink" title="3.2.1周期性依赖"></a>3.2.1周期性依赖</h4><p>不同周期相同位置的子序列必然非常相似，受随机过程理论的启发，对于离散的时间过程，可以将两个周期子序列之间的相关性通过如下方式表示：</p>
-<p><img src="/uploads/截屏2022-01-24 20.15.01.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220124 20.15.01.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
 <p>R反应了序列$X_t$和滞后$T$的序列$X_{t-T}$之间的相似性，如上图中的$R(T)$表示。然后取前$k$个最相关的周期长度$T$，周期的依赖关系来自于上面周期的估计。</p>
 <h4 id="3-2-2时间聚合"><a href="#3-2-2时间聚合" class="headerlink" title="3.2.2时间聚合"></a>3.2.2时间聚合</h4><p>基于周期的依赖关系将估计后的周期之间的子序列连接起来。作者提出了基于时间滞后的聚合块(如上图)，该块可以根据所选时延序列($1,..,k$)进行roll操作。该操作可以将相似的子序列排列在估计周期的同一位置，并利用softmax归一化后对子序列进行聚合。可以通过如下公式表示：</p>
-<p><img src="/uploads/截屏2022-01-24 20.28.13.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220124 20.28.13.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
 <p>其中，$Top(·)$主要是对自相关值取top-k，其中$k=c \times logL$，其中c是一个超参数，在代码中默认为1.$Roll(X,T)$是对序列$X$进行延迟$T$操作，位置超过第一个位置的元素在最后一个位置重新引入。</p>
 <p>自相关机制可以无缝取代自注意力机制，和自注意力机制的输入和输出保持一致，实现无缝替换。而且自相关机制也支持多头机制，可以通过如下表示：</p>
-<p><img src="/uploads/截屏2022-01-24 20.38.59.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220124 20.38.59.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
 <h4 id="3-2-3有效计算"><a href="#3-2-3有效计算" class="headerlink" title="3.2.3有效计算"></a>3.2.3有效计算</h4><p>在实现过程中，为了提升计算效率，降低时间复杂度，使用了基于快速傅立叶变换(FFT)再逆变换的方式计算序列的自相关，基于Wiener-Khinchin定理可以证明。</p>
 <h4 id="3-2-4自相关机制-vs-自注意机制"><a href="#3-2-4自相关机制-vs-自注意机制" class="headerlink" title="3.2.4自相关机制 vs 自注意机制"></a>3.2.4自相关机制 vs 自注意机制</h4><p>与逐点的自注意族不同，自相关表示逐序列的之间的联系，如下图所示。对于时间的依赖，作者发现子序列之间的依赖关系是基于周期性的。相反，自注意力是计算离散点之间的关系。虽然一些自自注意力方法考虑了局部信息，但它们只是利用这一点来帮助发现逐点之间的依赖性。在信息聚合上，作者采用时间延迟块来聚合来自底层周期的相似子序列。而自注意力机制通过点积的方式对所选的点进行聚合。</p>
-<p><img src="/uploads/截屏2022-01-24 20.43.40.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
+<p><img src="/uploads/20220124 20.43.40.png" srcset="/img/loading.gif" style="zoom:50%;" /></p>
 <h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4.总结"></a>4.总结</h2><p>​    本文研究了时间序列的长期预测问题，这是一个实际应用的问题。然而，复杂的时间模式阻碍了模型学习可靠的依赖关系。我们提出Autoformer作为一个分解体系结构，通过嵌入序列分解块作为内部结构，可以逐步聚合中期预测的长期趋势部分。此外，我们设计了一种有效的自相关机制来进行序列级的依赖关系发现和信息聚合，与自注意机制有明显的区别。自相关机制可以达到$O(LlogL)$的时间复杂度，并在广泛的真实数据集中有最好的性能。通过对整个论文和代码的阅读总结如下：</p>
 <ol>
 <li>Autoformer主要是基于序列级发现时间维度上的依赖，通过自相关机制实现。</li>
