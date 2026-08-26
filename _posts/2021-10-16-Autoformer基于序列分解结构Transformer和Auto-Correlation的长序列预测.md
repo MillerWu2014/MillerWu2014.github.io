@@ -36,7 +36,7 @@ tags:
 
 ​	模型的效果评估主要基于`ETT`,`Electricity`,`Exchange`,`Traffic`,`Weather`,`ILI`这6个数据集（这些数据集涵盖了能源，交通，气象，经融等行业）通过MAE和MSE指标进行评估，并和其他深度学习模型(包括Informer，LogTrans，Reformer，LSTNet，LSTM，TCN)进行了比较。以96的长度作为输入，输出长度分别为(96，192，336，720)效果如下表，从效果上可以看出Autoformer在所有数据集上的MAE和MSE值均低于其他模型，模型效果最佳。
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-15 10.04.08.png" alt="Autoformer" style="zoom: 50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-15_10.04.08.png" alt="Autoformer" style="zoom: 50%;" />
 
 ### 1.1主要结论
 
@@ -46,9 +46,9 @@ tags:
 
 主要对文章中提出的2个创新点进行消融实验，均是基于**ETT数据集**和**MSE指标**进行。首先是分解结构进行消融实验，其次是对自相关机制进行消融实验，并和其他模型对比，得出两个创新点的有效性。下图是两个实验得到的结果，从结果中可以看出无论是分解结构还是自相关机制效果均是最好的。
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-15 10.30.50.png" alt="截屏2022-01-15 10.30.50" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-15_10.30.50.png" alt="截屏2022-01-15 10.30.50" style="zoom:50%;" />
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-15 10.31.08.png" alt="截屏2022-01-15 10.31.08" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-15_10.31.08.png" alt="截屏2022-01-15 10.31.08" style="zoom:50%;" />
 
 ### 1.3模型分析
 
@@ -78,7 +78,7 @@ tags:
 
 ​	时间序列预测问题是一个历史尝试为I的序列预测未来长度为O的序列，即I-输入O-输出的问题。Autoformer主要就是针对这一问题进行解决。Autoformer的整体结构如下所示：
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23 20.42.20.png" style="zoom:60%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23_20.42.20.png" style="zoom:60%;" />
 
 ### 3.1模型结构
 
@@ -86,7 +86,7 @@ tags:
 
 传统的时间序列分析会分解为趋势(Trend)和周期(Seasonal)两部分，而autoformer中借鉴时间序列分解，但是将分解部分形成了一个`series decomposition block`,通过移动平均实现分解block，具体如下：
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23 20.49.37.png" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23_20.49.37.png" style="zoom:50%;" />
 
 其中，$X_t$和$X_s$分别为周期和趋势部分。通过平均池化(`AvgPool`)来替代移动平均。该部分用函数：$X_t,X_s=SeriesDeomp(X)$进行表示。
 
@@ -113,7 +113,7 @@ $$
 
 Deocder包含两个部分：对trend-cyclical的累加结构和周期部分的自相关机制的stack结构。每个decoder包含了内在的自相关和encoder-decoder交叉的自相关，可改善预测结果并利用历史的周期信息。在decoder过程从中间隐藏变量中提取潜在趋势，逐步改善趋势预测并消除干扰信息，并通过自相关机制来发现基于周期的依赖关系。该结构支持多层的decoder，其中的隐藏信息来自encoder的输出$X_{en}{N}$，可以描述为$X_{de}^{l}=Decoder(X_{de}^{l-1},X_{de}^{N})$，详细表示如下:
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23 21.43.19.png" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23_21.43.19.png" style="zoom:50%;" />
 
 其中$X_{de}^{l}=S_{de}^{l,3}$，$X_{de}^{0}$是$X_{des}$的embedding输出。最终的预测结果是2部分的结果，可以表示为$W_s * X_{de}^{M}+T_{de}^{M}$，其趋势部分的权重主要是将趋势部分的结果映射到目标维度上。
 
@@ -121,13 +121,13 @@ Deocder包含两个部分：对trend-cyclical的累加结构和周期部分的�
 
 作者提出了基于自相关的类似Attention的机制，自相关机制主要是`series-wise`的信息连接和使用模式，主要通过相关系数来发现周期性依赖，并对相似的子序列进行聚合。其结构如下图所示：
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23 21.55.42.png" style="zoom:60%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-23_21.55.42.png" style="zoom:60%;" />
 
 #### 3.2.1周期性依赖
 
 不同周期相同位置的子序列必然非常相似，受随机过程理论的启发，对于离散的时间过程，可以将两个周期子序列之间的相关性通过如下方式表示：
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24 20.15.01.png" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24_20.15.01.png" style="zoom:50%;" />
 
 R反应了序列$X_t$和滞后$T$的序列$X_{t-T}$之间的相似性，如上图中的$R(T)$表示。然后取前$k$个最相关的周期长度$T$，周期的依赖关系来自于上面周期的估计。
 
@@ -135,13 +135,13 @@ R反应了序列$X_t$和滞后$T$的序列$X_{t-T}$之间的相似性，如上�
 
 基于周期的依赖关系将估计后的周期之间的子序列连接起来。作者提出了基于时间滞后的聚合块(如上图)，该块可以根据所选时延序列($1,..,k$)进行roll操作。该操作可以将相似的子序列排列在估计周期的同一位置，并利用softmax归一化后对子序列进行聚合。可以通过如下公式表示：
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24 20.28.13.png" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24_20.28.13.png" style="zoom:50%;" />
 
 其中，$Top(·)$主要是对自相关值取top-k，其中$k=c \times logL$，其中c是一个超参数，在代码中默认为1.$Roll(X,T)$是对序列$X$进行延迟$T$操作，位置超过第一个位置的元素在最后一个位置重新引入。
 
 自相关机制可以无缝取代自注意力机制，和自注意力机制的输入和输出保持一致，实现无缝替换。而且自相关机制也支持多头机制，可以通过如下表示：
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24 20.38.59.png" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24_20.38.59.png" style="zoom:50%;" />
 
 #### 3.2.3有效计算
 
@@ -151,7 +151,7 @@ R反应了序列$X_t$和滞后$T$的序列$X_{t-T}$之间的相似性，如上�
 
 与逐点的自注意族不同，自相关表示逐序列的之间的联系，如下图所示。对于时间的依赖，作者发现子序列之间的依赖关系是基于周期性的。相反，自注意力是计算离散点之间的关系。虽然一些自自注意力方法考虑了局部信息，但它们只是利用这一点来帮助发现逐点之间的依赖性。在信息聚合上，作者采用时间延迟块来聚合来自底层周期的相似子序列。而自注意力机制通过点积的方式对所选的点进行聚合。
 
-<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24 20.43.40.png" style="zoom:50%;" />
+<img src="/assets/img/posts/Autoformer基于序列分解结构Transformer和Auto-Correlation的长序列预测/截屏2022-01-24_20.43.40.png" style="zoom:50%;" />
 
 ## 4.总结
 

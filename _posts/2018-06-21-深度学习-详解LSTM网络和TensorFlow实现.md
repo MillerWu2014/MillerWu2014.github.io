@@ -24,14 +24,14 @@ LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它�
 
 下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，`LSTM Cell`中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。
 
-<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/\uploads\LSTM.png" style="zoom:30" />
+<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/LSTM.png" style="zoom:30" />
 <!--more-->
 
 ## 3.LSTM结构详解
 
 从上面中也提出了`LSTM Cell`中主要通过gate的方式在RNN基础上进行变换的。具体`LSTM Cell`的结构如下所示，主要通过三道`gate`（门）来控制输入，输出等，这个门来选择性的控制信息的是否通过。主要是通过sigmod神经网络层和一个元素的乘积实现门的控制。
 
-<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/\uploads\lstm_cell.png" style="zoom:50%" />
+<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/lstm_cell.png" style="zoom:50%" />
 
 ### 3.1 LSTM分步详解
 
@@ -68,7 +68,7 @@ $$
 
 ### 3.2 LSTM网络结构可视化
 
-根据LSTM Cell的结构，即内部的计算公式进行内部结构可视化，从输入，到计算，再到输出的过程进行详细的结构可视化，如下图所示：![LSTM内部结构可视化](/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/\uploads\LSTM_X.png)
+根据LSTM Cell的结构，即内部的计算公式进行内部结构可视化，从输入，到计算，再到输出的过程进行详细的结构可视化，如下图所示：![LSTM内部结构可视化](/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/LSTM_X.png)
 
 上面将LSTM Cell进行了划分，主要划分为三个部分，第一部分主要是三道门和输入的转换；第二部分可以看作是记忆单元$C_t$的更新；第三部分就是输出部分。
 
@@ -162,7 +162,7 @@ def build(self, inputs_shape):
 
 `LSTMCell`是`BasicLSTMCell`扩展实现，增加了窥视的窥视孔的功能，`LSTMCell`的初始化参数如下所示，先对初始化的参数进行详细说明。
 
-![](/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/\uploads\LSTM-diag.png)
+![](/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/LSTM-diag.png)
 
 ```python
 def __init__(self, num_units, use_peepholes=False, cell_clip=None, initializer=None, num_proj=None, 

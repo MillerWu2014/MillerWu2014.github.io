@@ -10,8 +10,8 @@ Hexo -> Jekyll(Chirpy) 文章批量迁移脚本
 2. categories 统一转成列表，最多保留两级(Chirpy 限制)
 3. date 补上时区，变成 Jekyll/Chirpy 要求的格式
 4. 按 "YYYY-MM-DD-标题.md" 重新生成文件名（Jekyll 强制要求）
-5. 若文章同名目录下有图片资源，自动拷贝到 assets/img/posts/<slug>/ 并重写正文中的图片引用路径
-   (同时支持 Markdown 语法 ![]() 和 HTML <img src="">)
+5. 从同名目录、uploads/、assets/ 查找本地图片，拷贝到 assets/img/posts/<slug>/
+   并重写正文引用（支持 Markdown ![]()、HTML <img src="">，以及 Windows 反斜杠路径）
 6. <!--more--> 摘要分隔符保持不变（Jekyll 原生支持，只需在 _config.yml 里加一行配置，见脚本末尾说明）
 """
 import re
@@ -80,6 +80,139 @@ def format_date(date_val, tz):
     return f"{s} {tz}"
 
 
+def is_remote_src(src: str) -> bool:
+    s = src.strip().lower()
+    return s.startswith(('http://', 'https://', '//', 'data:', 'mailto:'))
+
+
+def normalize_src(src: str) -> str:
+    return src.strip().replace('\\', '/')
+
+
+def image_basename(src: str) -> str:
+    return Path(normalize_src(src)).name
+
+
+def dest_filename(src: str) -> str:
+    """Filesystem-safe name: keep CJK, drop spaces that break HTML-Proofer."""
+    return image_basename(src).replace(' ', '_')
+
+
+def _replace_balanced_md_images(text: str, replacer):
+    """Rewrite ![alt](url), allowing parentheses in the filename."""
+    out = []
+    i = 0
+    for m in re.finditer(r'!\[([^\]]*)\]\(', text):
+        out.append(text[i:m.end()])
+        start = m.end()
+        depth = 1
+        j = start
+        while j < len(text) and depth:
+            if text[j] == '(':
+                depth += 1
+            elif text[j] == ')':
+                depth -= 1
+            j += 1
+        url = text[start:j - 1]
+        out.append(replacer(url))
+        out.append(')')
+        i = j
+    out.append(text[i:])
+    return ''.join(out)
+
+
+def rewrite_image_urls(text: str, replacer):
+    def html_repl(match):
+        prefix, quote, src = match.group(1), match.group(2), match.group(3)
+        return f'<img{prefix}src={quote}{replacer(src)}{quote}'
+
+    text = re.sub(
+        r'<img([^>]*?)src=(["\'])([^"\']+)\2',
+        html_repl,
+        text,
+        flags=re.IGNORECASE,
+    )
+    return _replace_balanced_md_images(text, replacer)
+
+
+def iter_local_image_srcs(text: str):
+    srcs = []
+
+    def collect(src):
+        if src and not is_remote_src(src):
+            srcs.append(src)
+        return src
+
+    rewrite_image_urls(text, collect)
+    return srcs
+
+
+def find_source_image(basename: str, md_path: Path, search_roots):
+    roots = [md_path.parent / md_path.stem, *search_roots, md_path.parent]
+    seen = set()
+    for root in roots:
+        if root is None or not root.exists() or not root.is_dir():
+            continue
+        key = str(root.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
+        direct = root / basename
+        if direct.is_file():
+            return direct
+        target = basename.lower()
+        for f in root.iterdir():
+            if f.is_file() and f.name.lower() == target:
+                return f
+    return None
+
+
+IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'}
+
+
+def copy_and_rewrite_images(body: str, md_path: Path, slug: str, assets_out_root: Path, search_roots):
+    """Copy local images into assets/img/posts/<slug>/ and point the body at them."""
+
+    def dest_url(src: str) -> str:
+        if is_remote_src(src):
+            return src
+        return f"/assets/img/posts/{slug}/{dest_filename(src)}"
+
+    copied = 0
+    missing = []
+    target_dir = assets_out_root / slug
+    seen_names = set()
+    for src in iter_local_image_srcs(body):
+        original_name = image_basename(src)
+        fname = dest_filename(src)
+        if not fname or fname in seen_names or Path(fname).suffix.lower() not in IMAGE_EXTS:
+            continue
+        seen_names.add(fname)
+        src_file = find_source_image(original_name, md_path, search_roots) or find_source_image(
+            fname, md_path, search_roots
+        )
+        if src_file is None:
+            missing.append(fname)
+            continue
+        target_dir.mkdir(parents=True, exist_ok=True)
+        (target_dir / fname).write_bytes(src_file.read_bytes())
+        copied += 1
+
+    if target_dir.is_dir():
+        for extra in target_dir.iterdir():
+            if extra.is_file() and extra.name not in seen_names:
+                extra.unlink()
+        if not any(target_dir.iterdir()):
+            target_dir.rmdir()
+
+    if copied:
+        print(f"  [图片] 拷贝了 {copied} 张图片到 {target_dir}")
+    for fname in missing:
+        print(f"  [提示] 未找到本地图片 {fname}，需手动放到 {target_dir}")
+
+    return rewrite_image_urls(body, dest_url)
+
+
 def process_file(md_path: Path, out_dir: Path, assets_out_root: Path, tz: str):
     text = md_path.read_text(encoding='utf-8')
     m = FRONT_MATTER_RE.match(text)
@@ -107,43 +240,12 @@ def process_file(md_path: Path, out_dir: Path, assets_out_root: Path, tz: str):
         'tags': convert_tags(fm.get('tags')),
     }
 
-    # --- 重写图片引用路径 ---
-    def repl_html_img(match):
-        src = match.group(1)
-        fname = Path(src).name
-        return match.group(0).replace(src, f"/assets/img/posts/{slug}/{fname}")
-
-    def repl_md_img(match):
-        alt, src = match.group(1), match.group(2)
-        if src.startswith('http://') or src.startswith('https://'):
-            return match.group(0)  # 外链图片不处理
-        fname = Path(src).name
-        return f"![{alt}](/assets/img/posts/{slug}/{fname})"
-
-    new_body = re.sub(r'<img[^>]*src="([^"]+)"[^>]*>', repl_html_img, body)
-    new_body = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', repl_md_img, new_body)
-
-    # --- 拷贝图片资源: 支持两种 Hexo 常见约定 ---
-    # 约定1: 与文章同名的文件夹 (post_asset_folder 开启时)
-    # 约定2: 文章内写死的相对路径文件夹 (如 ./uploads/xxx.png)
-    candidates = [md_path.parent / md_path.stem]
-    for m2 in re.finditer(r'(?:src="|\]\()(\./)?([\w\-./]+)/[^/">\)]+\.(?:png|jpe?g|gif|webp|svg)', body):
-        rel_dir = m2.group(2)
-        candidates.append(md_path.parent / rel_dir)
-
-    copied = 0
-    target_dir = assets_out_root / slug
-    for c in candidates:
-        if c.exists() and c.is_dir():
-            target_dir.mkdir(parents=True, exist_ok=True)
-            for img in c.glob('*'):
-                if img.is_file():
-                    (target_dir / img.name).write_bytes(img.read_bytes())
-                    copied += 1
-    if copied:
-        print(f"  [图片] 拷贝了 {copied} 张图片到 {target_dir}")
-    elif re.search(r'\.(png|jpe?g|gif|webp|svg)', body, re.IGNORECASE):
-        print(f"  [提示] 检测到图片引用，但未找到本地图片文件夹，需手动放到 {target_dir}")
+    search_roots = [
+        md_path.parent / 'uploads',
+        md_path.parent / 'assets',
+        md_path.parent,
+    ]
+    new_body = copy_and_rewrite_images(body, md_path, slug, assets_out_root, search_roots)
 
     fm_yaml = yaml.dump(new_fm, allow_unicode=True, sort_keys=False, default_flow_style=False)
     out_text = f"---\n{fm_yaml}---\n{new_body}"

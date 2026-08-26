@@ -21,7 +21,7 @@ RNN在[维基](https://zh.wikipedia.org/zh-hans/%E9%80%92%E5%BD%92%E7%A5%9E%E7%B
 
 传统的神经网络是层与层之间进行连接，但是每层之间的神经元是没有连接的（假设各个数据之间是相互独立的）。而RNN的结构就是当前层的数据和之前的输出也有关系，即每层之间的神经元不再是无连接，而是有连接的。基本结构可以通过下面表示：
 
-![nn](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\rnn_struct.png) 
+![nn](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/rnn_struct.png) 
 
 上面的结构中非常清晰的表示了layer的结构，主要针对序列型的数据，各个神经元之间存在关联，每个时刻的状态会输入到后续的时刻中。
 
@@ -29,7 +29,7 @@ RNN在[维基](https://zh.wikipedia.org/zh-hans/%E9%80%92%E5%BD%92%E7%A5%9E%E7%B
 
 RNN的大体结构如上图所示，也可以更加详细的表示，如下图中，输入，输出，状态项等。如下图中，存在一个循环结构，每个时间点的状态进行了下一时间点输入。
 
-![RNN01](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\rnn_01.jpg) 
+![RNN01](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/rnn_01.jpg) 
 
 在上图中，输入单元（`input units`）为：$x_{t-1}, x_t, x_{t+1}$，输出单元（`output units`）为：$o_{t-1}, o_t, o_{t+1}$，隐藏单元（`hidden units`）为：$s_{t-1}, s_t, s_{t+1}$。
 
@@ -49,25 +49,25 @@ RNN的变体有很多，如双向RNN，多层双向RNN，多对多的RNN，一�
 
 ### 3.2 多对一的结构
 
-![Many to one](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\RNN_02.png) 
+![Many to one](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/RNN_02.png) 
 
 多个输入对应一个输出，比如情感分析。如一段话，判断这段话的情感。其中，$x_1, x_2, ..., x_{t-1}, x_t$表示句子中的$t$个词语，$o$表示最终的情感输出标签。
 
 ### 3.3 一对多的结构
 
-![One to Many](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\RNN_03.png) 
+![One to Many](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/RNN_03.png) 
 
 这个结构和3.2中的多对一的结构类似。
 
 ### 3.4 多对多结构
 
-![Many to Many](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\RNN_04.png) 
+![Many to Many](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/RNN_04.png) 
 
 ### 3.5 双向RNN
 
 前面的结构均为单向的RNN，$s_t$都只是记录了之前的信息，未考虑后面的信息。基于这种情况，于是出现了双向RNN，这种结构可以用到机器翻译，需要根据上下文的情况，给出翻译结果。
 
-![RNN](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\RNN_05.png) 
+![RNN](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/RNN_05.png) 
 
 双向RNN的结构要复杂一些，如前向计算：
 $$
@@ -78,7 +78,7 @@ $$
 
 前面的结构中多只是单层的state形式RNN，深度网络肯定是深层次结构会有更好的效果。因此可以是多层的RNN，多层次的RNN结构如下：
 
-![æ·±å±çRNN](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\RNN_06.png) 
+![æ·±å±çRNN](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/RNN_06.png) 
 
 ## 4.Back Propagation Through Time(BPTT)训练
 
@@ -421,7 +421,7 @@ outputs, state = tf.nn.dynamic_rnn(cell=multi_rnn_cell, inputs=data, dtype=tf.fl
 
 在RNN模型中也可以通过 dropout来有效得防止过拟合，在RNN中的dropout和其他的有一定的差异，在RNN中在时间序列方向不进行dropout，也就是在循环的部分不会进行dropout，如下图中，实线的部分不会进行dropout，在虚线的部分进行dropout。在实现时主要通过dropoutwrapper实现dropout功能。
 
-![RNN简化结构](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/\uploads\dropoutwrapper.png)
+![RNN简化结构](/assets/img/posts/深度学习-详解RNN网络及TensorFlow实现/dropoutwrapper.png)
 
 
 

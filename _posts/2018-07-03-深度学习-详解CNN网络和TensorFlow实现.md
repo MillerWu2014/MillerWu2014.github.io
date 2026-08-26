@@ -72,7 +72,7 @@ g=\left[\begin{array}{ccc}
 $$
 再使用$g$的中心和f的每个元素对齐，并对应元素相乘，在边缘外的元素用0来填充（在实际使用中不一定用0填充，也可以用边缘拷贝的方式）：
 
-![卷积计算过程](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\conv_dym.png)
+![卷积计算过程](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/conv_dym.png)
 
 最后得到了一个卷积后的矩阵：
 $$
@@ -201,7 +201,7 @@ Tensor("Conv2D_1:0", shape=(100, 26, 26, 5), dtype=float32)
 
 - `padding=’SAME’ `时，`TensorFlow`会自动对原图像进行补零,从而使输入输出的图像的[高度和宽度计算](https://www.tensorflow.org/api_guides/python/nn#convolution)如下：
 
-  ![SAME](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\conv_same.gif)
+  ![SAME](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/conv_same.gif)
 
 ```python
 out_height = ceil(float(in_height) / float(strides[1]))
@@ -216,7 +216,7 @@ out_height = ceil(float(in_height - filter_height + 1) / float(strides[1]))
 out_width  = ceil(float(in_width - filter_width + 1) / float(strides[2]))
 ```
 
-  ![VAILD](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\conv_vaild.gif)
+  ![VAILD](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/conv_vaild.gif)
 
 上面的两个公式也可以通过一个公式代替：
 $$
@@ -269,7 +269,7 @@ print('tf.nn.depthwise_conv2d : ', y)
 
 其实`Feature Map`的计算过程就是卷积计算的过程，下图中是对其进行了可视化，输入的为1\*32\*32\*3的图像，卷积核为3\*3\*3\*5的大小，对输入的**局部（一个局部）**进行计算，如下的右图所示。其中**$w_i$**就是其中一个卷积核的的某个值，这个值会通过模型训练进行**训练**。
 
-<img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\neuron_model0.jpeg" style="zoom:60%" align = center />              |               <img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\neuron_model.jpeg" style="zoom:60%" align=center /> 
+<img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/neuron_model0.jpeg" style="zoom:60%" align = center />              |               <img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/neuron_model.jpeg" style="zoom:60%" align=center /> 
 
 ### 2.8 卷积的训练参数
 
@@ -287,7 +287,7 @@ print('tf.nn.depthwise_conv2d : ', y)
 
 当为多通道进行多个卷积计算时，每个通道上面对应一个卷积核。假设有一个四通道的图片，利用两个卷积核进行运算，最后生成两通道，即得到两个`feature map`。如下所示：
 
-![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\mul-input-mul-k.png)
+![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/mul-input-mul-k.png)
 
 四个通道上每个通道对应一个卷积核，先将$w_2$忽略，只看$w_1$，那么在$w_1$的某位置（`i,j`）处的值，是由四个通道上（`i,j`）处的卷积结果相加然后再取激活函数值得到的。  所以最后得到两个`feature map`， 即输出层的卷积核核个数为 `feature map` 的个数。其计算公式：
 $$
@@ -295,7 +295,7 @@ h_{ij}^k = f((w^k * x)_{ij} + b^k)
 $$
 上面的参数个数就变为：$2 * 2 * 4 * 2 $，前面的两个2指卷积核大小，4为输入的通道数，最后的2为输出的通道数。因此多通道多核的运算核单通道多核运算不同，参数个数量级差别也很大。下面这个可视化也展示了多通道多核的计算过程：
 
-![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\mul-input-mul-conv.gif)
+![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/mul-input-mul-conv.gif)
 
 ## 3.非线性操作（`ReLU`）
 
@@ -374,9 +374,9 @@ Pooling也称为下采样或亚采样，主要对上面过程输出的特征图�
 
 #### 6.1.3 BN解决的问题
 
-![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\normazier.png)
+![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/normazier.png)
 
-![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\batch_normal.png)
+![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/batch_normal.png)
 
 >a中左图是没有经过任何处理的输入数据，曲线是sigmoid函数，如果数据在梯度很小的区域，那么学习率就会很慢甚至陷入长时间的停滞。减均值除方差后，数据就被移到中心区域如右图所示，对于大多数激活函数而言，这个区域的梯度都是最大的或者是有梯度的（比如ReLU），这可以看做是一种对抗梯度消失的有效手段。对于一层如此，如果对于每一层数据都那么做的话，数据的分布总是在随着变化敏感的区域，相当于不用考虑数据分布变化了，这样训练起来更有效率。
 
@@ -392,7 +392,7 @@ Pooling也称为下采样或亚采样，主要对上面过程输出的特征图�
 
 对独立进行特征学习的分支进行融合，来构建高效而精简的特征组合。 融合层可以对切分层进行融合，也可以对不同大小的卷积核学习到的特征进行融合。 
 
-![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/uploads\3.jpg)
+![](/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/3.jpg)
 
 可以用 **级连(concatenation)** 的方法，其实也就是不同输入网络特征的简单叠加，比如说首尾相接。 也可以是合并，或者说运算的融合，对形状一致的特征，通过 `+, -, x, max, conv` 等运算，形成形状相同的输出 。
 
