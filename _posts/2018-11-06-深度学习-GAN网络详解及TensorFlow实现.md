@@ -9,6 +9,7 @@ tags:
 - deep learning
 - tensorflow
 - discriminator
+math: true
 ---
 ## GAN的基本介绍
 

@@ -11,6 +11,7 @@ tags:
 - tensorflow
 - pooling
 - BN
+math: true
 ---
 ## 1. 卷积神经网络概述
 

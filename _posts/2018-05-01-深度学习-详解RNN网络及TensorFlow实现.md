@@ -8,6 +8,7 @@ tags:
 - deep learning
 - tensorflow
 - SGD
+math: true
 ---
 ## 1.RNN是什么
 

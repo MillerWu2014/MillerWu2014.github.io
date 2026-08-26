@@ -9,6 +9,7 @@ tags:
 - lightgbm
 - goss
 - histogram
+math: true
 ---
 ##  LightGBM简介
 

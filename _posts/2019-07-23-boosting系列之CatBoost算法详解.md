@@ -9,6 +9,7 @@ tags:
 - catboost
 - categorical
 - feature
+math: true
 ---
 CatBoost是由俄罗斯的搜索公司Yandex提出的一类boosting集成学习算法，该算法主要是解决类别型特征的学习，可以直接对字符型类别特征进行处理和学习，使用非常简单，实用。因此算法名称也叫做CatBoost（categorical和boosting两者的结合）,该算法支持GPU，以及训练过程可视化等，支持Python，R等建模，也支持其他语言的部署。官方的论文结构如下，本文主要对3，4两个部分进行说明。
 
