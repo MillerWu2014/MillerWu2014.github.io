@@ -269,7 +269,7 @@ print('tf.nn.depthwise_conv2d : ', y)
 
 其实`Feature Map`的计算过程就是卷积计算的过程，下图中是对其进行了可视化，输入的为1\*32\*32\*3的图像，卷积核为3\*3\*3\*5的大小，对输入的**局部（一个局部）**进行计算，如下的右图所示。其中**$w_i$**就是其中一个卷积核的的某个值，这个值会通过模型训练进行**训练**。
 
-<img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/neuron_model0.jpeg" style="zoom:60%" align = center />              |               <img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/neuron_model.jpeg" style="zoom:60%" align=center /> 
+<img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/neuron_model0.jpeg" alt="单输入神经元模型" style="zoom:60%" align="center" />              |               <img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/neuron_model.jpeg" alt="多输入神经元模型" style="zoom:60%" align="center" /> 
 
 ### 2.8 卷积的训练参数
 
@@ -307,7 +307,7 @@ $$
 
 Pooling也称为下采样或亚采样，主要对上面过程输出的特征图进行采样，降低特征图的维度，但是可以保持部分重要的信息；池化**规模**一般为**2×2** （也可以使用其他的大小），在feature map上**不重合的平移*2×2**大小区域，并进行采用；空间池化的主要方式有以下几种。
 
-<img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/pooling.jpg" style="zoom:40%" \>
+<img src="/assets/img/posts/深度学习-详解CNN网络和TensorFlow实现/pooling.jpg" alt="池化过程" style="zoom:40%" />
 
 #### 4.1.1 池化方法
 

@@ -24,14 +24,14 @@ LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它�
 
 下面是在整个时间序列上LSTM的整体结构，$X_t$表示不同时间点的输入序列，$h_t$为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，`LSTM Cell`中多出了一个$C_t$的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。$C_t$在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。
 
-<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/LSTM.png" style="zoom:30" />
+<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/LSTM.png" alt="LSTM 网络结构" style="zoom:30" />
 <!--more-->
 
 ## 3.LSTM结构详解
 
 从上面中也提出了`LSTM Cell`中主要通过gate的方式在RNN基础上进行变换的。具体`LSTM Cell`的结构如下所示，主要通过三道`gate`（门）来控制输入，输出等，这个门来选择性的控制信息的是否通过。主要是通过sigmod神经网络层和一个元素的乘积实现门的控制。
 
-<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/lstm_cell.png" style="zoom:50%" />
+<img src="/assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/lstm_cell.png" alt="LSTM Cell 结构" style="zoom:50%" />
 
 ### 3.1 LSTM分步详解
 
