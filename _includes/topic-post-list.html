@@ -1,0 +1,30 @@
+{%- comment -%}
+  Ordered article list for a topic hub.
+  include.topic — key in site.data.topics (e.g. agent)
+{%- endcomment -%}
+{%- assign topic = site.data.topics[include.topic] -%}
+{%- assign cat_posts = site.categories[topic.category] -%}
+
+{%- if cat_posts and cat_posts.size > 0 -%}
+<ol class="topic-post-list">
+  {%- for title in topic.reading_order -%}
+    {%- assign post = cat_posts | where: "title", title | first -%}
+    {%- if post -%}
+    <li>
+      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y-%m-%d" }}</time>
+    </li>
+    {%- endif -%}
+  {%- endfor -%}
+  {%- for post in cat_posts -%}
+    {%- unless topic.reading_order contains post.title -%}
+    <li>
+      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y-%m-%d" }}</time>
+    </li>
+    {%- endunless -%}
+  {%- endfor -%}
+</ol>
+{%- else -%}
+<p class="topic-empty">这个专题还没有文章。</p>
+{%- endif -%}

@@ -23,3 +23,32 @@
     }
   }
 }
+
+.content div.language-mermaid {
+  overflow-x: auto;
+}
+
+.topic-post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.topic-post-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--main-border-color);
+}
+
+.topic-post-list time {
+  flex-shrink: 0;
+  color: var(--text-muted-color);
+  font-size: 0.875rem;
+}
+
+.topic-empty {
+  color: var(--text-muted-color);
+}

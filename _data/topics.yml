@@ -1,0 +1,18 @@
+# Topic hubs: sidebar tab + mermaid graph + ordered article list.
+# Files still live under _posts/<Topic>/; navigation uses categories, not folders.
+
+agent:
+  title: Agent
+  category: Agent
+  # Titles must match post front matter exactly.
+  reading_order:
+    - "AI Agent（智能体）技术白皮书（Google，2024）"
+    - "LLMs的Agent架构"
+    - "Agent：原理、架构与工程实践"
+    - "记忆(Memory)模块的深度解析"
+    - "Agent的Skills规范原理及应用"
+    - "高手都在用的 Skill 2.0 架构指南（附完整步骤）"
+    - "CrewAI的相关概念和框架"
+    - "crewAI框架下关键的策略和模式设计"
+    - "AI Agents 初學者課程"
+    - "必读的Agent相关研究"

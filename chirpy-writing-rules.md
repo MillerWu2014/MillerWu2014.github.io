@@ -12,7 +12,9 @@
   - `YYYY-MM-DD` 是文章的发布日期，必须和 Front Matter 里的 `date` 日期部分一致。
   - 标题部分建议用英文/拼音/短横线连接（如 `2024-05-01-hello-world.md`），也可以直接用中文标题，但要避免 `[ ] ( ) : ： 【】 / \ ? *` 等文件名不安全字符。
   - 扩展名只能是 `.md` 或 `.markdown`，不支持其他格式。
-- 从 Chirpy v2.4.1 起，`_posts/` 下允许建子目录来组织文章（仅用于管理文件，不影响分类/标签这些站点功能）。
+- 从 Chirpy v2.4.1 起，`_posts/` 下允许建子目录来组织文章（仅用于管理文件，**不**产生 URL、也不等于分类）。
+  - 专题文章放 `_posts/<Topic>/YYYY-MM-DD-标题.md`，例如 `_posts/Agent/`。
+  - 站点导航、归档、专题落地页一律靠 Front Matter 的 `categories`，不要靠文件夹名。
 
 ## 2. Front Matter（文章头部元数据）规则
 
@@ -140,3 +142,19 @@ image:
    - 正文里用第 3 节的方式引用（推荐配合 `img_path` 简化写法）。
 5. 写正文内容（Markdown 标准语法即可，代码块用三个反引号）。
 6. 提交并推送到仓库默认分支，触发 GitHub Actions 自动构建部署。
+
+## 6. 专题落地页 + 图谱
+
+产品形态：侧栏 Tab 落地页（图谱 + 可点标题列表），不是独立文档站。
+
+- 落地页：`_tabs/<topic>.md`，`layout` 默认 `page`，permalink 为 `/<文件名>/`（如 `/agent/`）。
+- 必须加 `mermaid: true`，否则图谱不渲染。
+- 图谱用 Mermaid `flowchart` 表示阅读路径；节点本身不挂链接（避免 html-proofer / mermaid click 配置问题）。文章入口是下方标题列表。
+- 列表：落地页里 include `_includes/topic-post-list.html`，传入 `topic` 键；数据在 `_data/topics.yml`。
+  - `category` 必须和文章 `categories` 第一级一致（如 `Agent`）。
+  - `reading_order` 里的标题必须和文章 `title` **完全一致**；未列入的同分类文章会追加在列表末尾。
+- 新增一篇专题文章时：
+  1. 文件放到 `_posts/<Topic>/`。
+  2. Front Matter 写 `categories: [Topic]`（最多两级）。
+  3. 如需出现在推荐路径上，把 `title` 追加进 `_data/topics.yml` 的 `reading_order`，并视情况改落地页里的 Mermaid。
+- 导入脚本：`tools/import_agent_wiki.py`（把 Wiki 按 H1 拆文、拷图、写 Chirpy Front Matter）。不要对已有旧文改分类，除非明确要求。
