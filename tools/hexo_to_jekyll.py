@@ -94,8 +94,8 @@ def image_basename(src: str) -> str:
 
 
 def dest_filename(src: str) -> str:
-    """Filesystem-safe name: keep CJK, drop spaces that break HTML-Proofer."""
-    return image_basename(src).replace(' ', '_')
+    """Filesystem-safe name: keep CJK, drop spaces/parens that break Markdown links."""
+    return image_basename(src).replace(' ', '_').replace('(', '').replace(')', '')
 
 
 def _replace_balanced_md_images(text: str, replacer):

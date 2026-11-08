@@ -35,7 +35,7 @@ Agent Skills的意义在于把零散的工具与隐式的专家经验，抽象�
     - 将“专家经验”从Prompt中解耦，将领域知识工程化和知识化
     - 降低Agent系统复杂度，而不是增加一层概念
 
-![Image.png](/assets/img/posts/Agent的Skills规范原理及应用/Image_(2).png)
+![Image.png](/assets/img/posts/Agent的Skills规范原理及应用/Image_2.png)
 
 总之，Skills 的本质意义是把“完成任务的方法”从模型推理中抽离出来，变成系统可理解、可控制、可演进的能力结构。
 
@@ -73,7 +73,7 @@ Skill应该结构化的，以便有效利用上下文，主文档 `SKILL.md` 应
 
 一般基于工具的智能体无需专用计算机环境即可运行。通过实现各种工具，使模型能够触发技能并访问捆绑的资源。具体的工具实现方式由开发者决定。但代理需要进行以下流程：
 
-![Image.png](/assets/img/posts/Agent的Skills规范原理及应用/Image_(3).png)
+![Image.png](/assets/img/posts/Agent的Skills规范原理及应用/Image_3.png)
 
 目前有可以参考的技能处理：skill-ref: [https://github.com/agentskills/agentskills/tree/main/skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref)
 
@@ -83,7 +83,7 @@ Skill应该结构化的，以便有效利用上下文，主文档 `SKILL.md` 应
 
 根据底层的孪生体接口信息（输入、输出、功能描述等）进行接口的能力抽象（按照业务场景、功能等维度），并形成相应的Skill。
 
-![Image.png](/assets/img/posts/Agent的Skills规范原理及应用/Image_(4).png)
+![Image.png](/assets/img/posts/Agent的Skills规范原理及应用/Image_4.png)
 
     - 分析API的业务场景模式：轨迹查询、航班动态查询、机位状态查询、时间线查询、资源分配查询等。
     - 操作方式：更新、删除、查询、状态等
@@ -201,9 +201,9 @@ flight = client.get_flight("CA1234")
 
 ## 相关资源
 
-- API 文档：[reference/api1.json](reference/api1.json)
-- 使用示例：[examples/exmaple.md](examples/exmaple.md)
-- 调用方法：[scripts/api_client.py](scripts/api_client.py)
+- API 文档：`reference/api1.json`
+- 使用示例：`examples/exmaple.md`
+- 调用方法：`scripts/api_client.py`
 - 相关 Skill：gate-assignment（登机口分配）
 ````
 
