@@ -257,7 +257,7 @@ Figure 5. 1-to-many relationship between Agents, Extensions and APIs
 
 以 Google 的 Code Interpreter extension 作为例子，从自然语言描述生成和运行 Python 代码。
 
-```other
+```python
 import vertexai
 import pprint
 
@@ -282,7 +282,7 @@ pprint.pprint(response['generated_code'])
 
 输出如下：
 
-```other
+```python
 class TreeNode:
     def __init__(self, val=0, left=None, right=None):
         self.val = val
@@ -338,13 +338,13 @@ Figure 8. Delineating client vs. agent side control for extensions and function 
 
 - 用户可能会说：
 
-```other
+```text
   I’d like to take a ski trip with my family but I’m not sure where to go.
 ```
 
 - 典型的模型输出可能如下：
 
-```other
+```text
   Sure, here’s a list of cities that you can consider for family ski trips:
   - Crested Butte, Colorado, USA
   - Whistler, BC, Canada
@@ -353,7 +353,7 @@ Figure 8. Delineating client vs. agent side control for extensions and function 
 
 - 虽然以上输出包含了我们需要的数据（城市名称），但**格式不适合解析**。 通过 Function，我们可以**教模型以结构化风格（如 JSON）输出**，以便其他系统解析。 例如，输出可能是下面这样，
 
-```other
+```json
   {
     "name": "display_cities",
     "args": {
@@ -373,7 +373,7 @@ Figure 9. Sequence diagram showing the lifecycle of a Function Call
 
 Function 定义：
 
-```other
+```python
 def display_cities(cities: list[str], preferences: Optional[str] = None):
     """Provides a list of cities based on the user's search query and preferences.
 
@@ -389,7 +389,7 @@ def display_cities(cities: list[str], preferences: Optional[str] = None):
 
 接下来，初始化模型和工具，然后将用户的查询和工具传递给模型。
 
-```other
+```python
 from vertexai.generative_models import GenerativeModel, Tool, FunctionDeclaration
 
 model = GenerativeModel("gemini-1.5-flash-001")
@@ -405,7 +405,7 @@ print(f"Function Args: {res.candidates[0].content.parts[0].function_call.args}")
 
 效果：
 
-```other
+```text
 > Function Name: display_cities
 > Function Args: {'preferences': 'skiing', 'cities': ['Aspen', 'Vail', 'Park City']}
 ```
@@ -527,7 +527,7 @@ Figure 14. Sample RAG based application w/ ReAct reasoning/planning
 
 ## 6.1 代码
 
-```other
+```python
 from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
 from langchain_community.utilities import SerpAPIWrapper
@@ -570,7 +570,7 @@ for s in Agent.stream(input, stream_mode="values"):
 
 ## 6.2 运行效果
 
-```other
+```yaml
 =============================== Human Message ================================
 Who did the Texas Longhorns play in football last week? What is the address of the other team's stadium?
 ================================= Ai Message =================================

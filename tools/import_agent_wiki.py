@@ -118,6 +118,70 @@ def find_image(src: str, md_path: Path | None) -> Path | None:
     return None
 
 
+def infer_fence_lang(body: str) -> str:
+    raw = body.strip()
+    if not raw:
+        return "text"
+    if "├──" in raw or "└──" in raw:
+        return "text"
+    compact = "\n".join(ln.strip() for ln in raw.splitlines() if ln.strip())
+    first = compact.splitlines()[0]
+    if first.startswith("{") or first.startswith("["):
+        return "json"
+    if re.search(r"^(docker |psql |#!/)", compact, re.M) or re.search(r"^docker ", compact, re.M):
+        return "bash"
+    if re.search(
+        r"^(import |from [\w.]+ import |def |async def |class \w|@dataclass|@task|@crew|@kernel_function)",
+        compact,
+        re.M,
+    ):
+        return "python"
+    if re.search(r"\b(Agent|Crew|Task|Kernel)\s*\(", raw) and re.search(r"\b(def |return |self\.)", raw):
+        return "python"
+    if re.search(r"^(CREATE |GRANT |ALTER |SELECT |INSERT |DROP )\b", compact, re.I | re.M):
+        return "sql"
+    if re.match(r"^---\s*$", raw, re.M) and re.search(r"^(name|description):", compact, re.M):
+        return "markdown"
+    if re.search(r"^(interface |type \w|export |function |const |let )", compact, re.M):
+        return "typescript"
+    yaml_keys = re.findall(r"^[a-zA-Z_][\w-]*:\s*(>|&|\||$|['\"\d\[\{])", compact, re.M)
+    if len(yaml_keys) >= 2 and "def " not in compact and "import " not in compact:
+        return "yaml"
+    if first.startswith("#") and re.search(r"^#{1,6} ", compact, re.M):
+        return "markdown"
+    return "text"
+
+
+def retag_code_fences(text: str) -> str:
+    """Typora dumps unknown fences as ```other; Chirpy needs a real language."""
+    lines = text.splitlines(keepends=True)
+    out = []
+    i = 0
+    while i < len(lines):
+        m = re.match(r"^(`{3,})(\S*)[ \t]*\n?$", lines[i])
+        if not m:
+            out.append(lines[i])
+            i += 1
+            continue
+        ticks, lang = m.group(1), m.group(2)
+        body = []
+        j = i + 1
+        while j < len(lines) and not re.match(rf"^{re.escape(ticks)}\s*$", lines[j]):
+            body.append(lines[j])
+            j += 1
+        if lang in ("", "other", "plaintext"):
+            lang = "markdown" if len(ticks) >= 4 else infer_fence_lang("".join(body))
+        nl = "\n" if lines[i].endswith("\n") else ""
+        out.append(f"{ticks}{lang}{nl}")
+        out.extend(body)
+        if j < len(lines):
+            out.append(lines[j])
+            i = j + 1
+        else:
+            i = j
+    return "".join(out)
+
+
 def convert_body(body: str, slug: str, md_path: Path | None) -> str:
     target_dir = ASSETS_ROOT / slug
 
@@ -134,7 +198,7 @@ def convert_body(body: str, slug: str, md_path: Path | None) -> str:
     text = rewrite_image_urls(body, dest_url)
     text = re.sub(r"^# .+$", "", text, count=1, flags=re.M).lstrip()
     text = strip_leading_meta(text)
-    return excerpted(text)
+    return retag_code_fences(excerpted(text))
 
 
 def write_post(title: str, body: str, date: datetime, md_path: Path | None) -> str:

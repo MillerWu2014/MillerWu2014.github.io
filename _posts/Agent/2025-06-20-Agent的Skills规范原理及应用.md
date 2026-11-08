@@ -44,7 +44,7 @@ Agent Skills的意义在于把零散的工具与隐式的专家经验，抽象�
 Skill的核心是一个包含 `SKILL.md` 文件的文件夹。该文件包含元数据（至少包括 `name` 和 `description` ）以及指示智能体如何执行特定任务的指令。技能还可以包含脚本、模板和参考资料。
 每个技能都是从一个包含YAML前置元数据和Markdown指令的 `SKILL.md` 文件开始。agent会根据这些内容来判断在何时以及如何使用该技能。
 
-```plaintext
+```markdown
 ---
 name: skill-name
 description: Description that helps Codex select the skill
@@ -90,7 +90,7 @@ Skill应该结构化的，以便有效利用上下文，主文档 `SKILL.md` 应
 
 目的：确定Agent的Skills；原则是：（1）同一个Skill应该统一业务领域、相似的使用场景、相同的数据查询方式等。（2）不能拆分过细，否则API没有起到聚合的作用。（2）同一个Skill下不能包含过多的Skill，否则可能无法准确匹配。划分的步骤参考：
 
-```plaintext
+```text
 s1:确定顶层业务域（如：航班、登机口、跑道等）
 s2:将 API 归入对应域
 s3:检查每个域内 API 数量
@@ -103,7 +103,7 @@ s4:验证每个 Skill 的职责是否单一
 
 该文档设计主要解决skill到具体API的路由，通过该文档可以让Agent正确选择相应的API，同时控制token的数量。该文件的设计参考如下示例：
 
-````plaintext
+````markdown
 ---
 name:使用小写字母和连字符, 如flight-query（航班查询）,gate-assignment（登机口分配）
 description:[功能概述]。使用场景：[具体场景列表]。支持操作：[操作列表].查询条件：[支持的查询参数]。
@@ -209,7 +209,7 @@ flight = client.get_flight("CA1234")
 
 ### 5.3 Skill目录结构
 
-```other
+```text
 flight-query/
 ├── SKILL.md # Skill 定义文件(Agent读取)
 ├── reference # API 详细参考文档
