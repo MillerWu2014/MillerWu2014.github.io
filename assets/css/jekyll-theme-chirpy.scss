@@ -52,3 +52,88 @@
 .topic-empty {
   color: var(--text-muted-color);
 }
+
+/* Home page: keep Chirpy's post list and pagination, and restyle their presentation. */
+#post-list {
+  --home-accent: #147d79;
+  --home-tint: color-mix(in srgb, var(--home-accent) 8%, var(--main-bg));
+
+  display: grid;
+  gap: 1rem;
+  padding-block: 0.5rem 1.5rem;
+  border-top: 3px solid var(--home-accent);
+
+  .card-wrapper {
+    min-width: 0;
+    margin: 0;
+    border: 1px solid var(--main-border-color);
+    border-radius: 1rem;
+    overflow: hidden;
+    background: var(--card-bg, var(--main-bg));
+    box-shadow: none;
+  }
+
+  .post-preview {
+    height: 100%;
+  }
+
+  .post-preview:focus-visible {
+    outline: 2px solid var(--home-accent);
+    outline-offset: -3px;
+  }
+
+  .post-preview .card-body {
+    height: 100%;
+    padding: clamp(1rem, 3vw, 1.65rem);
+  }
+
+  .card-title {
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .card-text p {
+    text-align: start;
+  }
+
+  .card-wrapper:first-child {
+    background: var(--home-tint);
+  }
+
+  .post-preview:hover::before {
+    background: color-mix(in srgb, var(--home-accent) 6%, transparent);
+  }
+}
+
+@media (min-width: 992px) {
+  #post-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    .card-wrapper:first-child {
+      grid-column: 1 / -1;
+
+      .card-title {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+      }
+    }
+
+    .card-wrapper:not(:first-child) {
+      .post-preview {
+        display: grid;
+        grid-template-rows: 1fr;
+
+        &:has(> .col-md-5) {
+          grid-template-rows: auto 1fr;
+        }
+      }
+
+      .post-preview > div {
+        width: 100%;
+      }
+
+      .post-preview > .col-md-5 {
+        aspect-ratio: 2.5;
+      }
+    }
+  }
+}
