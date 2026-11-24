@@ -1,39 +1,42 @@
-# Chirpy Starter
+# Miller Wu · Blog
 
-[![Gem Version](https://img.shields.io/gem/v/jekyll-theme-chirpy)][gem]&nbsp;
-[![GitHub license](https://img.shields.io/github/license/cotes2020/chirpy-starter.svg?color=blue)][mit]
+博客源码维护在 `redesign/`，由 Python 构建为静态页面并通过 GitHub Pages 发布。
 
-A minimal, ready-to-use template for creating a blog with the [**Chirpy**][chirpy] Jekyll theme. Get up and running in minutes with all critical files pre-configured.
+## 本地预览
 
-## Why This Starter Exists
+在仓库根目录运行：
 
-When installing Chirpy through [RubyGems.org][gem], Jekyll can only read a subset of theme files (`_data`, `_layouts`, `_includes`, `_sass`, `assets`) and limited `_config.yml` options from the gem. As a result, users cannot enjoy the full out-of-the-box experience that Chirpy offers.
-
-To unlock all features, the following files must be present in your Jekyll site:
-
-```shell
-.
-├── _config.yml
-├── _plugins
-├── _tabs
-└── index.html
+```sh
+python3 -m http.server 8000 --directory redesign
 ```
 
-This starter bundles those files from the latest **Chirpy** release along with a [CD][CD] workflow, so you can start writing immediately.
+打开 http://127.0.0.1:8000/。
 
-## Usage
+## 更新文章
 
-Check out the [theme's docs](https://github.com/cotes2020/jekyll-theme-chirpy/wiki).
+- 文章源文件位于 `redesign/content/`。
+- 图片位于 `redesign/assets/img/`。
+- 专题配置位于 `redesign/topics.json`。
+- 文章初始分类位于 `redesign/article-types.json`，文章 Front Matter 中的 `article_type` 优先。
 
-## Contributing
+安装依赖并重新生成页面：
 
-This repository is automatically updated with new releases from the theme repository. If you encounter any issues or want to contribute to its improvement, please visit the [theme repository][chirpy] to provide feedback.
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r redesign/requirements.txt
+python redesign/build.py
+```
 
-## License
+## 发布
 
-This work is published under [MIT][mit] License.
+推送至 `master` 或 `main` 后，GitHub Actions 自动构建并将新版发布到网站根目录。
 
-[gem]: https://rubygems.org/gems/jekyll-theme-chirpy
-[chirpy]: https://github.com/cotes2020/jekyll-theme-chirpy/
-[CD]: https://en.wikipedia.org/wiki/Continuous_deployment
-[mit]: https://github.com/cotes2020/chirpy-starter/blob/master/LICENSE
+也可导出静态站点用于本地检查，输出目录需为空：
+
+```sh
+python redesign/publish.py --output _site
+python -m http.server 8001 --directory _site
+```
+
+详细说明见 [新版博客说明](redesign/README.md)。旧版源码可从 Git 历史中查看。
