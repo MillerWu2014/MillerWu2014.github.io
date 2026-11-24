@@ -47,6 +47,18 @@ python build.py
 
 ## 部署和替换
 
+当前 GitHub Actions 将本模块发布为网站根站点。推送到 `master` 或 `main` 后，会自动执行构建和导出，然后发布到 GitHub Pages。线上首页对应本模块的 `index.html`。
+
+可在仓库根目录复现发布导出，输出目录需为空：
+
+```sh
+python redesign/build.py
+python redesign/publish.py --output _site
+python -m http.server 8001 --directory _site
+```
+
+打开 `http://127.0.0.1:8001/` 查看正式发布结构。导出只包含网站运行文件，源文档下载通过 `assets/markdown/` 提供。
+
 将本目录作为静态网站根目录发布，保留 `articles/`、`assets/`、首页、标签页、`posts-data.js`、CSS 和 JavaScript。构建脚本、文章源文件和模板可留在源码仓库。
 
 后续替换旧博客时，以本模块为网站根目录并执行上述构建命令。新版文章地址是 `articles/文件名.html`，旧站文章地址的跳转映射需在正式替换时配置。

@@ -35,12 +35,8 @@ jobs:
       - name: Build redesigned blog
         run: python redesign/build.py
 
-      - name: Prepare website
-        run: |
-          mkdir -p _site
-          cp redesign/*.html redesign/*.css redesign/*.js _site/
-          cp -R redesign/articles redesign/assets _site/
-          touch _site/.nojekyll
+      - name: Publish redesign as website root
+        run: python redesign/publish.py --output _site
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v4
