@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>spark算子aggregate,fold,lookup详解 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>spark</h2><a href="2017-08-30-spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob%2Cstage%2Ctask%E8%A7%A3%E6%9E%90.html">spark中job运行过程详解和job,stage,task解析</a><a href="2017-07-24-spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html">spark中遇到的问题汇总</a><a href="2017-07-09-spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.html">spark中创建RDD的几种方式</a><a href="2017-07-08-%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe.html">使用spark读取mysql数据库数据转化为dataframe</a><a href="2017-07-03-spark%E7%AE%97%E5%AD%90aggregate%2Cfold%2Clookup%E8%AF%A6%E8%A7%A3.html" aria-current="page">spark算子aggregate,fold,lookup详解</a><a href="2017-07-03-%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC.html">用spark对时间数据进行分组求平均值</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-07-03-spark%E7%AE%97%E5%AD%90aggregate%2Cfold%2Clookup%E8%AF%A6%E8%A7%A3.md" download="2017-07-03-spark算子aggregate,fold,lookup详解.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-07-03">2017-07-03</time></p>
+        <h1>spark算子aggregate,fold,lookup详解</h1>
+      </header>
+      <div class="prose" id="body"><h3 id="aggregate">aggregate</h3>
+<p>定义如下：
+<code>def aggregate[U](zeroValue: U)(seqOp: (U, T) ⇒ U, combOp: (U, U) ⇒ U)(implicit arg0: ClassTag[U]): U</code>
+aggregate用户聚合RDD中的元素，先使用seqOp将RDD中每个分区中的T类型元素聚合成U类型，再使用combOp将之前每个分区聚合后的U类型聚合成U类型，特别注意seqOp和combOp都会使用zeroValue的值，zeroValue的类型为U。</p>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">var rdd1 = sc.makeRDD(1 to 10,2)
+rdd1.mapPartitionsWithIndex {
+        (partIdx,iter) =&gt; {
+          var part_map = scala.collection.mutable.Map[String,List[Int]]()
+            while(iter.hasNext){
+              var part_name = &quot;part_&quot; + partIdx;
+              var elem = iter.next()
+              if(part_map.contains(part_name)) {
+                var elems = part_map(part_name)
+                elems ::= elem
+                part_map(part_name) = elems
+              } else {
+                part_map(part_name) = List[Int]{elem}
+              }
+            }
+            part_map.iterator
+           
+        }
+      }.collect
+res16: Array[(String, List[Int])] = Array((part_0,List(5, 4, 3, 2, 1)), (part_1,List(10, 9, 8, 7, 6)))
+</code></pre></div>
+<!--more--> 
+<p>第一个分区中包含5,4,3,2,1
+第二个分区中包含10,9,8,7,6</p>
+<div class="code-block"><div class="code-toolbar"><span>scala</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-scala"><span class="n">scala</span><span class="o">&gt;</span><span class="w"> </span><span class="n">rdd1</span><span class="p">.</span><span class="n">aggregate</span><span class="p">(</span><span class="mi">1</span><span class="p">)(</span>
+<span class="w">     </span><span class="o">|</span><span class="w">           </span><span class="p">{(</span><span class="n">x</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">Int</span><span class="p">,</span><span class="n">y</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">Int</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="p">},</span><span class="w"> </span>
+<span class="w">     </span><span class="o">|</span><span class="w">           </span><span class="p">{(</span><span class="n">a</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">Int</span><span class="p">,</span><span class="n">b</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nc">Int</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">}</span>
+<span class="w">     </span><span class="o">|</span><span class="w">     </span><span class="p">)</span>
+<span class="n">res17</span><span class="p">:</span><span class="w"> </span><span class="nc">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">58</span>
+</code></pre></div>
+<p>结果为什么是58，看下面的计算过程：</p>
+<p>先在每个分区中迭代执行<code>(x : Int,y : Int) =&gt; x + y</code>并且使用<code>zeroValue</code>的值<code>1</code>
+即：<code>part_0</code>中<code> zeroValue+5+4+3+2+1 = 1+5+4+3+2+1 = 16</code>
+<code>part_1</code>中 <code>zeroValue+10+9+8+7+6 = 1+10+9+8+7+6 = 41</code>
+再将两个分区的结果合并<code>(a : Int,b : Int) =&gt; a + b </code>，并且使用<code>zeroValue</code>的值<code>1</code>
+即：<code>zeroValue+part_0+part_1 = 1 + 16 + 41 = 58</code>
+再比如：</p>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">scala&gt; rdd1.aggregate(2)(
+     |           {(x : Int,y : Int) =&gt; x + y}, 
+     |           {(a : Int,b : Int) =&gt; a * b}
+     |     )
+res18: Int = 1428
+</code></pre></div>
+<p>这次<code>zeroValue=2</code>
+<code>part_0</code>中 <code>zeroValue+5+4+3+2+1 = 2+5+4+3+2+1 = 17</code>
+<code>part_1</code>中 <code>zeroValue+10+9+8+7+6 = 2+10+9+8+7+6 = 42</code>
+最后：<code>zeroValue*part_0*part_1 = 2 * 17 * 42 = 1428</code>
+因此，<code>zeroValue</code>即确定了<code>U</code>的类型，也会对结果产生至关重要的影响，使用时候要特别注意。</p>
+<h3 id="fold">fold</h3>
+<div class="code-block"><div class="code-toolbar"><span>scala</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-scala"><span class="k">def</span><span class="w"> </span><span class="nf">fold</span><span class="p">(</span><span class="n">zeroValue</span><span class="p">:</span><span class="w"> </span><span class="nc">T</span><span class="p">)(</span><span class="n">op</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="nc">T</span><span class="p">,</span><span class="w"> </span><span class="nc">T</span><span class="p">)</span><span class="w"> </span><span class="o">⇒</span><span class="w"> </span><span class="nc">T</span><span class="p">):</span><span class="w"> </span><span class="nc">T</span>
+<span class="c1">// fold是aggregate的简化，将aggregate中的seqOp和combOp使用同一个函数op。</span>
+<span class="n">scala</span><span class="o">&gt;</span><span class="w"> </span><span class="n">rdd1</span><span class="p">.</span><span class="n">fold</span><span class="p">(</span><span class="mi">1</span><span class="p">)(</span>
+<span class="w">     </span><span class="o">|</span><span class="w">       </span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="w">    </span>
+<span class="w">     </span><span class="o">|</span><span class="w">     </span><span class="p">)</span>
+<span class="n">res19</span><span class="p">:</span><span class="w"> </span><span class="nc">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">58</span>
+</code></pre></div>
+<p>结果同上面使用aggregate的第一个例子一样，即：</p>
+<div class="code-block"><div class="code-toolbar"><span>scala</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-scala"><span class="n">scala</span><span class="o">&gt;</span><span class="w"> </span><span class="n">rdd1</span><span class="p">.</span><span class="n">aggregate</span><span class="p">(</span><span class="mi">1</span><span class="p">)(</span>
+<span class="w">     </span><span class="o">|</span><span class="w">           </span><span class="p">{(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="p">},</span><span class="w"> </span>
+<span class="w">     </span><span class="o">|</span><span class="w">           </span><span class="p">{(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">}</span>
+<span class="w">     </span><span class="o">|</span><span class="w">     </span><span class="p">)</span>
+<span class="n">res20</span><span class="p">:</span><span class="w"> </span><span class="nc">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">58</span>
+</code></pre></div>
+<h3 id="lookup">lookup</h3>
+<p><code>def lookup(key: K): Seq[V]</code>
+lookup用于(K,V)类型的RDD,指定K值，返回RDD中该K对应的所有V值。</p>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">scala&gt; var rdd1 = sc.makeRDD(Array((&quot;A&quot;,0),(&quot;A&quot;,2),(&quot;B&quot;,1),(&quot;B&quot;,2),(&quot;C&quot;,1)))
+rdd1: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[0] at makeRDD at :21
+scala&gt; rdd1.lookup(&quot;A&quot;)
+res0: Seq[Int] = WrappedArray(0, 2)
+scala&gt; rdd1.lookup(&quot;B&quot;)
+res1: Seq[Int] = WrappedArray(1, 2)
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

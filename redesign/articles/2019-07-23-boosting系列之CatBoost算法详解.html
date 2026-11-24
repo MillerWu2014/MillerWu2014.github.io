@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>boosting系列之CatBoost算法详解 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>机器学习</h2><a href="2020-06-11-boosting%E7%B3%BB%E5%88%97%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之NGBoost算法详解</a><a href="2019-07-23-boosting%E7%B3%BB%E5%88%97%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html" aria-current="page">boosting系列之CatBoost算法详解</a><a href="2019-07-16-boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之LightGBM算法详解</a><a href="2019-06-25-%E5%9F%BA%E4%BA%8E%E8%BD%A8%E8%BF%B9%E7%9A%84%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93.html">基于轨迹的数据挖掘相关技术总结</a><a href="2018-11-24-KL%E6%95%A3%E5%BA%A6%2CJS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB.html">KL散度,JS散度和wasserstein距离</a><a href="2017-09-05-%E5%9F%BA%E4%BA%8EMLE%E7%9A%84logistic%E6%A8%A1%E5%9E%8B.html">基于MLE的logistic模型</a><a href="2017-08-15-%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98.html">利用scikit-learn来分析模型欠拟合和过拟合问题</a><a href="2017-08-13-%E5%AF%B9%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%80%83.html">对梯度下降算法的思考</a><a href="2017-07-26-%E4%BF%A1%E6%81%AF%E8%AE%BA%E4%B8%ADKL%E6%95%A3%E5%BA%A6%E8%AF%A6%E8%A7%A3.html">信息论中KL散度详解</a><a href="2017-07-14-%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95.html">最优化-梯度下降算法</a><a href="2017-07-06-%E7%89%B9%E5%BE%81%E5%8F%AF%E8%A7%86%E5%8C%96%E5%92%8C%E7%89%B9%E5%BE%81%E9%99%8D%E7%BB%B4%E7%AE%97%E6%B3%95T-SNE%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3.html">特征可视化和特征降维算法T-SNE模型详解</a><a href="2017-06-12-Bootstrap%2CBoosting%2CBagging%2CRandforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D.html">Bootstrap,Boosting,Bagging,Randforest几种方法介绍</a><a href="2017-06-12-%E4%BF%A1%E6%81%AF%E5%A2%9E%E7%9B%8A%E7%AD%9B%E9%80%89%E5%8F%98%E9%87%8F%E5%92%8Cpython%E5%AE%9E%E7%8E%B0.html">信息增益筛选变量和python实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2019-07-23-boosting%E7%B3%BB%E5%88%97%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.md" download="2019-07-23-boosting系列之CatBoost算法详解.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2019-07-23">2019-07-23</time></p>
+        <h1>boosting系列之CatBoost算法详解</h1>
+      </header>
+      <div class="prose" id="body"><p>CatBoost是由俄罗斯的搜索公司Yandex提出的一类boosting集成学习算法，该算法主要是解决类别型特征的学习，可以直接对字符型类别特征进行处理和学习，使用非常简单，实用。因此算法名称也叫做CatBoost（categorical和boosting两者的结合）,该算法支持GPU，以及训练过程可视化等，支持Python，R等建模，也支持其他语言的部署。官方的论文结构如下，本文主要对3，4两个部分进行说明。</p>
+<div class="code-block"><div class="code-toolbar"><span>tex</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-tex">---- 1.Introduction
+---- 2.Background
+---- 3.Categorical feature
+--------Target statistics: Greedy TS, Holdout TS, Leave-one-out TS, Ordered TS
+---- 4.Prediction shift and ordered boosting
+--------Prediction shift
+--------Ordered boosting
+---- 5.Practical implementation of ordered boosting
+</code></pre></div>
+<h2 id="categorical-features类别特征">Categorical features(类别特征)</h2>
+<p>这部分主要是对类别特征转化为数值型特征，一般类别特征的最简单的方式就是通过对应标签的平均值来代替，而CatBoost则使用了自己设定的方式来进行转换，而且会进行特征组合，生成新的特征。</p>
+<h3 id="greedy-ts">Greedy TS</h3>
+<p>类别特征不能直接在boosting中使用，因此需要将类别特征转换为数值型特征，CatBoost处理Categorical features的方式有别于其他方式，首先会计算TS(target statistics)，而传统的方式是：
+<div class="math inline">\[\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right] \cdot Y_{i}}{\sum_{j=1}^{n}\left[x_{j, k}=x_{i, k}\right]}\]</div>
+CatBoost对该方法进行了优化，采用<strong>Greedy TS</strong>，添加先验分布项，这样可以减少噪声和低频率数据对于数据分布的影响（这个公式写的很奇怪，可能是俄罗斯人思维方式和我们的差异）：
+<div class="math inline">\[\hat{x}_{k}^{i}=\frac{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right] Y_{\sigma, j}+a \cdot P}{\sum_{j=1}^{p-1}\left[x_{\sigma_{j}, k}=x_{\sigma_{p}, k}\right]}\]</div>
+其中，<span class="math inline">\(a\)</span>为大于0的参数，<span class="math inline">\(P\)</span>一般是target值得均值(添加的先验项)。其中方括弧中即满足条件为1，否则为0。但是上面得式子会出现一个问题就是greedy导致target leakage，<span class="math inline">\(\hat{x}_{k}^{i}\)</span>的计算需要使用<span class="math inline">\(y_k\)</span>和<span class="math inline">\(x_k\)</span>，这样会出现<strong>target leakage</strong>，即<span class="math inline">\(E\left(\hat{x}^{i} | y=v\right)=E\left(\hat{x}_{k}^{i} | y_{k}=v\right)\)</span>不成立。解决办法就是去掉<span class="math inline">\(x_k\)</span>：<div class="math inline">\[D_{k} \subset D-\left\{x_{k}\right\}\]</div>的样本来估计<span class="math inline">\(\hat{x}_{k}^{i}\)</span>的值，不使用全部数据集合<span class="math inline">\(D\)</span>。<!--more--></p>
+<h3 id="holdout-ts">Holdout TS</h3>
+<p>这种方法是将数据集分为两部分，D0和D1，D0用来计算TS，而D1用来训练，这种方式减少了用于训练的数据量和用来计算TS的的数据量，但是也存在问题：并未使用到所有的数据集来计算TS特征和学习模型。</p>
+<h3 id="leave-one-out-ts">Leave-one-out TS</h3>
+<p>为了平衡训练和TS的计算，leave-one-out 的方式可能会更好，文中对该方式进行了简要的说明。</p>
+<h3 id="ordered-ts">Ordered TS</h3>
+<p>为了将所有样本用于训练，CatBoost给出了一种解决方案，这受在线学习算法的启发（在线学习算法按照时序来获取训练数据），即首先对所有样本进行随机排序，然后针对类别型特征中的某个取值，每个样本的该特征转为数值型时都是基于排在该样本之前的类别标签取均值，同时加入了优先级和优先级的权重系数。CatBoost在不同的梯度提升步中使用不同的排列。</p>
+<h2 id="order-boosting">Order Boosting</h2>
+<h3 id="prediction-shift">Prediction shift</h3>
+<p>在梯度提升的过程中，存在<code>Prediction Shift</code>的问题，主要是应为特征的target leakage导致，处理的方式还是和<code>ordered ts</code>处理方式相同。
+<div class="math inline">\[h_{t}=\operatorname{argmin}_{\{h \in H\}} \frac{1}{n} \sum_{k=1}^{n}\left(-g^{t}\left(x_{k}, y_{k}\right)-h\left(x_{k}\right)\right)\]</div>
+论文中对链式偏移（chain of shifts）进行了描述：</p>
+<p>（1）梯度的条件分布和测试数据的分布存在偏移。</p>
+<p>（2）<span class="math inline">\(h_t\)</span>的估计和式子<span class="math inline">\(h^{t}=\underset{h \in H}{\arg \min } \mathbb{E}\left(-g^{t}(\mathbf{x}, y)-h(\mathbf{x})\right)^{2}\)</span>存在偏差。</p>
+<p>（3）最终会影响学习到的函数<span class="math inline">\(F^t\)</span>的泛化能力。</p>
+<h3 id="order-boosting-1">Order Boosting</h3>
+<p>为了解决上面的问题，CatBoost提出了order boosting的方案，具体算法如下图所示，首先是生成随机排列<span class="math inline">\(\sigma\)</span>，随机配列用于下面的模型训练。在计算第<span class="math inline">\(M_i\)</span>个模型时，使用排列中的前<span class="math inline">\(i\)</span>个样本训练模型。在迭代（每次迭代使用的排列都不相同）的过程中，为了得到第<span class="math inline">\(j\)</span>个样本的残差估计值，使用<span class="math inline">\(M_{j-1}\)</span>模型进行估计。</p>
+<p><img src="../assets/img/posts/boosting%E7%B3%BB%E5%88%97%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/order-boosting.png" alt="1563784395054" /></p>
+<p>下图中对模型构建过程进行了简要可视化：</p>
+<p><img src="../assets/img/posts/boosting%E7%B3%BB%E5%88%97%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/order_boost_compute.png" alt="1563789737273" /></p>
+<p>论文中也分析了模型训练过程中的时间和空间复杂度，总体而言时间复杂度较高，因此，boosting tree构建过程必须进行改进和优化。</p>
+<h2 id="主要实现">主要实现</h2>
+<h3 id="树的构建">树的构建</h3>
+<p>CatBoost 使用决策树，每次分裂节点均使用相同的策略。在Ordered Mode下，在计算梯度或者计算某个叶子节点平均梯度值，均只利用前 <span class="math inline">\(i\)</span>个样本的信息。而在Plain Mode下，流程和GBDT算法类似，但是对于分类变量，计算其TS时仍会使用带permutation的模式（使用随机排列<span class="math inline">\(\sigma^0\)</span>)。CatBoost实现了 gradient boosting，完全使用二叉树作为基础树形结构，而且是对称的二叉树。论文中认为使用这种树为了避免过拟合。</p>
+<h3 id="叶子节点值">叶子节点值</h3>
+<p>在所有树结构都建立好的情况下，最终模型 <span class="math inline">\(F\)</span>的叶子节点值是通过标准的梯度提升处理得到的，对于分类变量就需要使用随机排列 <span class="math inline">\(\sigma^o\)</span> 计算TS值。</p>
+<p>具体的构建树的算法过程就不详细说明了，可以参考<a href="https://arxiv.org/pdf/1706.09516.pdf">官方论文</a>中伪代码。</p>
+<h2 id="catboost优点">CatBoost优点</h2>
+<ul>
+<li>性能卓越：在性能方面可以匹敌任何先进的机器学习算法</li>
+<li>鲁棒性/强健性：它减少了对很多超参数调优的需求，并降低了过度拟合的机会，这也使得模型变得更加具有通用性</li>
+<li>易于使用：提供与scikit集成的Python接口，以及R和命令行界面</li>
+<li>实用：可以处理类别型、数值型特征</li>
+<li>可扩展：支持自定义损失函数</li>
+</ul>
+<h2 id="参考文档">参考文档</h2>
+<ol>
+<li><a href="https://github.com/catboost/catboost">CatBoost github main page</a></li>
+<li><a href="https://catboost.ai/">CatBoost AI Documentation</a></li>
+<li><a href="https://arxiv.org/pdf/1706.09516.pdf">CatBoost原始Paper地址</a></li>
+<li><a href="https://blog.csdn.net/u014686462/article/details/83543609">论文笔记-1</a></li>
+<li><a href="https://www.jianshu.com/p/49ab87122562">CatBoost一个简单实用的boosting算法</a></li>
+<li><a href="https://blog.csdn.net/appleyuchi/article/details/85413352">CatBoost原文解读</a></li>
+<li><a href="https://lonepatient.top/2017/03/18/boosting.html">XGBoost、LightGBM和CatBoost的同与不同</a></li>
+<li><a href="https://www.biaodianfu.com/catboost.html">机器学习算法之Catboost</a></li>
+</ol>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

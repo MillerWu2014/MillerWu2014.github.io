@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>crewAI框架下关键的策略和模式设计 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>Agent</h2><a href="2025-07-27-%E5%BF%85%E8%AF%BB%E7%9A%84Agent%E7%9B%B8%E5%85%B3%E7%A0%94%E7%A9%B6.html">必读的Agent相关研究</a><a href="2025-07-17-AI-Agents-%E5%88%9D%E5%AD%B8%E8%80%85%E8%AA%B2%E7%A8%8B.html">AI Agents 初學者課程</a><a href="2025-07-08-crewAI%E6%A1%86%E6%9E%B6%E4%B8%8B%E5%85%B3%E9%94%AE%E7%9A%84%E7%AD%96%E7%95%A5%E5%92%8C%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1.html" aria-current="page">crewAI框架下关键的策略和模式设计</a><a href="2025-07-01-CrewAI%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%E5%92%8C%E6%A1%86%E6%9E%B6.html">CrewAI的相关概念和框架</a><a href="2025-06-28-%E9%AB%98%E6%89%8B%E9%83%BD%E5%9C%A8%E7%94%A8%E7%9A%84-Skill-2.0-%E6%9E%B6%E6%9E%84%E6%8C%87%E5%8D%97%E9%99%84%E5%AE%8C%E6%95%B4%E6%AD%A5%E9%AA%A4.html">高手都在用的 Skill 2.0 架构指南（附完整步骤）</a><a href="2025-06-20-Agent%E7%9A%84Skills%E8%A7%84%E8%8C%83%E5%8E%9F%E7%90%86%E5%8F%8A%E5%BA%94%E7%94%A8.html">Agent的Skills规范原理及应用</a><a href="2025-06-16-%E8%AE%B0%E5%BF%86Memory%E6%A8%A1%E5%9D%97%E7%9A%84%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90.html">记忆(Memory)模块的深度解析</a><a href="2025-06-13-Agent%E5%8E%9F%E7%90%86%E3%80%81%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5.html">Agent：原理、架构与工程实践</a><a href="2025-06-06-LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84.html">LLMs的Agent架构</a><a href="2025-06-01-AI-Agent%E6%99%BA%E8%83%BD%E4%BD%93%E6%8A%80%E6%9C%AF%E7%99%BD%E7%9A%AE%E4%B9%A6Google%EF%BC%8C2024.html">AI Agent（智能体）技术白皮书（Google，2024）</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2025-07-08-crewAI%E6%A1%86%E6%9E%B6%E4%B8%8B%E5%85%B3%E9%94%AE%E7%9A%84%E7%AD%96%E7%95%A5%E5%92%8C%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1.md" download="2025-07-08-crewAI框架下关键的策略和模式设计.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2025-07-08">2025-07-08</time></p>
+        <h1>crewAI框架下关键的策略和模式设计</h1>
+      </header>
+      <div class="prose" id="body"><p><strong>User</strong></p>
+<!--more-->
+<p>现在来讨论crewAI框架下crew策略下的Process未sequential模式时，一个Agent配置多个Task时，是如何识别使用哪一个Task?</p>
+<hr />
+<p><strong>Cursor</strong></p>
+<p>我来帮您分析 CrewAI 框架中 sequential 模式下 Agent 和 Task 的关系机制。让我先查看项目中的相关配置文件。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;创建航空数据分析专家团队&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>根据项目代码分析，我来解答您关于 CrewAI 框架中 sequential 模式下 Agent 和 Task 关系的问题。</p>
+<h2 id="一核心机制解析">一、核心机制解析</h2>
+<h3 id="1-task-与-agent-的绑定关系">1. <strong>Task 与 Agent 的绑定关系</strong></h3>
+<p>在 CrewAI 中，<strong>Task 不是自动分配给 Agent 的，而是通过显式绑定</strong>：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python">    <span class="nd">@task</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_coordination_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;创建任务协调任务&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;task_coordination_task&#39;</span><span class="p">]</span>  <span class="c1"># type: ignore[index]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task_config</span> <span class="o">=</span> <span class="n">TaskCoordinationTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+            <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="nd">@task</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">database_query_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;创建数据库查询任务&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;database_query_task&#39;</span><span class="p">]</span>  <span class="c1"># type: ignore[index]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task_config</span> <span class="o">=</span> <span class="n">DatabaseQueryTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+            <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()],</span>
+            <span class="c1"># Removed context dependency - manager agent handles coordination in hierarchical mode</span>
+        <span class="p">)</span>
+</code></pre></div>
+<p>每个 Task 通过 <code>agent=</code> 参数明确指定执行该任务的 Agent。</p>
+<h3 id="2-sequential-模式下的执行机制">2. <strong>Sequential 模式下的执行机制</strong></h3>
+<p>查看项目的 Crew 配置：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;创建航空数据分析专家团队&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span>
+        <span class="c1"># manager_llm=self.chat_llm,</span>
+        <span class="c1"># planning=True,</span>
+        <span class="c1"># planning_llm=self.chat_llm,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p><strong>关键发现</strong>：</p>
+<ul>
+<li>定义了 <strong>3 个 Agents</strong></li>
+<li>但在 <code>tasks</code> 列表中<strong>只注册了 1 个 Task</strong>（<code>task_coordination_task</code>）</li>
+<li>Sequential 模式按照 <code>tasks</code> 列表的顺序执行</li>
+</ul>
+<h3 id="3-实际工作方式delegate-模式">3. <strong>实际工作方式：Delegate 模式</strong></h3>
+<p>这个项目使用了 <strong>委托（Delegate）模式</strong> 而不是多 Task 分配：</p>
+<p>查看任务配置：</p>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="nt">task_coordination_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">作为系统的核心协调任务，负责理解用户问题{question}，智能拆分任务，调用专业agent，并最终整合输出用户要求的数据。</span>
+
+<span class="w">    </span><span class="no">核心职责：</span>
+<span class="w">    </span><span class="no">1. 需求理解与任务拆分：</span>
+<span class="w">       </span><span class="no">- 深入分析用户问题的本质和目标</span>
+<span class="w">       </span><span class="no">- 识别涉及的数据类型（航班计划、飞行轨迹、机场路网等）</span>
+<span class="w">       </span><span class="no">- 判断需要调用哪些专业agent</span>
+<span class="w">       </span><span class="no">- 确定最适合的处理方式和执行顺序</span>
+
+<span class="w">    </span><span class="no">2. 智能Agent调用：</span>
+<span class="w">       </span><span class="no">- 如果涉及数据库查询（航班信息、轨迹信息、机场路网等）→ 使用delegate工具调用[数据库专家]</span>
+<span class="w">         </span><span class="no">注意：</span>
+<span class="w">          </span><span class="no">--调用数据库专家时，任务描述中，只能包括查询任务，不能包括计算任务</span>
+<span class="w">          </span><span class="no">--数据库专家只能处理查询任务，所有涉及计算任务，需要将查询到的文件，传递给下游的时序数据分析工程师</span>
+<span class="w">          </span><span class="no">--数据库专家执行后会生成本地JSON数据文件，包括原始数据文件和元数据文件</span>
+<span class="w">          </span><span class="no">--sql执行不允许将字段转化为中文，使用sql原始的字段名进行查询</span>
+<span class="w">       </span><span class="no">- 数据处理、数据统计分析、机器学习等计算任务 → 使用delegate工具调用[时序数据分析工程师]</span>
+<span class="w">          </span><span class="no">--时序数据分析工程师应该能够处理所有的计算、分析统计的任务</span>
+<span class="w">          </span><span class="no">--时序数据分析师的输入是数据库专家生成的本地JSON数据文件</span>
+
+<span class="w">    </span><span class="no">3. 结果整合与输出：</span>
+<span class="w">       </span><span class="no">- 收集各专业agent的执行结果</span>
+<span class="w">       </span><span class="no">- 对结果进行质量检查和一致性验证</span>
+<span class="w">       </span><span class="no">- 按照用户需求格式化最终输出</span>
+<span class="w">       </span><span class="no">- 确保输出数据的完整性和准确性</span>
+
+<span class="w">    </span><span class="no">决策逻辑（重要）：</span>
+<span class="w">    </span><span class="no">- 数据库查询 → 调用数据库专家</span>
+<span class="w">    </span><span class="no">- 简单的解释性问题 → 直接回答，不调用其他agent</span>
+<span class="w">    </span><span class="no">- 计算任务、分析任务、统计任务、机器学习任务，时序任务, 滑行路径提取, 轨迹优化 → 调用时序数据分析工程师</span>
+
+<span class="w">    </span><span class="no">执行流程：</span>
+<span class="w">    </span><span class="no">1. 接收并深入分析用户问题</span>
+<span class="w">    </span><span class="no">2. 识别核心需求和涉及的数据类型</span>
+<span class="w">    </span><span class="no">3. 判断是否需要调用专业agent</span>
+<span class="w">    </span><span class="no">4. 如果需要，使用delegate工具调用相应的专业agent</span>
+<span class="w">    </span><span class="no">5. 如果不需要，直接提供答案</span>
+<span class="w">    </span><span class="no">6. 整合各agent的执行结果</span>
+<span class="w">    </span><span class="no">7. 格式化并输出最终结果给用户</span>
+
+<span class="w">  </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+</code></pre></div>
+<h2 id="总结">总结</h2>
+<p>在 CrewAI 的 <strong>Sequential 模式</strong>下，<strong>并不存在&quot;一个 Agent 自动识别执行多个 Task&quot;的机制</strong>。实际的实现方式有两种：</p>
+<h3 id="方式一显式注册多个-task传统方式">方式一：显式注册多个 Task（传统方式）</h3>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">Crew</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">agent1</span><span class="p">,</span> <span class="n">agent2</span><span class="p">,</span> <span class="n">agent3</span><span class="p">],</span>
+    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">task1</span><span class="p">,</span>  <span class="c1"># agent=agent1</span>
+        <span class="n">task2</span><span class="p">,</span>  <span class="c1"># agent=agent2  </span>
+        <span class="n">task3</span><span class="p">,</span>  <span class="c1"># agent=agent3</span>
+    <span class="p">],</span>
+    <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span>
+<span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>Sequential 会按 <code>tasks</code> 列表顺序依次执行</li>
+<li>每个 Task 通过 <code>agent=</code> 参数绑定到特定 Agent</li>
+<li>Task 执行时会激活对应的 Agent</li>
+</ul>
+<h3 id="方式二delegate-委托模式本项目采用">方式二：Delegate 委托模式（本项目采用）</h3>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">Crew</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">coordinator</span><span class="p">,</span> <span class="n">expert1</span><span class="p">,</span> <span class="n">expert2</span><span class="p">],</span>
+    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">coordinator_task</span><span class="p">],</span>  <span class="c1"># 只注册一个协调任务</span>
+    <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span>
+<span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>只注册一个协调任务（<code>task_coordination_task</code>）</li>
+<li>协调 Agent 使用 <strong>delegate 工具</strong>动态调用其他 Agent</li>
+<li>其他 Agent（<code>database_expert</code>, <code>python_data_scientist</code>）作为&quot;可调用资源&quot;存在</li>
+<li>更灵活，但所有 Agent 必须在 <code>agents</code> 列表中注册</li>
+</ul>
+<p><strong>Delegate 工具的工作原理</strong>：</p>
+<ul>
+<li>Task Coordinator 在执行过程中，可以通过 delegate 工具将子任务委托给其他 Agent</li>
+<li>被委托的 Agent 会临时执行子任务并返回结果</li>
+<li>这种方式实现了动态任务分配，比固定的 Task 列表更灵活</li>
+</ul>
+<p>这就是为什么您的项目虽然定义了 3 个 Task，但只在 Crew 中注册了 1 个 Task 的原因。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@task</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_coordination_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;创建任务协调任务&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;task_coordination_task&#39;</span><span class="p">]</span>  <span class="c1"># type: ignore[index]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task_config</span> <span class="o">=</span> <span class="n">TaskCoordinationTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+            <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="nd">@task</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">database_query_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;创建数据库查询任务&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;database_query_task&#39;</span><span class="p">]</span>  <span class="c1"># type: ignore[index]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task_config</span> <span class="o">=</span> <span class="n">DatabaseQueryTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+            <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()],</span>
+            <span class="c1"># Removed context dependency - manager agent handles coordination in hierarchical mode</span>
+        <span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@crew</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;创建航空数据分析专家团队&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+            <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>
+            <span class="p">],</span>
+            <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>
+            <span class="p">],</span>
+            <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span>
+            <span class="c1"># manager_llm=self.chat_llm,</span>
+            <span class="c1"># planning=True,</span>
+            <span class="c1"># planning_llm=self.chat_llm,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="nt">task_coordination_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">作为系统的核心协调任务，负责理解用户问题{question}，智能拆分任务，调用专业agent，并最终整合输出用户要求的数据。</span>
+
+<span class="w">    </span><span class="no">核心职责：</span>
+<span class="w">    </span><span class="no">1. 需求理解与任务拆分：</span>
+<span class="w">       </span><span class="no">- 深入分析用户问题的本质和目标</span>
+<span class="w">       </span><span class="no">- 识别涉及的数据类型（航班计划、飞行轨迹、机场路网等）</span>
+<span class="w">       </span><span class="no">- 判断需要调用哪些专业agent</span>
+<span class="w">       </span><span class="no">- 确定最适合的处理方式和执行顺序</span>
+
+<span class="w">    </span><span class="no">2. 智能Agent调用：</span>
+<span class="w">       </span><span class="no">- 如果涉及数据库查询（航班信息、轨迹信息、机场路网等）→ 使用delegate工具调用[数据库专家]</span>
+<span class="w">         </span><span class="no">注意：</span>
+<span class="w">          </span><span class="no">--调用数据库专家时，任务描述中，只能包括查询任务，不能包括计算任务</span>
+<span class="w">          </span><span class="no">--数据库专家只能处理查询任务，所有涉及计算任务，需要将查询到的文件，传递给下游的时序数据分析工程师</span>
+<span class="w">          </span><span class="no">--数据库专家执行后会生成本地JSON数据文件，包括原始数据文件和元数据文件</span>
+<span class="w">          </span><span class="no">--sql执行不允许将字段转化为中文，使用sql原始的字段名进行查询</span>
+<span class="w">       </span><span class="no">- 数据处理、数据统计分析、机器学习等计算任务 → 使用delegate工具调用[时序数据分析工程师]</span>
+<span class="w">          </span><span class="no">--时序数据分析工程师应该能够处理所有的计算、分析统计的任务</span>
+<span class="w">          </span><span class="no">--时序数据分析师的输入是数据库专家生成的本地JSON数据文件</span>
+
+<span class="w">    </span><span class="no">3. 结果整合与输出：</span>
+<span class="w">       </span><span class="no">- 收集各专业agent的执行结果</span>
+<span class="w">       </span><span class="no">- 对结果进行质量检查和一致性验证</span>
+<span class="w">       </span><span class="no">- 按照用户需求格式化最终输出</span>
+<span class="w">       </span><span class="no">- 确保输出数据的完整性和准确性</span>
+
+<span class="w">    </span><span class="no">决策逻辑（重要）：</span>
+<span class="w">    </span><span class="no">- 数据库查询 → 调用数据库专家</span>
+<span class="w">    </span><span class="no">- 简单的解释性问题 → 直接回答，不调用其他agent</span>
+<span class="w">    </span><span class="no">- 计算任务、分析任务、统计任务、机器学习任务，时序任务, 滑行路径提取, 轨迹优化 → 调用时序数据分析工程师</span>
+
+<span class="w">    </span><span class="no">执行流程：</span>
+<span class="w">    </span><span class="no">1. 接收并深入分析用户问题</span>
+<span class="w">    </span><span class="no">2. 识别核心需求和涉及的数据类型</span>
+<span class="w">    </span><span class="no">3. 判断是否需要调用专业agent</span>
+<span class="w">    </span><span class="no">4. 如果需要，使用delegate工具调用相应的专业agent</span>
+<span class="w">    </span><span class="no">5. 如果不需要，直接提供答案</span>
+<span class="w">    </span><span class="no">6. 整合各agent的执行结果</span>
+<span class="w">    </span><span class="no">7. 格式化并输出最终结果给用户</span>
+
+<span class="w">  </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">Crew</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">agent1</span><span class="p">,</span> <span class="n">agent2</span><span class="p">,</span> <span class="n">agent3</span><span class="p">],</span>
+    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">task1</span><span class="p">,</span>  <span class="c1"># agent=agent1</span>
+        <span class="n">task2</span><span class="p">,</span>  <span class="c1"># agent=agent2  </span>
+        <span class="n">task3</span><span class="p">,</span>  <span class="c1"># agent=agent3</span>
+    <span class="p">],</span>
+    <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span>
+<span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">Crew</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">coordinator</span><span class="p">,</span> <span class="n">expert1</span><span class="p">,</span> <span class="n">expert2</span><span class="p">],</span>
+    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">coordinator_task</span><span class="p">],</span>  <span class="c1"># 只注册一个协调任务</span>
+    <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span>
+<span class="p">)</span>
+</code></pre></div>
+<hr />
+<p><strong>User</strong></p>
+<p>那如果我的python_data_scientist定义了2个Task时，它如何选择某个Task?</p>
+<hr />
+<p><strong>Cursor</strong></p>
+<p>好问题！让我先查看一下现有的Task定义，特别是与<code>python_data_scientist</code>相关的部分。</p>
+<p>明白了！让我为您详细解释如果 <code>python_data_scientist</code> 对应 2 个 Task 时的情况。</p>
+<h2 id="二crewai-中一个-agent-对应多个-task-的机制">二、CrewAI 中一个 Agent 对应多个 Task 的机制</h2>
+<h3 id="核心原则task-决定-agent而非-agent-选择-task"><strong>核心原则：Task 决定 Agent，而非 Agent 选择 Task</strong></h3>
+<p>在 CrewAI 的 Sequential 模式下，<strong>不是 Agent 主动选择执行哪个 Task，而是按照 Crew 中 <code>tasks</code> 列表的顺序执行，每个 Task 自带执行它的 Agent</strong>。</p>
+<h3 id="示例场景">示例场景</h3>
+<p>假设您为 <code>python_data_scientist</code> 定义两个 Task：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 在 crew.py 中</span>
+<span class="nd">@task</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">code_generation_execute_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;代码生成和执行任务&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;code_generation_execute_task&#39;</span><span class="p">]</span>
+    <span class="n">task_config</span> <span class="o">=</span> <span class="n">CodeGenerationExecuteTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+        <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">(),</span>  <span class="c1"># 绑定到同一个Agent</span>
+        <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">()]</span>
+    <span class="p">)</span>
+
+<span class="nd">@task</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">insight_analyst_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;洞察分析任务&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;insight_analyst_task&#39;</span><span class="p">]</span>
+    <span class="n">task_config</span> <span class="o">=</span> <span class="n">InsightAnalystTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+        <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">(),</span>  <span class="c1"># 也绑定到同一个Agent</span>
+        <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">()]</span>  <span class="c1"># 依赖前一个任务</span>
+    <span class="p">)</span>
+
+<span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">(),</span>      <span class="c1"># Task 1 → task_coordinator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>          <span class="c1"># Task 2 → database_expert</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">(),</span> <span class="c1"># Task 3 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insight_analyst_task</span><span class="p">()</span>         <span class="c1"># Task 4 → python_data_scientist (同一个Agent)</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<h3 id="执行流程">执行流程</h3>
+<p><strong>Sequential 模式下的执行顺序</strong>：</p>
+<ol>
+<li><strong>Task 1</strong>：<code>task_coordination_task</code>
+<ul>
+<li>激活 <code>task_coordinator</code> Agent</li>
+<li>执行协调任务</li>
+</ul>
+</li>
+<li><strong>Task 2</strong>：<code>database_query_task</code>
+<ul>
+<li>激活 <code>database_expert</code> Agent</li>
+<li>执行数据库查询</li>
+</ul>
+</li>
+<li><strong>Task 3</strong>：<code>code_generation_execute_task</code>
+<ul>
+<li>激活 <code>python_data_scientist</code> Agent（第一次）</li>
+<li>接收前两个任务的 context</li>
+<li>执行代码生成任务</li>
+<li><strong>Agent 角色不变，但任务描述、期望输出、工具集可以不同</strong></li>
+</ul>
+</li>
+<li><strong>Task 4</strong>：<code>insight_analyst_task</code>
+<ul>
+<li><strong>再次激活同一个 <code>python_data_scientist</code> Agent</strong>（第二次）</li>
+<li>接收 Task 3 的结果作为 context</li>
+<li>执行洞察分析任务</li>
+<li>使用相同的 Agent 配置（role, goal, backstory），但执行不同的任务描述</li>
+</ul>
+</li>
+</ol>
+<h3 id="关键点">关键点</h3>
+<h4 id="1-agent-是演员task-是剧本">1. <strong>Agent 是&quot;演员&quot;，Task 是&quot;剧本&quot;</strong></h4>
+<ul>
+<li>同一个 Agent 可以执行多个 Task</li>
+<li>每次执行时，Agent 会根据 Task 的 <code>description</code> 和 <code>expected_output</code> 调整行为</li>
+<li>Agent 的 role/goal/backstory 保持不变，但具体任务目标来自 Task 配置</li>
+</ul>
+<h4 id="2-task-之间通过-context-传递信息">2. <strong>Task 之间通过 <code>context</code> 传递信息</strong></h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">insight_analyst_task</span><span class="p">(</span>
+    <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">(),</span>
+    <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">()]</span>  <span class="c1"># 可以访问前一个Task的输出</span>
+<span class="p">)</span>
+</code></pre></div>
+<h4 id="3-不会选择只会顺序执行">3. <strong>不会&quot;选择&quot;，只会&quot;顺序执行&quot;</strong></h4>
+<ul>
+<li>Sequential 模式下，Agent 不需要&quot;选择&quot;执行哪个 Task</li>
+<li>按 <code>tasks</code> 列表顺序，每个 Task 自动调用绑定的 Agent</li>
+<li>如果连续两个 Task 绑定同一个 Agent，该 Agent 会被连续调用两次</li>
+</ul>
+<h4 id="4-与-delegate-模式的区别">4. <strong>与 Delegate 模式的区别</strong></h4>
+<table>
+<thead>
+<tr>
+<th><strong>方式</strong></th>
+<th><strong>机制</strong></th>
+<th><strong>适用场景</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>多 Task 注册</strong></td>
+<td>固定执行顺序，按 tasks 列表依次执行</td>
+<td>确定的工作流，每个步骤必须执行</td>
+</tr>
+<tr>
+<td><strong>Delegate 委托</strong></td>
+<td>动态调用，由协调 Agent 决定是否调用</td>
+<td>灵活的决策流程，某些步骤可能跳过</td>
+</tr>
+</tbody>
+</table>
+<h3 id="实际应用建议">实际应用建议</h3>
+<p>对于您的项目，如果想让 <code>python_data_scientist</code> 执行两个不同的任务：</p>
+<p><strong>方案 A：注册两个独立 Task（适合固定流程）</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">(),</span>  <span class="c1"># python_data_scientist 第1次</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">insight_analyst_task</span><span class="p">()</span>          <span class="c1"># python_data_scientist 第2次</span>
+<span class="p">]</span>
+</code></pre></div>
+<p><strong>方案 B：使用 Delegate（适合动态决策，目前采用）</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>  <span class="c1"># 内部使用delegate动态调用其他Agent</span>
+<span class="p">]</span>
+</code></pre></div>
+<ul>
+<li>Task Coordinator 根据问题复杂度决定是否需要分析</li>
+<li>更灵活，避免不必要的步骤</li>
+</ul>
+<h3 id="配置示例">配置示例</h3>
+<p>如果采用方案 A，您需要在 <code>tasks.yaml</code> 中添加：</p>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="nt">insight_analyst_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">基于代码执行结果，结合航空领域知识生成深度洞察和优化建议。</span>
+<span class="w">    </span><span class="no">输入：code_generation_execute_task 的输出结果</span>
+<span class="w">    </span><span class="no">输出：业务洞察、异常分析、优化建议</span>
+<span class="w">  </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">返回格式化的JSON对象:</span>
+<span class="w">    </span><span class="no">{</span>
+<span class="w">        </span><span class="no">&quot;insights&quot;: &quot;基于数据的关键发现&quot;,</span>
+<span class="w">        </span><span class="no">&quot;recommendations&quot;: &quot;可执行的优化建议&quot;,</span>
+<span class="w">        </span><span class="no">&quot;risk_factors&quot;: &quot;潜在风险因素&quot;</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span>
+</code></pre></div>
+<p><strong>总结</strong>：在 Sequential 模式下，Agent 不会&quot;选择&quot; Task，而是 Task 按顺序执行并调用绑定的 Agent。同一个 Agent 可以被连续多个 Task 使用，每次执行不同的任务描述。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 在 crew.py 中</span>
+<span class="nd">@task</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">code_generation_execute_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;代码生成和执行任务&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;code_generation_execute_task&#39;</span><span class="p">]</span>
+    <span class="n">task_config</span> <span class="o">=</span> <span class="n">CodeGenerationExecuteTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+        <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">(),</span>  <span class="c1"># 绑定到同一个Agent</span>
+        <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">()]</span>
+    <span class="p">)</span>
+
+<span class="nd">@task</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">insight_analyst_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;洞察分析任务&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks_config</span><span class="p">[</span><span class="s1">&#39;insight_analyst_task&#39;</span><span class="p">]</span>
+    <span class="n">task_config</span> <span class="o">=</span> <span class="n">InsightAnalystTask</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">task_config</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+        <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">(),</span>  <span class="c1"># 也绑定到同一个Agent</span>
+        <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">()]</span>  <span class="c1"># 依赖前一个任务</span>
+    <span class="p">)</span>
+
+<span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">(),</span>      <span class="c1"># Task 1 → task_coordinator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>          <span class="c1"># Task 2 → database_expert</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">(),</span> <span class="c1"># Task 3 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insight_analyst_task</span><span class="p">()</span>         <span class="c1"># Task 4 → python_data_scientist (同一个Agent)</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">insight_analyst_task</span><span class="p">(</span>
+    <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">(),</span>
+    <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">()]</span>  <span class="c1"># 可以访问前一个Task的输出</span>
+<span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">(),</span>  <span class="c1"># python_data_scientist 第1次</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">insight_analyst_task</span><span class="p">()</span>          <span class="c1"># python_data_scientist 第2次</span>
+<span class="p">]</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>  <span class="c1"># 内部使用delegate动态调用其他Agent</span>
+<span class="p">]</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="nt">insight_analyst_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">基于代码执行结果，结合航空领域知识生成深度洞察和优化建议。</span>
+<span class="w">    </span><span class="no">输入：code_generation_execute_task 的输出结果</span>
+<span class="w">    </span><span class="no">输出：业务洞察、异常分析、优化建议</span>
+<span class="w">  </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">返回格式化的JSON对象:</span>
+<span class="w">    </span><span class="no">{</span>
+<span class="w">        </span><span class="no">&quot;insights&quot;: &quot;基于数据的关键发现&quot;,</span>
+<span class="w">        </span><span class="no">&quot;recommendations&quot;: &quot;可执行的优化建议&quot;,</span>
+<span class="w">        </span><span class="no">&quot;risk_factors&quot;: &quot;潜在风险因素&quot;</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span>
+</code></pre></div>
+<hr />
+<p><strong>User</strong></p>
+<p>如果是crew策略下的Process为hierarchical模式，一个Agent下的多task设计是否有效？</p>
+<hr />
+<p><strong>Cursor</strong></p>
+<p>让我先查看项目中关于 hierarchical 模式的配置和实现：</p>
+<p>很好的问题！让我详细解释 <strong>Hierarchical 模式</strong>下一个 Agent 对应多个 Task 的有效性。我注意到您的项目中有注释掉的 hierarchical 配置：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># @crew</span>
+    <span class="c1"># def crew(self) -&gt; Crew:</span>
+    <span class="c1">#     &quot;&quot;&quot;创建航空数据分析专家团队&quot;&quot;&quot;</span>
+    <span class="c1">#     return Crew(</span>
+    <span class="c1">#         agents=[</span>
+    <span class="c1">#             self.database_expert(),</span>
+    <span class="c1">#             self.data_analysis_expert()</span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#         tasks=[</span>
+    <span class="c1">#             self.database_query_task(),</span>
+    <span class="c1">#             self.data_analysis_task()</span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#         process=Process.hierarchical,</span>
+    <span class="c1">#         manager_agent=self.task_coordinator(),  # Manager agent handles coordination</span>
+    <span class="c1">#         # manager_llm=self.chat_llm,</span>
+    <span class="c1">#         # planning=True,</span>
+    <span class="c1">#         # planning_llm=self.chat_llm,</span>
+    <span class="c1">#         verbose=True</span>
+    <span class="c1">#     )</span>
+</code></pre></div>
+<h2 id="三hierarchical-模式下的-task-agent-关系">三、Hierarchical 模式下的 Task-Agent 关系</h2>
+<h3 id="核心机制manager-主导的任务分配"><strong>核心机制：Manager 主导的任务分配</strong></h3>
+<p>在 Hierarchical 模式下，工作机制与 Sequential 模式<strong>完全不同</strong>：</p>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">┌─────────────────────────────────────────────────┐
+│            Manager Agent (经理)                  │
+│         (task_coordinator)                      │
+│  职责：分析任务 → 分配给合适的 Worker Agent         │
+└─────────────────┬───────────────────────────────┘
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+┌───────▼────────┐  ┌──────▼─────────┐
+│ Worker Agent 1 │  │ Worker Agent 2 │
+│ (database)     │  │ (data_science) │
+└────────────────┘  └────────────────┘
+</code></pre></div>
+<h3 id="一个-agent-对应多个-task-在-hierarchical-模式下的有效性"><strong>一个 Agent 对应多个 Task 在 Hierarchical 模式下的有效性</strong></h3>
+<p><strong>答案：完全有效且非常常见！</strong></p>
+<h4 id="1-hierarchical-模式的工作流程"><strong>1. Hierarchical 模式的工作流程</strong></h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="c1"># Worker Agents（不包括 Manager）</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="c1"># 所有需要完成的任务</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>           <span class="c1"># 可能分配给 database_expert</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessing_task</span><span class="p">(),</span>       <span class="c1"># 可能分配给 python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statistical_analysis_task</span><span class="p">(),</span>     <span class="c1"># 可能分配给 python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_optimization_task</span><span class="p">()</span>   <span class="c1"># 可能分配给 python_data_scientist</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">,</span>
+        <span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>    <span class="c1"># Manager 负责分配任务</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<h4 id="2-manager-如何分配任务"><strong>2. Manager 如何分配任务？</strong></h4>
+<p>Manager Agent 会：</p>
+<ol>
+<li><strong>分析每个 Task 的描述</strong>（<code>description</code>）</li>
+<li><strong>评估每个 Worker Agent 的能力</strong>（<code>role</code>, <code>goal</code>, <code>backstory</code>）</li>
+<li><strong>动态决定</strong>哪个 Agent 最适合执行哪个 Task</li>
+<li><strong>可以将多个 Task 分配给同一个 Agent</strong></li>
+</ol>
+<p><strong>示例场景</strong>：</p>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="c1"># tasks.yaml</span>
+<span class="nt">data_preprocessing_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">清洗和预处理航班轨迹数据，处理缺失值和异常值</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span><span class="w">  </span><span class="c1"># 仅作为提示，Manager 可以覆盖</span>
+
+<span class="nt">statistical_analysis_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">对预处理后的数据进行统计分析，计算均值、方差等指标</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span>
+
+<span class="nt">trajectory_optimization_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">基于历史数据优化航班滑行路径</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span>
+</code></pre></div>
+<p>Manager 看到这些任务后，会：</p>
+<ul>
+<li>识别出 3 个 Task 都需要数据科学能力</li>
+<li><strong>将这 3 个 Task 全部分配给 <code>python_data_scientist</code></strong></li>
+<li><code>python_data_scientist</code> 会<strong>依次执行</strong>这 3 个任务</li>
+</ul>
+<h4 id="3-与-sequential-模式的对比"><strong>3. 与 Sequential 模式的对比</strong></h4>
+<table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>Sequential 模式</strong></th>
+<th><strong>Hierarchical 模式</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>任务分配</strong></td>
+<td>按 tasks 列表固定顺序执行</td>
+<td>Manager 动态分配给最合适的 Agent</td>
+</tr>
+<tr>
+<td><strong>Agent 选择</strong></td>
+<td>Task 绑定的 Agent 固定</td>
+<td>Manager 根据能力匹配，可以覆盖绑定</td>
+</tr>
+<tr>
+<td><strong>一对多关系</strong></td>
+<td>支持，但顺序固定</td>
+<td>支持，且 Manager 可以优化分配顺序</td>
+</tr>
+<tr>
+<td><strong>任务依赖</strong></td>
+<td>通过 <code>context</code> 显式声明</td>
+<td>Manager 自动识别依赖关系</td>
+</tr>
+<tr>
+<td><strong>灵活性</strong></td>
+<td>低（流程固定）</td>
+<td>高（Manager 可以调整策略）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4-实际配置示例"><strong>4. 实际配置示例</strong></h4>
+<p>假设您要在 Hierarchical 模式下让 <code>python_data_scientist</code> 处理多个任务：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>  <span class="c1"># 只有一个数据科学家</span>
+        <span class="p">],</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>              <span class="c1"># Task 1 → database_expert</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_cleaning_task</span><span class="p">(),</span>               <span class="c1"># Task 2 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statistical_analysis_task</span><span class="p">(),</span>        <span class="c1"># Task 3 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_optimization_task</span><span class="p">(),</span>     <span class="c1"># Task 4 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insight_generation_task</span><span class="p">()</span>          <span class="c1"># Task 5 → python_data_scientist</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">,</span>
+        <span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>      <span class="c1"># Manager 协调一切</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p><strong>执行过程</strong>：</p>
+<ol>
+<li>Manager 接收用户输入</li>
+<li>分析 5 个 Task 的要求</li>
+<li>识别出 Task 1 需要数据库能力 → 分配给 <code>database_expert</code></li>
+<li>识别出 Task 2-5 都需要数据科学能力 → 全部分配给 <code>python_data_scientist</code></li>
+<li><code>python_data_scientist</code> 依次执行 4 个任务</li>
+<li>Manager 收集结果并整合输出</li>
+</ol>
+<h4 id="5-关键优势"><strong>5. 关键优势</strong></h4>
+<p>在 Hierarchical 模式下，一个 Agent 对应多个 Task <strong>不仅有效，而且有优势</strong>：</p>
+<p>✅ <strong>自动负载均衡</strong>：Manager 可以根据 Agent 的能力合理分配任务</p>
+<p>✅ <strong>动态决策</strong>：如果某个 Task 失败，Manager 可以重新分配或调整策略</p>
+<p>✅ <strong>简化配置</strong>：不需要为每个 Task 显式绑定 Agent，Manager 自动匹配</p>
+<p>✅ <strong>处理复杂场景</strong>：当多个 Task 需要相同能力时，Manager 自动识别并批量分配</p>
+<h4 id="6-潜在问题与解决方案"><strong>6. 潜在问题与解决方案</strong></h4>
+<p><strong>问题 1</strong>：Manager 可能误判任务需求，分配错误的 Agent</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>在 Task 的 <code>description</code> 中明确说明所需技能</li>
+<li>在 Agent 的 <code>role</code> 和 <code>goal</code> 中清晰定义能力范围</li>
+<li>使用 <code>agent=</code> 参数作为强提示（Manager 通常会尊重）</li>
+</ul>
+<p><strong>问题 2</strong>：Manager 的决策逻辑不透明</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>设置 <code>verbose=True</code> 查看 Manager 的决策过程</li>
+<li>使用监控工具（如您项目中的 <code>MonitoredCrew</code>）跟踪任务分配</li>
+</ul>
+<p><strong>问题 3</strong>：Manager 本身需要消耗 LLM tokens</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>对于简单固定流程，使用 Sequential 模式更经济</li>
+<li>对于复杂、需要动态决策的场景，Hierarchical 的额外成本是值得的</li>
+</ul>
+<h3 id="7-您的项目适用性分析"><strong>7. 您的项目适用性分析</strong></h3>
+<p>根据您当前的项目结构，两种模式都可行：</p>
+<p><strong>当前方案（Sequential + Delegate）</strong>：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>  <span class="c1"># 内部使用 delegate 调用其他 Agent</span>
+<span class="p">]</span>
+</code></pre></div>
+<ul>
+<li>✅ 灵活性高</li>
+<li>✅ Token 消耗可控（只在必要时调用）</li>
+<li>❌ 需要手动编写委托逻辑</li>
+</ul>
+<p><strong>Hierarchical 方案</strong>：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">insight_analyst_task</span><span class="p">()</span>
+<span class="p">],</span>
+<span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">()</span>
+</code></pre></div>
+<ul>
+<li>✅ Manager 自动协调，无需手动 delegate</li>
+<li>✅ 任务依赖自动处理</li>
+<li>❌ Manager 的每次决策都消耗 tokens</li>
+<li>❌ 所有任务都会执行（不能跳过）</li>
+</ul>
+<h3 id="结论"><strong>结论</strong></h3>
+<p><strong>在 Hierarchical 模式下，一个 Agent 对应多个 Task 的设计完全有效且推荐使用！</strong></p>
+<p>这是 Hierarchical 模式的核心优势之一：<strong>Manager 可以智能地将多个相关任务批量分配给能力匹配的 Worker Agent</strong>，而不需要创建多个功能重复的 Agent。</p>
+<p>对于您的项目，如果 <code>python_data_scientist</code> 需要处理数据清洗、统计分析、轨迹优化等多个任务，在 Hierarchical 模式下只需定义这些 Task，Manager 会自动识别并分配给该 Agent 执行。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># @crew</span>
+    <span class="c1"># def crew(self) -&gt; Crew:</span>
+    <span class="c1">#     &quot;&quot;&quot;创建航空数据分析专家团队&quot;&quot;&quot;</span>
+    <span class="c1">#     return Crew(</span>
+    <span class="c1">#         agents=[</span>
+    <span class="c1">#             self.database_expert(),</span>
+    <span class="c1">#             self.data_analysis_expert()</span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#         tasks=[</span>
+    <span class="c1">#             self.database_query_task(),</span>
+    <span class="c1">#             self.data_analysis_task()</span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#         process=Process.hierarchical,</span>
+    <span class="c1">#         manager_agent=self.task_coordinator(),  # Manager agent handles coordination</span>
+    <span class="c1">#         # manager_llm=self.chat_llm,</span>
+    <span class="c1">#         # planning=True,</span>
+    <span class="c1">#         # planning_llm=self.chat_llm,</span>
+    <span class="c1">#         verbose=True</span>
+    <span class="c1">#     )</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">┌─────────────────────────────────────────────────┐
+│            Manager Agent (经理)                 │
+│         (task_coordinator)                      │
+│  职责：分析任务 → 分配给合适的 Worker Agent    │
+└─────────────────┬───────────────────────────────┘
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+┌───────▼────────┐  ┌──────▼─────────┐
+│ Worker Agent 1 │  │ Worker Agent 2 │
+│ (database)     │  │ (data_science) │
+└────────────────┘  └────────────────┘
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="c1"># Worker Agents（不包括 Manager）</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="c1"># 所有需要完成的任务</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>           <span class="c1"># 可能分配给 database_expert</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessing_task</span><span class="p">(),</span>       <span class="c1"># 可能分配给 python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statistical_analysis_task</span><span class="p">(),</span>     <span class="c1"># 可能分配给 python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_optimization_task</span><span class="p">()</span>   <span class="c1"># 可能分配给 python_data_scientist</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">,</span>
+        <span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>    <span class="c1"># Manager 负责分配任务</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="c1"># tasks.yaml</span>
+<span class="nt">data_preprocessing_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">清洗和预处理航班轨迹数据，处理缺失值和异常值</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span><span class="w">  </span><span class="c1"># 仅作为提示，Manager 可以覆盖</span>
+
+<span class="nt">statistical_analysis_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">对预处理后的数据进行统计分析，计算均值、方差等指标</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span>
+
+<span class="nt">trajectory_optimization_task</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<span class="w">    </span><span class="no">基于历史数据优化航班滑行路径</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python_data_scientist</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="nd">@crew</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crew</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Crew</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Crew</span><span class="p">(</span>
+        <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_expert</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">python_data_scientist</span><span class="p">()</span>  <span class="c1"># 只有一个数据科学家</span>
+        <span class="p">],</span>
+        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>              <span class="c1"># Task 1 → database_expert</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_cleaning_task</span><span class="p">(),</span>               <span class="c1"># Task 2 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statistical_analysis_task</span><span class="p">(),</span>        <span class="c1"># Task 3 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_optimization_task</span><span class="p">(),</span>     <span class="c1"># Task 4 → python_data_scientist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insight_generation_task</span><span class="p">()</span>          <span class="c1"># Task 5 → python_data_scientist</span>
+        <span class="p">],</span>
+        <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">,</span>
+        <span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">(),</span>      <span class="c1"># Manager 协调一切</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>  <span class="c1"># 内部使用 delegate 调用其他 Agent</span>
+<span class="p">]</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">insight_analyst_task</span><span class="p">()</span>
+<span class="p">],</span>
+<span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><strong>User</strong></p>
+<p>在 Hierarchical 模式下，Delegate对这种模式有什么影响？比如Agent中的参数<code>allow_delegation</code>对整个的执行过程有什么影响。</p>
+<hr />
+<p><strong>Cursor</strong></p>
+<p>非常好的问题！让我查看项目中关于 <code>allow_delegation</code> 的配置和使用情况：</p>
+<p>完美！我看到了您项目中的配置。让我详细解释 <strong>Hierarchical 模式下 <code>allow_delegation</code> 参数的影响</strong>：</p>
+<h2 id="您的项目当前配置">您的项目当前配置</h2>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">create_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">),</span>
+                <span class="n">goal</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;goal&#39;</span><span class="p">),</span>
+                <span class="n">backstory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backstory&#39;</span><span class="p">),</span>
+                <span class="n">llm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># 协调器需要委派能力</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">),</span>
+                <span class="n">goal</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;goal&#39;</span><span class="p">),</span>
+                <span class="n">backstory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backstory&#39;</span><span class="p">),</span>
+                <span class="n">llm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">,</span>
+                <span class="n">tools</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_create_tools</span><span class="p">(),</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">create_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">),</span>
+                <span class="n">goal</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;goal&#39;</span><span class="p">),</span>
+                <span class="n">backstory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backstory&#39;</span><span class="p">),</span>
+                <span class="n">llm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">allow_code_execution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">AnalysisDataLoaderTool</span><span class="p">(),</span> <span class="n">CustomCodeInterpreterTool</span><span class="p">(</span><span class="n">unsafe_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">TaxiPathExtractionTool</span><span class="p">()]</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span>
+</code></pre></div>
+<h2 id="四allow_delegation-在-hierarchical-模式下的影响">四、<code>allow_delegation</code> 在 Hierarchical 模式下的影响</h2>
+<h3 id="1-核心概念对比">1. <strong>核心概念对比</strong></h3>
+<p>在理解影响之前，需要区分两种不同的&quot;委派&quot;机制：</p>
+<table>
+<thead>
+<tr>
+<th><strong>委派类型</strong></th>
+<th><strong>机制</strong></th>
+<th><strong>触发条件</strong></th>
+<th><strong>使用场景</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Manager 委派</strong></td>
+<td>Hierarchical 模式的内置机制</td>
+<td>自动触发</td>
+<td>Manager 将 Task 分配给 Worker</td>
+</tr>
+<tr>
+<td><strong>Agent 委派</strong></td>
+<td><code>allow_delegation=True</code> 启用</td>
+<td>Agent 主动调用 delegate 工具</td>
+<td>Agent 在执行过程中将子任务委派给其他 Agent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-hierarchical-模式下的执行架构">2. <strong>Hierarchical 模式下的执行架构</strong></h3>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">用户请求
+    │
+    ▼
+┌─────────────────────────────────────────────┐
+│  Manager Agent (task_coordinator)           │
+│  - allow_delegation = True                  │
+│  - 职责：分析并分配任务给 Worker Agents         │
+└────────────┬────────────────────────────────┘
+             │
+             │ Manager 委派（内置机制）
+             ├──────────────┬─────────────────┐
+             │              │                 │
+        ┌────▼─────┐   ┌───▼────────┐  ┌────▼────────┐
+        │ Worker 1 │   │  Worker 2  │  │  Worker 3   │
+        │ database │   │ data_sci   │  │   ...       │
+        │ allow=F  │   │ allow=F    │  │             │
+        └──────────┘   └────────────┘  └─────────────┘
+             │              │
+             │ 如果 allow_delegation=True
+             │ Agent 可以进一步委派
+             ▼
+        ┌──────────┐
+        │ Worker 2 │ (二级委派)
+        └──────────┘
+</code></pre></div>
+<h3 id="3-allow_delegation-在不同角色中的作用">3. <strong><code>allow_delegation</code> 在不同角色中的作用</strong></h3>
+<h4 id="场景-amanager-agenttask_coordinator"><strong>场景 A：Manager Agent（task_coordinator）</strong></h4>
+<p><strong>配置</strong>：<code>allow_delegation=True</code></p>
+<p><strong>在 Hierarchical 模式下的影响</strong>：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 1. Manager 自身的职责（Hierarchical 内置）</span>
+<span class="c1"># Manager 会自动将 tasks 分配给 Worker Agents</span>
+<span class="c1"># 这个是 Hierarchical 模式的核心功能，不依赖 allow_delegation</span>
+
+<span class="c1"># 2. 额外的委派能力（allow_delegation=True 提供）</span>
+<span class="c1"># Manager 在执行自己的任务时，如果遇到需要其他 Agent 协助的情况</span>
+<span class="c1"># 可以使用 delegate 工具主动委派子任务</span>
+</code></pre></div>
+<p><strong>实际表现</strong>：</p>
+<ul>
+<li>✅ <strong>作为 Manager</strong>：自动分配 <code>tasks</code> 列表中的任务（无论 <code>allow_delegation</code> 值）</li>
+<li>✅ <strong>作为 Worker</strong>：如果 Manager 自己也有 Task 要执行，可以委派给其他 Worker</li>
+<li>✅ <strong>灵活协调</strong>：在 Sequential 模式下，可以使用 delegate 工具动态调用其他 Agent</li>
+</ul>
+<p><strong>您的项目实践</strong>（Sequential 模式）：</p>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="c1"># task_coordination_task 的描述</span>
+<span class="l l-Scalar l-Scalar-Plain">智能Agent调用：</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">- 使用delegate工具调用[数据库专家]</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">- 使用delegate工具调用[时序数据分析工程师]</span>
+</code></pre></div>
+<p>这就是 <code>allow_delegation=True</code> 的实际应用！</p>
+<h4 id="场景-bworker-agentdatabase_expert-python_data_scientist"><strong>场景 B：Worker Agent（database_expert, python_data_scientist）</strong></h4>
+<p><strong>配置</strong>：<code>allow_delegation=False</code></p>
+<p><strong>在 Hierarchical 模式下的影响</strong>：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># Worker Agent 接收到 Manager 分配的任务后</span>
+<span class="c1"># - 只能使用自己的 tools 完成任务</span>
+<span class="c1"># - 不能再将任务委派给其他 Agent</span>
+<span class="c1"># - 必须独立完成或报告失败</span>
+</code></pre></div>
+<p><strong>实际表现</strong>：</p>
+<ul>
+<li>✅ <strong>专注执行</strong>：只负责完成分配的任务</li>
+<li>❌ <strong>不能委派</strong>：遇到超出能力范围的任务无法转交</li>
+<li>✅ <strong>避免循环</strong>：防止 Agent 之间无限委派导致死循环</li>
+<li>✅ <strong>清晰边界</strong>：明确每个 Agent 的职责范围</li>
+</ul>
+<h3 id="4-hierarchical-模式下的三种委派层级">4. <strong>Hierarchical 模式下的三种委派层级</strong></h3>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">层级 1: Manager 委派（Hierarchical 内置）
+  Manager → Worker 1
+  Manager → Worker 2
+
+层级 2: Worker 间委派（需要 allow_delegation=True）
+  Worker 1 → Worker 2
+  Worker 2 → Worker 3
+
+层级 3: 递归委派（多级嵌套，通常应避免）
+  Manager → Worker 1 → Worker 2 → Worker 3
+</code></pre></div>
+<p><strong>您的项目配置分析</strong>：</p>
+<ul>
+<li>Manager (<code>task_coordinator</code>): <code>allow_delegation=True</code> → 支持层级 1 和 2</li>
+<li>Workers (<code>database_expert</code>, <code>python_data_scientist</code>): <code>allow_delegation=False</code> → 只接受任务，不再委派</li>
+</ul>
+<h3 id="5-具体影响对比表">5. <strong>具体影响对比表</strong></h3>
+<table>
+<thead>
+<tr>
+<th><strong>配置组合</strong></th>
+<th><strong>Manager</strong></th>
+<th><strong>Worker</strong></th>
+<th><strong>执行效果</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Manager=True, Worker=False</strong><br/>（您的当前配置）</td>
+<td>可以分配任务 + 可以委派</td>
+<td>只能执行任务</td>
+<td>✅ 推荐：清晰的层级结构</td>
+</tr>
+<tr>
+<td><strong>Manager=True, Worker=True</strong></td>
+<td>可以分配任务 + 可以委派</td>
+<td>可以执行 + 可以委派</td>
+<td>⚠️ 谨慎：可能导致复杂的委派链</td>
+</tr>
+<tr>
+<td><strong>Manager=False, Worker=False</strong></td>
+<td>只能分配任务</td>
+<td>只能执行任务</td>
+<td>✅ 可行：最简单的结构</td>
+</tr>
+<tr>
+<td><strong>Manager=False, Worker=True</strong></td>
+<td>只能分配任务</td>
+<td>可以执行 + 可以委派</td>
+<td>❌ 不推荐：Worker 之间可能混乱委派</td>
+</tr>
+</tbody>
+</table>
+<h3 id="6-在两种模式下的差异">6. <strong>在两种模式下的差异</strong></h3>
+<h4 id="sequential-模式--allow_delegationtrue您当前使用"><strong>Sequential 模式 + allow_delegation=True</strong>（您当前使用）</h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># crew.py</span>
+<span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>  <span class="c1"># 只注册一个任务</span>
+<span class="p">]</span>
+
+<span class="c1"># task_coordinator 通过 delegate 工具主动调用其他 Agent</span>
+<span class="c1"># 优势：完全可控，按需调用</span>
+<span class="c1"># 劣势：需要在 Task 描述中编写委派逻辑</span>
+</code></pre></div>
+<p><strong>执行流程</strong>：</p>
+<ol>
+<li><code>task_coordinator</code> 开始执行 <code>task_coordination_task</code></li>
+<li>分析用户问题</li>
+<li>决定需要查询数据库 → 使用 <strong>delegate 工具</strong> 调用 <code>database_expert</code></li>
+<li><code>database_expert</code> 完成查询 → 返回结果</li>
+<li>决定需要数据分析 → 使用 <strong>delegate 工具</strong> 调用 <code>python_data_scientist</code></li>
+<li>整合所有结果</li>
+</ol>
+<h4 id="hierarchical-模式--allow_delegation-配置"><strong>Hierarchical 模式 + allow_delegation 配置</strong></h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 假设切换到 Hierarchical 模式</span>
+<span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">()</span>
+<span class="p">],</span>
+<span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>执行流程</strong>：</p>
+<ol>
+<li>Manager (<code>task_coordinator</code>) 接收所有任务</li>
+<li><strong>自动分析</strong> <code>database_query_task</code> → 分配给 <code>database_expert</code></li>
+<li><strong>自动分析</strong> <code>code_generation_execute_task</code> → 分配给 <code>python_data_scientist</code></li>
+<li>收集结果并整合</li>
+</ol>
+<p><strong>此时 <code>allow_delegation</code> 的影响</strong>：</p>
+<ul>
+<li>Manager 的 <code>allow_delegation=True</code>：如果 Manager 自己也需要执行某个任务（不仅是分配），可以委派给其他 Agent</li>
+<li>Worker 的 <code>allow_delegation=False</code>：Worker 不能再将任务转交给其他 Worker</li>
+</ul>
+<h3 id="7-实际应用建议">7. <strong>实际应用建议</strong></h3>
+<h4 id="推荐配置您的当前配置是最佳实践"><strong>推荐配置</strong>（您的当前配置是最佳实践）：</h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># Manager/Coordinator</span>
+<span class="n">allow_delegation</span><span class="o">=</span><span class="kc">True</span>   <span class="c1"># 需要协调和委派能力</span>
+
+<span class="c1"># Worker Agents</span>
+<span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># 专注执行，不再委派</span>
+</code></pre></div>
+<p><strong>理由</strong>：</p>
+<ul>
+<li>✅ 清晰的责任链：只有一级委派</li>
+<li>✅ 避免死循环：Worker 不会互相委派</li>
+<li>✅ 易于调试：委派路径明确</li>
+<li>✅ Token 效率：减少不必要的 LLM 调用</li>
+</ul>
+<h4 id="特殊场景worker-也需要委派"><strong>特殊场景</strong>：Worker 也需要委派</h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 示例：复杂的数据处理 Agent 可能需要委派给可视化 Agent</span>
+<span class="n">python_data_scientist</span><span class="p">:</span>
+    <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># 可以委派给 visualization_expert</span>
+
+<span class="n">visualization_expert</span><span class="p">:</span>
+    <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># 纯执行者</span>
+</code></pre></div>
+<p><strong>风险控制</strong>：</p>
+<ul>
+<li>需要在 Agent 的 <code>goal</code> 中明确委派边界</li>
+<li>监控委派深度，防止递归</li>
+<li>使用 <code>verbose=True</code> 跟踪委派链</li>
+</ul>
+<h3 id="8-调试和监控">8. <strong>调试和监控</strong></h3>
+<p>在您的项目中，可以通过 <code>MonitoredCrew</code> 监控委派行为：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 在 monitoring/crew_wrapper.py 中</span>
+<span class="c1"># 可以捕获 delegate 工具的调用</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">on_tool_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">tool_input</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">tool_name</span> <span class="o">==</span> <span class="s2">&quot;Delegate work to coworker&quot;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Delegation] </span><span class="si">{</span><span class="n">current_agent</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">target_agent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="总结-1">总结</h3>
+<p><strong>在 Hierarchical 模式下，<code>allow_delegation</code> 的影响</strong>：</p>
+<ol>
+<li><strong>Manager Agent</strong>（<code>allow_delegation=True</code>）：
+<ul>
+<li>Hierarchical 的任务分配能力（内置，不受此参数影响）</li>
+<li><strong>额外增加</strong> Agent 间主动委派能力</li>
+<li>适合需要灵活协调的场景</li>
+</ul>
+</li>
+<li><strong>Worker Agent</strong>（<code>allow_delegation=False</code>）：
+<ul>
+<li>只能接受任务并执行</li>
+<li>不能将任务转交给其他 Agent</li>
+<li>保持清晰的责任边界</li>
+</ul>
+</li>
+<li><strong>关键区别</strong>：
+<ul>
+<li><strong>Manager 分配任务</strong> ≠ <strong>Agent 委派任务</strong></li>
+<li>Manager 分配是 Hierarchical 模式的核心功能</li>
+<li>Agent 委派是 <code>allow_delegation=True</code> 提供的额外能力</li>
+</ul>
+</li>
+<li><strong>您的配置是最佳实践</strong>：单向委派链，职责清晰，易于维护和调试。</li>
+</ol>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">create_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">),</span>
+                <span class="n">goal</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;goal&#39;</span><span class="p">),</span>
+                <span class="n">backstory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backstory&#39;</span><span class="p">),</span>
+                <span class="n">llm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># 协调器需要委派能力</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">),</span>
+                <span class="n">goal</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;goal&#39;</span><span class="p">),</span>
+                <span class="n">backstory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backstory&#39;</span><span class="p">),</span>
+                <span class="n">llm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">,</span>
+                <span class="n">tools</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_create_tools</span><span class="p">(),</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">create_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">),</span>
+                <span class="n">goal</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;goal&#39;</span><span class="p">),</span>
+                <span class="n">backstory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backstory&#39;</span><span class="p">),</span>
+                <span class="n">llm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">allow_code_execution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">AnalysisDataLoaderTool</span><span class="p">(),</span> <span class="n">CustomCodeInterpreterTool</span><span class="p">(</span><span class="n">unsafe_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">TaxiPathExtractionTool</span><span class="p">()]</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">用户请求
+    │
+    ▼
+┌─────────────────────────────────────────────┐
+│  Manager Agent (task_coordinator)          │
+│  - allow_delegation = True                 │
+│  - 职责：分析并分配任务给 Worker Agents   │
+└────────────┬────────────────────────────────┘
+             │
+             │ Manager 委派（内置机制）
+             ├──────────────┬─────────────────┐
+             │              │                 │
+        ┌────▼─────┐   ┌───▼────────┐  ┌────▼────────┐
+        │ Worker 1 │   │  Worker 2  │  │  Worker 3   │
+        │ database │   │ data_sci   │  │   ...       │
+        │ allow=F  │   │ allow=F    │  │             │
+        └──────────┘   └────────────┘  └─────────────┘
+             │              │
+             │ 如果 allow_delegation=True
+             │ Agent 可以进一步委派
+             ▼
+        ┌──────────┐
+        │ Worker 2 │ (二级委派)
+        └──────────┘
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 1. Manager 自身的职责（Hierarchical 内置）</span>
+<span class="c1"># Manager 会自动将 tasks 分配给 Worker Agents</span>
+<span class="c1"># 这个是 Hierarchical 模式的核心功能，不依赖 allow_delegation</span>
+
+<span class="c1"># 2. 额外的委派能力（allow_delegation=True 提供）</span>
+<span class="c1"># Manager 在执行自己的任务时，如果遇到需要其他 Agent 协助的情况</span>
+<span class="c1"># 可以使用 delegate 工具主动委派子任务</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>yaml</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-yaml"><span class="c1"># task_coordination_task 的描述</span>
+<span class="l l-Scalar l-Scalar-Plain">智能Agent调用：</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">- 使用delegate工具调用[数据库专家]</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">- 使用delegate工具调用[时序数据分析工程师]</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># Worker Agent 接收到 Manager 分配的任务后</span>
+<span class="c1"># - 只能使用自己的 tools 完成任务</span>
+<span class="c1"># - 不能再将任务委派给其他 Agent</span>
+<span class="c1"># - 必须独立完成或报告失败</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">层级 1: Manager 委派（Hierarchical 内置）
+  Manager → Worker 1
+  Manager → Worker 2
+
+层级 2: Worker 间委派（需要 allow_delegation=True）
+  Worker 1 → Worker 2
+  Worker 2 → Worker 3
+
+层级 3: 递归委派（多级嵌套，通常应避免）
+  Manager → Worker 1 → Worker 2 → Worker 3
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># crew.py</span>
+<span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">task_coordination_task</span><span class="p">()</span>  <span class="c1"># 只注册一个任务</span>
+<span class="p">]</span>
+
+<span class="c1"># task_coordinator 通过 delegate 工具主动调用其他 Agent</span>
+<span class="c1"># 优势：完全可控，按需调用</span>
+<span class="c1"># 劣势：需要在 Task 描述中编写委派逻辑</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 假设切换到 Hierarchical 模式</span>
+<span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">database_query_task</span><span class="p">(),</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">code_generation_execute_task</span><span class="p">()</span>
+<span class="p">],</span>
+<span class="n">manager_agent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_coordinator</span><span class="p">()</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># Manager/Coordinator</span>
+<span class="n">allow_delegation</span><span class="o">=</span><span class="kc">True</span>   <span class="c1"># 需要协调和委派能力</span>
+
+<span class="c1"># Worker Agents</span>
+<span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># 专注执行，不再委派</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 示例：复杂的数据处理 Agent 可能需要委派给可视化 Agent</span>
+<span class="n">python_data_scientist</span><span class="p">:</span>
+    <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># 可以委派给 visualization_expert</span>
+
+<span class="n">visualization_expert</span><span class="p">:</span>
+    <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># 纯执行者</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 在 monitoring/crew_wrapper.py 中</span>
+<span class="c1"># 可以捕获 delegate 工具的调用</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">on_tool_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">tool_input</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">tool_name</span> <span class="o">==</span> <span class="s2">&quot;Delegate work to coworker&quot;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Delegation] </span><span class="si">{</span><span class="n">current_agent</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">target_agent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="agent的资源">Agent的资源</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Tag</th>
+<th>Due Date</th>
+<th>Status</th>
+<th>About</th>
+<th>URL</th>
+<th>GitHub</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><a href="2025-07-17-AI-Agents-%E5%88%9D%E5%AD%B8%E8%80%85%E8%AA%B2%E7%A8%8B.html">AI Agents 初學者課程</a></strong></td>
+<td>Course</td>
+<td>8月 31 2025</td>
+<td>On Going</td>
+<td>11 節課程，教你從零開始打造 AI Agents 所需的所有知識</td>
+<td>https://microsoft.github.io/ai-agents-for-beginners/translations/zh/</td>
+<td>https://github.com/microsoft/ai-agents-for-beginners</td>
+</tr>
+<tr>
+<td><strong><a href="https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction">Hugging Face 🤗 AI Agents 课程</a></strong></td>
+<td>Course, Learning</td>
+<td>9月 30 2025</td>
+<td>Not-started</td>
+<td>从新手到专家的蜕变之旅，全面掌握 AI 智能体的理解、使用与构建技能。</td>
+<td>https://huggingface.co/learn/agents-course/zh-CN/unit0/introduction</td>
+<td>https://github.com/huggingface/agents-course</td>
+</tr>
+<tr>
+<td><strong><a href="https://github.com/langchain-ai/agents-from-scratch">Agents From Scratch</a></strong></td>
+<td>Learning, Example</td>
+<td>8月 31 2025</td>
+<td>Not-started</td>
+<td>Build an email assistant with human-in-the-loop and memory</td>
+<td>https://github.com/langchain-ai/agents-from-scratch</td>
+<td>https://github.com/langchain-ai/agents-from-scratch</td>
+</tr>
+<tr>
+<td><strong><a href="https://github.com/microsoft/agent-lightning">Agent lighting (2)</a></strong></td>
+<td>Train</td>
+<td>8月 16 2025</td>
+<td>Not-started</td>
+<td>The absolute trainer to light up AI agents.</td>
+<td>https://github.com/microsoft/agent-lightning</td>
+<td>https://github.com/microsoft/agent-lightning</td>
+</tr>
+</tbody>
+</table>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

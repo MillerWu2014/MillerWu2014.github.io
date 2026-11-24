@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>深度学习-GAN网络详解及TensorFlow实现 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>deep learning</h2><a href="2021-10-16-Autoformer%E5%9F%BA%E4%BA%8E%E5%BA%8F%E5%88%97%E5%88%86%E8%A7%A3%E7%BB%93%E6%9E%84Transformer%E5%92%8CAuto-Correlation%E7%9A%84%E9%95%BF%E5%BA%8F%E5%88%97%E9%A2%84%E6%B5%8B.html">Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测</a><a href="2021-04-16-%E5%9F%BA%E4%BA%8EDNN%E7%9A%84%E5%A4%9A%E7%BB%B4%E6%97%B6%E9%97%B4%E5%BC%82%E5%B8%B8%E6%A3%80%E6%B5%8B.html">基于DNN的多维时间异常检测</a><a href="2020-09-27-Convolutional-Pose-Machines%E8%AE%BA%E6%96%87%E8%AE%B0%E5%BD%95.html">Convolutional Pose Machines论文记录</a><a href="2018-11-06-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0.html" aria-current="page">深度学习-GAN网络详解及TensorFlow实现</a><a href="2018-07-03-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0.html">深度学习-详解CNN网络和TensorFlow实现</a><a href="2018-06-21-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0.html">深度学习-详解LSTM网络和TensorFlow实现</a><a href="2018-05-01-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0.html">深度学习-详解RNN网络及TensorFlow实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2018-11-06-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0.md" download="2018-11-06-深度学习-GAN网络详解及TensorFlow实现.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2018-11-06">2018-11-06</time></p>
+        <h1>深度学习-GAN网络详解及TensorFlow实现</h1>
+      </header>
+      <div class="prose" id="body"><h2 id="gan的基本介绍">GAN的基本介绍</h2>
+<p>2014 年，Ian Goodfellow 及其蒙特利尔大学的同事引入了生成对抗网络（GAN）。这是一种学习数据的基本分布的全新方法，让生成出的人工对象可以和真实对象之间达到惊人的相似度。</p>
+<h3 id="基本概念">基本概念</h3>
+<p>GAN（Generative Adversarial Networks），是一种生成式的，对抗网络。再具体一点，就是通过对抗的方式，去学习数据分布的生成式模型。所谓的对抗，指的是生成网络和判别网络的互相对抗。生成网络尽可能生成逼真样本，判别网络则尽可能去判别该样本是真实样本，还是生成的假样本。示意图如下：</p>
+<p><img src="../assets/img/posts/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/640.png" alt="img" /></p>
+<h3 id="基本原理">基本原理</h3>
+<p>生成器和判别器两个网络彼此博弈，目标是生成器生成与真实数据几乎没有区别的样本。生成器<span class="math inline">\(G\)</span>的目标是基于噪声变量<span class="math inline">\(z\)</span>生成一个对象<span class="math inline">\(x^{&#x27;}\)</span>，并使其看起来和真的<span class="math inline">\(x\)</span>一样。而判别器<span class="math inline">\(D\)</span>的目标就是找到生成出的结果和真实<span class="math inline">\(x\)</span>之间的差异，差异越小越好。如上图所示。隐变量<span class="math inline">\(z\)</span>（通常为服从高斯分布的随机噪声）通过 Generator 生成 <span class="math inline">\(X_{fake}\)</span>, 判别器负责判别输入的 data 是生成的样本 <span class="math inline">\(X_{fake}\)</span>还是真实样本 <span class="math inline">\(X_{real}\)</span>。通过公式描述如下所示：
+<div class="math inline">\[\min _{G} \max _{D} V(D, G)=\mathbb{E}_{\boldsymbol{x} \sim p_{\operatorname{tat}}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}_{\boldsymbol{z} \sim p_{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]\]</div>
+对于判别器 <span class="math inline">\(D\)</span> 来说，这是一个二分类问题，<span class="math inline">\(V(D,G)\)</span> 为二分类问题中常见的交叉熵损失。对于生成器 <span class="math inline">\(G\)</span> 来说，为了尽可能欺骗 <span class="math inline">\(D\)</span>，所以需要最大化生成样本的判别概率 <span class="math inline">\(D(G(z))\)</span>，即最小化 <span class="math inline">\(log(1-D(G(z)))\)</span>，注意：<span class="math inline">\(log(D(x))\)</span> 一项与生成器 <span class="math inline">\(G\)</span> 无关，所以可以忽略。</p>
+<p>实际训练时，生成器和判别器采取交替训练，即先训练 <span class="math inline">\(D\)</span>，然后训练 <span class="math inline">\(G\)</span>，不断往复。值得注意的是，对于生成器，其最小化的是<span class="math inline">\(\max _{D} V(D, G)\)</span>，即最小化<span class="math inline">\(V(D,G)\)</span> 的最大值，这样形成一个对抗的过程。<!--more--></p>
+<h3 id="目标函数">目标函数</h3>
+<p>GAN网络的提出者Ian Goodfellow证明了，当经典GAN在最优化时就是最小化两个分布的JS散度。但在实际使用中，衡量两个分布的相似性有很多方式，如KL散度，JS散度，F散度，Bregman散度，Wasserstein距离等。因此可以定义不同的距离度量方式来定义目标函数。Wasserstein距离如下：
+<div class="math inline">\[W(p, q)=\inf _{\gamma \sim \Pi(p, q)} \mathbb{E}_{(x, y) \sim \gamma}[\|x-y\|]\]</div></p>
+<h2 id="gan的训练过程">GAN的训练过程</h2>
+<p>前面说过GAN包含了生成器和判别器，实际上是两个网络：生成网络和判别网络。那么在整个网络中，怎么来对网络进行训练呢？</p>
+<h3 id="生成器">生成器</h3>
+<p>对于生成器（生成网络）来说，输入一个<span class="math inline">\(n\)</span>维向量，输出目标大小的样本，因此首先需要得到一个输入向量。以图片为例，可以输入一个分布的向量，输出图片像素大小的图片。</p>
+<blockquote>
+<p>这里的生成器可以是任意可以输出图片的模型，比如最简单的全连接神经网络，又或者是反卷积网络等。</p>
+</blockquote>
+<p>一般输入向量用随机输入即可，随机输入最好满足常见的分布，如高斯分布，均值分布等。输入向量经过生成网络后输出一个目标样本。</p>
+<h3 id="判别器">判别器</h3>
+<p>判别器一般采用常用的判别器，输入真实图片和生成的图片，辨别它们之间的差异。判别器可以为任意的判别器模型，如全连接网络，CNN网络等。</p>
+<h3 id="训练过程">训练过程</h3>
+<p>上面对生成器和判别器进行了说明，下面可以说明如何训练，对基本流程进行简要的说明。基本训练流程如下：</p>
+<ul>
+<li>初始化判别器的参数<span class="math inline">\(\theta_{D}\)</span>和生成器<span class="math inline">\(G\)</span>的参数<span class="math inline">\(\theta_{G}\)</span></li>
+<li>从真实样本中采样 <span class="math inline">\(m\)</span>个样本<span class="math inline">\(\left\{x^{1}, x^{2}, \ldots x^{m}\right\}\)</span>，从先验分布噪声中采样<span class="math inline">\(m\)</span>个噪声样本<span class="math inline">\(\{z^{1}, z^{2}, \ldots, z^{m}\}\)</span>并通过生成器获取 <span class="math inline">\(m\)</span>个生成样本<span class="math inline">\(\left\{\tilde{x}^{1}, \tilde{x}^{2}, \ldots, \tilde{x}^{m}\right\}\)</span>固定生成器<span class="math inline">\(G\)</span>，训练判别器<span class="math inline">\(D\)</span>尽可能好地准确判别真实样本和生成样本，尽可能大地区分正确样本和生成的样本。</li>
+<li><strong>循环<span class="math inline">\(k\)</span>次更新判别器之后，使用较小的学习率来更新一次生成器的参数</strong>，训练生成器使其尽可能能够减小生成样本与真实样本之间的差距，也相当于尽量使得判别器判别错误。</li>
+<li>多次更新迭代之后，最终理想情况是使得判别器判别不出样本来自于生成器的输出还是真实的输出。亦即最终样本判别概率均为0.5。使得生成器和判别器之间达到平衡（这点也被Ian Goodfellow证明会达到<a href="https://zh.wikipedia.org/zh-hans/%E7%B4%8D%E4%BB%80%E5%9D%87%E8%A1%A1%E9%BB%9E">纳什均衡</a>）。</li>
+</ul>
+<blockquote>
+<p>之所以要训练k次判别器，再训练生成器，是因为要先拥有一个好的判别器，使得能够教好地区分出真实样本和生成样本之后，才好更为准确地对生成器进行更新。下面是GAN的论文中对训练过程的描述，如下图所示。</p>
+</blockquote>
+<p><img src="../assets/img/posts/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/gan_train_p.jpg" alt="img" /></p>
+<blockquote>
+<p>注：图中的<strong>黑色虚线</strong>表示真实的样本的分布情况，<strong>蓝色虚线</strong>表示判别器判别概率的分布情况，<strong>绿色实线</strong>表示生成样本的分布。 <span class="math inline">\(Z\)</span> 表示噪声， <span class="math inline">\(Z\)</span>到 <span class="math inline">\(x\)</span>表示通过生成器之后的分布的映射情况。</p>
+<p>我们的目标是使用生成样本分布（绿色实线）去拟合真实的样本分布（黑色虚线），来达到生成以假乱真样本的目的。</p>
+<p>可以看到在**（a）<strong>状态处于最初始的状态的时候，生成器生成的分布和真实分布区别较大，并且判别器判别出样本的概率不是很稳定，因此会先训练判别器来更好地分辨样本。
+通过多次训练判别器来达到</strong>（b）<strong>样本状态，此时判别样本区分得非常显著和良好。然后再对生成器进行训练。训练生成器之后达到</strong>（c）<strong>样本状态，此时生成器分布相比之前，逼近了真实样本分布。
+经过多次反复训练迭代之后，最终希望能够达到</strong>（d）**状态，生成样本分布拟合于真实样本分布，并且判别器分辨不出样本是生成的还是真实的（判别概率均为0.5）。也就是说我们这个时候就可以生成出非常真实的样本啦，目的达到。</p>
+</blockquote>
+<h2 id="gan存在的问题">GAN存在的问题</h2>
+<p>GAN网络在理论上偏于完美，但是在实践过程中还是存在较多的问题，主要存在以下问题：</p>
+<ol>
+<li>
+<p>GAN 提出者 Ian Goodfellow 在理论中虽然证明了 GAN 是可以达到纳什均衡的。可是我们在实际实现中，我们是在参数空间优化，而非函数空间，这导致理论上的保证在实践中是不成立的。</p>
+</li>
+<li>
+<p>不收敛（non-convergence）的问题，所有的理论都认为 GAN 应该在纳什均衡（Nash equilibrium）上有卓越的表现，但梯度下降只有在凸函数的情况下才能保证实现纳什均衡。当博弈双方都由神经网络表示时，在没有实际达到均衡的情况下，让它们永远保持对自己策略的调整是可能的。</p>
+</li>
+<li>
+<p>GAN 的优化目标是一个极小极大（minmax）问题，即<span class="math inline">\(\min _{G} \max _{D} V(G, D)\)</span>，也就是说，优化生成器的时候，最小化的是<span class="math inline">\(\max _{D} V(G, D)\)</span>。可是我们是迭代优化的，要保证 <span class="math inline">\(V(G,D)\)</span> 最大化，就需要迭代非常多次，这就导致训练时间很长。如果我们只迭代一次判别器，然后迭代一次生成器，不断循环迭代。这样原先的极小极大问题，就容易变成极大极小（maxmin）问题，可二者是不一样的，会出现mode collapse（模型崩溃）。即：
+<div class="math inline">\[\min _{G} \max _{D} V(G, D) \neq \max _{D} \min _{G} V(G, D)\]</div></p>
+</li>
+</ol>
+<p>针对上面的主要问题，很多其他GAN网络对经典的GAN网络进行了优化，如WGAN，StackGAN等，都是在GAN的基础上进行优化，扩展，时期应用更广泛。</p>
+<h2 id="gan常见的模型结构">GAN常见的模型结构</h2>
+<h3 id="dcgan">DCGAN</h3>
+<p>DCGAN 提出使用 CNN 结构来稳定 GAN 的训练，并使用了以下一些 trick：</p>
+<ul>
+<li>Batch Normalization</li>
+<li>使用 Transpose convlution 进行上采样</li>
+<li>使用 Leaky ReLu 作为激活函数</li>
+</ul>
+<h3 id="stackgan"><a href="https://arxiv.org/abs/1612.03242">StackGAN</a></h3>
+<p>StackGAN—构建两个GAN，第一个GAN（Stage-IGAN）用于根据文本描述生成一张分辨率低的图像，包括目标物体的大致形状和颜色。 第二个GAN 将Stage-I 生成的低分辨率图片和text作为输入, 修正之前生成的图并添加细节生成高分辨率的更加细致的图片。</p>
+<p><img src="../assets/img/posts/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/stack_gan_struct.png" alt="stackgan" /></p>
+<h3 id="wgan"><a href="https://arxiv.org/abs/1701.07875">WGAN</a></h3>
+<p>WGAN 提出了一种全新的距离度量方式——地球移动距离（EM, Earth-mover distance），也叫 <code>Wasserstein</code> 距离。即散度定义其中方式之一。<code>Wessertein</code>距离相比KL散度和JS散度的优势在于：即使两个分布的支撑集没有重叠或者重叠非常少，仍然能反映两个分布的远近。而JS散度在此情况下是常量，KL散度可能无意义。WGAN也是基于这个对经典GAN进行了优化。</p>
+<p>还有很多GAN的结构，这儿只是列出了冰山一角，针对不同的应用场景有不同的网络结构。但都是基于经典的GAN模型基础上进行的结构优化，优化trick等。</p>
+<h2 id="gan的应用">GAN的应用</h2>
+<p>GAN 在生成样本过程成不需要显式建模任何数据分布就可以生成<code>real-like</code> 的样本，所以 GAN 在图像，文本，语音等诸多领域都有广泛的应用。</p>
+<p>在图像领域，在图像翻译，超分辨率，目标监测，图像联合分布学习，视频生成等。也可以做序列生成，音乐生成；语言和语音转换等。下面对各个领域的应用进行了总结：</p>
+<p><img src="../assets/img/posts/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/1558418520398.png" alt="1558418520398" /></p>
+<h2 id="gan的tensorflow实现">GAN的TensorFlow实现</h2>
+<p>下面时对GAN网络的基础实现，生成器和判别器均是使用2层全连接的网络结构，在训练过程中先训练判别器再训练生成器，1-1的训练（即训练一次判别器后训练一次生成器），在每迭代10000步就生成一批图片。损失函数也是使用原始论文中的形式。具体代码参考如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.gridspec</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gridspec</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.examples.tutorials.mnist</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_data</span>
+
+<span class="n">weight_std</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># 参数初始化分布参数</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">variable_init</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="n">List</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="n">weight_std</span><span class="p">)</span>
+
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">784</span><span class="p">])</span>
+
+<span class="c1"># 定义判别器的权重矩阵和偏置项向量, 由此可知判别网络为三层全连接网络</span>
+<span class="n">d_w1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">variable_init</span><span class="p">([</span><span class="mi">784</span><span class="p">,</span> <span class="mi">128</span><span class="p">]))</span>
+<span class="n">d_b1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">variable_init</span><span class="p">([</span><span class="mi">128</span><span class="p">]))</span>
+
+<span class="n">d_w2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">variable_init</span><span class="p">([</span><span class="mi">128</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="n">d_b2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">variable_init</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
+<span class="n">theta_d</span> <span class="o">=</span> <span class="p">[</span><span class="n">d_w1</span><span class="p">,</span> <span class="n">d_w2</span><span class="p">,</span> <span class="n">d_b1</span><span class="p">,</span> <span class="n">d_b2</span><span class="p">]</span>
+
+<span class="c1"># 定义生成器的输入噪声为100维度的向量组，None根据批量大小确定</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_z</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generator</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;生成器:输出层为784个神经元, 并输出手写字体图片&quot;&quot;&quot;</span>
+    <span class="n">g_w1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">variable_init</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">128</span><span class="p">]))</span>
+    <span class="n">g_b1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">variable_init</span><span class="p">([</span><span class="mi">128</span><span class="p">]))</span>
+    <span class="n">g_h1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">g_w1</span><span class="p">)</span><span class="o">+</span><span class="n">g_b1</span><span class="p">)</span>
+
+    <span class="n">g_w2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">variable_init</span><span class="p">([</span><span class="mi">128</span><span class="p">,</span> <span class="mi">784</span><span class="p">]))</span>
+    <span class="n">g_b2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">784</span><span class="p">]))</span>
+    <span class="n">g_h2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">g_h1</span><span class="p">,</span> <span class="n">g_w2</span><span class="p">)</span> <span class="o">+</span> <span class="n">g_b2</span>
+    <span class="n">theta_g</span> <span class="o">=</span> <span class="p">[</span><span class="n">g_w1</span><span class="p">,</span> <span class="n">g_w2</span><span class="p">,</span> <span class="n">g_b1</span><span class="p">,</span> <span class="n">g_b2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">g_h2</span><span class="p">),</span> <span class="n">theta_g</span>  <span class="c1"># None, 784</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">discriminator</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;判别器&quot;&quot;&quot;</span>
+    <span class="n">d_h1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">d_w1</span><span class="p">)</span><span class="o">+</span><span class="n">d_b1</span><span class="p">)</span>
+    <span class="n">d_h2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">d_h1</span><span class="p">,</span> <span class="n">d_w2</span><span class="p">)</span> <span class="o">+</span> <span class="n">d_b2</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">d_h2</span><span class="p">),</span> <span class="n">d_h2</span>  <span class="c1"># (batch_size, 1)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">gs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greys_r&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+<span class="n">g_sample</span><span class="p">,</span> <span class="n">theta_g</span> <span class="o">=</span> <span class="n">generator</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>  <span class="c1"># batch_size, 784</span>
+<span class="n">d_real</span><span class="p">,</span> <span class="n">d_logit_real</span> <span class="o">=</span> <span class="n">discriminator</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">d_fake</span><span class="p">,</span> <span class="n">d_logit_fake</span> <span class="o">=</span> <span class="n">discriminator</span><span class="p">(</span><span class="n">g_sample</span><span class="p">)</span>
+
+<span class="c1"># 以下为原论文的判别器损失和生成器损失</span>
+<span class="n">d_loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">d_real</span><span class="p">)</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">d_fake</span><span class="p">))</span>
+<span class="n">g_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">d_fake</span><span class="p">)</span>
+
+<span class="n">D_solver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">)</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">d_loss</span><span class="p">,</span> <span class="n">var_list</span><span class="o">=</span><span class="n">theta_d</span><span class="p">)</span>
+<span class="n">G_solver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">)</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">g_loss</span><span class="p">,</span> <span class="n">var_list</span><span class="o">=</span><span class="n">theta_g</span><span class="p">)</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">z_dims</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">mnist</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">read_data_sets</span><span class="p">(</span><span class="s2">&quot;../../data/mnist&quot;</span><span class="p">,</span> <span class="n">one_hot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">())</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100000</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">it</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">g_sample</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">Z</span><span class="p">:</span> <span class="n">sample_z</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">z_dims</span><span class="p">)})</span>
+
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plot</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;./out/</span><span class="si">{}</span><span class="s1">.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+        <span class="n">X_mb</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">next_batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">D_loss_curr</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">D_solver</span><span class="p">,</span> <span class="n">d_loss</span><span class="p">],</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">X</span><span class="p">:</span> <span class="n">X_mb</span><span class="p">,</span> <span class="n">Z</span><span class="p">:</span> <span class="n">sample_z</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">z_dims</span><span class="p">)})</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">G_loss_curr</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">G_solver</span><span class="p">,</span> <span class="n">g_loss</span><span class="p">],</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">Z</span><span class="p">:</span> <span class="n">sample_z</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">z_dims</span><span class="p">)})</span>
+
+        <span class="k">if</span> <span class="n">it</span> <span class="o">%</span> <span class="mi">2000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Iter: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">it</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">()</span>
+
+</code></pre></div>
+<p>最终训练后，生成的图片如下:</p>
+<p><img src="../assets/img/posts/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0/reult009.png" alt="" /></p>
+<h2 id="reference">Reference</h2>
+<ol>
+<li>到底什么是生成对抗网络GAN？： <a href="https://www.msra.cn/zh-cn/news/features/gan-20170511">https://www.msra.cn/zh-cn/news/features/gan-20170511</a></li>
+<li>通俗理解生成对抗网络GAN： <a href="https://zhuanlan.zhihu.com/p/33752313">https://zhuanlan.zhihu.com/p/33752313</a></li>
+<li>简单理解和试验生成对抗网络GAN： <a href="https://blog.csdn.net/on2way/article/details/72773771">https://blog.csdn.net/on2way/article/details/72773771</a></li>
+<li>GAN入门及TF源码实现： <a href="https://blog.csdn.net/qq_31456593/article/details/71113926">https://blog.csdn.net/qq_31456593/article/details/71113926</a></li>
+<li>GAN完整理论推导与实现： <a href="https://www.jiqizhixin.com/articles/2017-10-1-1">https://www.jiqizhixin.com/articles/2017-10-1-1</a></li>
+<li>CNN反向传播过程详解： <a href="https://zhuanlan.zhihu.com/p/40951745">https://zhuanlan.zhihu.com/p/40951745</a></li>
+<li>GAN完整理论推导和实现： <a href="https://www.jiqizhixin.com/articles/2017-10-1-1">https://www.jiqizhixin.com/articles/2017-10-1-1</a></li>
+<li>GAN学习指南：从原理入门到制作生成Demo： <a href="https://zhuanlan.zhihu.com/p/24767059">https://zhuanlan.zhihu.com/p/24767059</a></li>
+<li>Generative Adversarial Nets（译）： <a href="https://blog.csdn.net/wspba/article/details/54577236">https://blog.csdn.net/wspba/article/details/54577236</a></li>
+<li>2018 年最棒的三篇 GAN 论文：<a href="https://www.leiphone.com/news/201901/k1ogqdXFO6arLA5L.html">https://www.leiphone.com/news/201901/k1ogqdXFO6arLA5L.html</a></li>
+<li>GAN论文综述： <a href="https://www.jiqizhixin.com/articles/2019-03-19-12">https://www.jiqizhixin.com/articles/2019-03-19-12</a></li>
+</ol>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

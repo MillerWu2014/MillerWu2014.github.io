@@ -1,0 +1,9 @@
+{%- for pair in site.data.topics -%}
+  {%- assign topic = pair[1] -%}
+  <a class="topic-hub" href="{{ topic.url | relative_url }}">
+    <strong>{{ topic.title }}</strong>
+    {%- if topic.blurb -%}
+    <span>{{ topic.blurb }}</span>
+    {%- endif -%}
+  </a>
+{%- endfor -%}

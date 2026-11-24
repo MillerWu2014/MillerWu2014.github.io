@@ -1,7 +1,7 @@
 ---
+layout: page
 title: Agent
-icon: fas fa-robot
-order: 2
+permalink: /agent/
 mermaid: true
 ---
 

@@ -1,0 +1,43 @@
+[
+  {
+    "name": "Agent",
+    "slug": "agent",
+    "description": "从智能体的基本概念出发，理解架构、记忆与 Skills，再走进 CrewAI 的多智能体协作实践。",
+    "groups": [
+      {
+        "title": "入门与整体架构",
+        "description": "先建立对 Agent 的整体认识，理解模型、工具与行动如何连接。",
+        "articles": [
+          "AI Agents 初學者課程",
+          "AI Agent（智能体）技术白皮书（Google，2024）",
+          "Agent：原理、架构与工程实践",
+          "LLMs的Agent架构"
+        ]
+      },
+      {
+        "title": "记忆与能力扩展",
+        "description": "围绕上下文、记忆与 Skills，理解智能体如何积累信息和组织能力。",
+        "articles": [
+          "记忆(Memory)模块的深度解析",
+          "Agent的Skills规范原理及应用",
+          "高手都在用的 Skill 2.0 架构指南（附完整步骤）"
+        ]
+      },
+      {
+        "title": "多智能体协作",
+        "description": "通过 CrewAI 的概念与流程设计，探索多个 Agent 的任务分工。",
+        "articles": [
+          "CrewAI的相关概念和框架",
+          "crewAI框架下关键的策略和模式设计"
+        ]
+      },
+      {
+        "title": "研究与延伸阅读",
+        "description": "沿着研究资料继续探索，补充论文与工程经验。",
+        "articles": [
+          "必读的Agent相关研究"
+        ]
+      }
+    ]
+  }
+]

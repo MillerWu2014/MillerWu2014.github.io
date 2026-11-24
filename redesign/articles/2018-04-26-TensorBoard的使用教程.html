@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TensorBoard的使用教程 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>tensorflow</h2><a href="2018-10-26-TensorFlow%E4%B8%AD%E7%9A%84KeyPoint.html">TensorFlow中的KeyPoint</a><a href="2018-04-26-TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.html" aria-current="page">TensorBoard的使用教程</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2018-04-26-TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.md" download="2018-04-26-TensorBoard的使用教程.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2018-04-26">2018-04-26</time></p>
+        <h1>TensorBoard的使用教程</h1>
+      </header>
+      <div class="prose" id="body"><p>TensorFlow 可用于训练大规模深度神经网络所需的计算，使用该工具涉及的计算往往复杂而深奥。很多人也认为NN为一个黑盒，对训练过程种的很多东西不太了解。因此Google推出了基于TensorFlow的深度学习可视化工具TensorBoard 。您可以用 TensorBoard 来展现 TensorFlow 图，绘制图像生成的定量指标图以及显示附加数据（如其中传递的图像），也可以通过该工具了解模型训练过程种参数的收敛过程，判断模型是否过拟合，是否是欠拟合等。</p>
+<h2 id="1summary">1.summary</h2>
+<p>首先明确一点,<code>summary</code>也是<code>op</code>。要对某些变量或值进行可视化，就必须在创建图的过程中将这些变量或标量给记录下来，后续将训练过程得记录给写入log，再通过tensorboard进行展示。</p>
+<h3 id="11-标量可视化">1.1 标量可视化</h3>
+<p>如果我们想对标量在训练中可视化，可以使用<code>tf.summary.scalar()</code>，比如损失loss，accuracy等。这个API得接口如下所示，主要用于标量，会得到一个标量得summary：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">调用这个函数来观察Tensorflow的Graph中某个节点</span>
+<span class="sd">parameters</span>
+<span class="sd">----------</span>
+<span class="sd">tensor: 想要在TensorBoard中观察的节点</span>
+<span class="sd">name: 为该节点设置名字，在TensorBoard中我们观察的曲线将会以name命名</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</code></pre></div>
+<!--more-->
+<h3 id="12-参数可视化">1.2 参数可视化</h3>
+<p>使用<code>tf.summary.histogram()</code>可以对参数进行可视化，如权重，偏置项等。可以通过该API可视化参数的分布情况，每次迭代的分布情况等。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">return</span>
+<span class="sd">------</span>
+<span class="sd">A scalar Tensor of type string. The serialized Summary protocol buffer.</span>
+
+<span class="sd">parameters</span>
+<span class="sd">----------</span>
+<span class="sd">	name: A name for the generated node. Will also serve as a series name in TensorBoard.</span>
+<span class="sd">	values: A real numeric Tensor. Any shape. Values to use to build the histogram.</span>
+<span class="sd">	collections: Optional list of graph collections keys. The new summary op is added to these collections. 	Defaults to [GraphKeys.SUMMARIES].</span>
+<span class="sd">	family: Optional; if provided, used as the prefix of the summary tag name, which controls the tab name used for display on Tensorboard.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="13-其他images-text-audio的可视化">1.3 其他(images, text, audio)的可视化</h3>
+<p>TensorBoard也可以对图片，文本和音频等近可视化，具体API可以查看官方文档。</p>
+<h2 id="2对所有的summary进行merge">2.对所有的summary进行merge</h2>
+<p>在 TensorFlow 中，只有当您运行指令时，指令才会执行，或者另一个 op 依赖于指令的输出时，指令才会运行。我们刚才创建的这些总结节点都围绕着您的图：您目前运行的 op 都不依赖于这些节点的结果。因此，为了生成总结信息，我们需要运行所有这些总结节点。这样的手动操作是枯燥而乏味的，因此可以使用 <a href="https://www.tensorflow.org/api_docs/python/tf/summary/merge_all?hl=zh-cn"><code>tf.summary.merge_all</code></a> 来将这些操作合并为一个 op，从而生成所有总结数据，生成一个<code>summary</code>对象，供后面<code>File_Writer</code>的<code> add_summary</code>使用。<strong>和初始化所有的变量用法相似</strong>。</p>
+<p>然后您可以执行该合并的总结 op，它会在特定步骤将所有总结数据生成一个序列化的 <code>summary protobuf</code> 对象。最后，要将此总结数据写入磁盘，请将此总结 protobuf 对象传递给 <a href="https://www.tensorflow.org/api_docs/python/tf/summary/FileWriter?hl=zh-cn"><code>tf.summary.FileWriter</code></a>。</p>
+<h2 id="3filewriter">3.FileWriter</h2>
+<p>这个步骤主要是将summary的结果（protobuf序列化后的数据）写入磁盘。后面启动TensorBoard服务时好使用该数据，在前端进行可视化。下面在训练过程中会通过<code>add_summary(summary, global_step=None)</code>将summary添加到FileWriter对象中。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">Class</span> <span class="n">FileWriter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Writes Summary protocol buffers to event files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_queue</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">flush_secs</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">graph_def</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename_suffix</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">		logdir: string, directory where event file will be written.</span>
+<span class="sd">		graph: A Graph object, such as sess.graph.</span>
+<span class="sd">		max_queue: Integer. 在向disk写数据之前，最大能够缓存event的个数</span>
+<span class="sd">         flush_secs: Number. 每多少秒像disk中写数据，并清空对象缓存.</span>
+<span class="sd">		graph_def: DEPRECATED: Use the graph argument instead.</span>
+<span class="sd">		filename_suffix: A string. Every event file&#39;s name is suffixed with suffix.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+<span class="c1"># example</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="s1">&#39;/train&#39;</span><span class="p">,</span> <span class="n">session</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="31-add_summary">3.1 add_summary</h3>
+<p>因为前面说明了summary也是一个OP，因此在需要session中，每个训练步（或者多个训练步）将summary对象添加到FileWriter中。summary对象是通过前面merge步骤中生成。因此一般会执行下面两个步骤：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">summary</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Y</span><span class="p">})</span>
+<span class="n">wiriter</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="n">global_step</span><span class="o">=</span><span class="n">train_step</span><span class="p">)</span>
+</code></pre></div>
+<p>下面再看下<code>add_summary</code>的api接口：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">add_summary</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="n">global_step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    summary: A Summary protocol buffer, optionally serialized as a string.</span>
+<span class="sd">    global_step: Number. Optional global step value to record with the summary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</code></pre></div>
+<blockquote>
+<p><strong>note</strong>：</p>
+<ol>
+<li>如果使用<code>writer.add_summary(summary，global_step)</code>时没有传<code>global_step</code>参数,会使<code>scarlar_summary</code>变成一条直线。</li>
+<li>只要是在计算图上的<code>Summary op</code>，都会被<code>merge_all</code>捕捉到， 不需要考虑变量生命周期问题。</li>
+<li>如果执行一次，<code>disk</code>上没有保存<code>Summary</code>数据的话，可以尝试下<code>file_writer.flush()</code></li>
+</ol>
+</blockquote>
+<h2 id="4启动tensorboard服务">4.启动TensorBoard服务</h2>
+<p>训练完成后，就可以进入到命令行启动TensorBoard，可以指定到某个logdir，指定TensorBoard服务监听的IP，监听的端口等。只需要再命令行指定，如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>shell</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-shell">tensorboard<span class="w"> </span>--logdir<span class="w"> </span>tain<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">88888</span>
+tensorboard<span class="w"> </span>--logdir<span class="w"> </span>/tmp/train
+</code></pre></div>
+<p>启动服务后就可以再浏览器中查看深度网络的可视化。</p>
+<h2 id="5配合name_scope使用">5.配合<code>name_scope</code>使用</h2>
+<p>当网络比较复杂时，整体网络的图看上去就会比较混乱，为了解决这个问题，TensorFlow中加入了name_scope，这样TensorBoard的可视化网络看上去更有层次性。如下使用：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">initial_value</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">random_uniform</span><span class="p">([</span><span class="mi">784</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="s2">&quot;bias&quot;</span><span class="p">):</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">initial_value</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">random_uniform</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="6refrence">6.Refrence</h2>
+<p>[1]. <a href="https://jhui.github.io/2017/03/12/TensorBoard-visualize-your-learning/">TensorBoard - Visualize your learning</a></p>
+<p>[2].<a href="https://blog.csdn.net/u012436149/article/details/53184847">TensorFlow可视化</a></p>
+<p>[3].<a href="http://www.tensorfly.cn/tfdoc/how_tos/summaries_and_tensorboard.html">TensorBoard可视化学习</a></p>
+<p>[4].<a href="https://www.youtube.com/watch?v=eBbEDRsCmv4">Hands on TensorBoard</a></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

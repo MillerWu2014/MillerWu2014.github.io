@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TensorFlow中的KeyPoint · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>tensorflow</h2><a href="2018-10-26-TensorFlow%E4%B8%AD%E7%9A%84KeyPoint.html" aria-current="page">TensorFlow中的KeyPoint</a><a href="2018-04-26-TensorBoard%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.html">TensorBoard的使用教程</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2018-10-26-TensorFlow%E4%B8%AD%E7%9A%84KeyPoint.md" download="2018-10-26-TensorFlow中的KeyPoint.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2018-10-26">2018-10-26</time></p>
+        <h1>TensorFlow中的KeyPoint</h1>
+      </header>
+      <div class="prose" id="body"><h2 id="1线程队列和流水线">1.线程，队列和流水线</h2>
+<p>在TensorFlow中也会使用线程和队列，主要在模型开始训练时对数据的处理时，通过多线程来读取数据，一个线程来消费数据(模型训练)。在TensorFlow中的线程主要通过Coordinator和QueueRunner来进行配合管理，队列Queue主要有四种队列。</p>
+<p>一句话概括就是：<code>Queue</code>-&gt;（构建图阶段）创建队列；<code>QueueRunner</code>-&gt;（构建图阶段）创建线程进行入队操作；<code>f.train.start_queue_runners()</code>-&gt;（执行图阶段）填充队列；<code>tf.train.Coordinator()</code> 在线程出错时关闭之。</p>
+<h3 id="11-线程管理-coordinator">1.1 线程管理-Coordinator</h3>
+<p><code>Coordinator</code>类主要对多线程进行同步停止。它和TensorFlow内的队列没有必然关系，可以和python的线程(threading)配合使用。<code>Coordinator</code>类主要有三个方法：</p>
+<ul>
+<li><a href="https://www.tensorflow.org/api_docs/python/tf/train/Coordinator#should_stop"><code>tf.train.Coordinator.should_stop</code></a>：如果线程停止，则返回True。</li>
+<li><a href="https://www.tensorflow.org/api_docs/python/tf/train/Coordinator#request_stop"><code>tf.train.Coordinator.request_stop</code></a>：请求线程停止。</li>
+<li><a href="https://www.tensorflow.org/api_docs/python/tf/train/Coordinator#join"><code>tf.train.Coordinator.join</code></a>：等待直到指定的线程停止。</li>
+</ul>
+<p>在使用Coordinator时，首先创建一个Coordinator对象，再创建一些Coordinator使用的线程。线程通常一直循环运行，直到should_stop()返回True时停止。任何线程也可以被请求停止，只需要Coordinator对象调用<code>request_stop</code>方法，调用该方法时，其他线程下的<code>should_stop</code>都被返回为True，其他线程停止。如下，通过Coordinator管理python的线程：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">thread_func</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">id_num</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param coord: tensorflow Coordinator object.</span>
+<span class="sd">    :param id_num: int, the constant number</span>
+<span class="sd">    :return:</span>
+<span class="sd">        id_num, int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">coord</span><span class="o">.</span><span class="n">should_stop</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This thread id is </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">id_num</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">id_num</span> <span class="o">&gt;=</span> <span class="mi">9</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Stop thread id is </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">id_num</span><span class="p">)</span>
+            <span class="n">coord</span><span class="o">.</span><span class="n">request_stop</span><span class="p">()</span>
+
+
+<span class="c1"># init coord object</span>
+<span class="n">coord_object</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Coordinator</span><span class="p">()</span>
+
+<span class="c1"># create 10 threads and run thread function</span>
+<span class="n">threads</span> <span class="o">=</span> <span class="p">[</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">thread_func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">coord_object</span><span class="p">,</span> <span class="n">num</span><span class="p">))</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="n">coord_object</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</code></pre></div>
+<p>Coordinator还支持捕获和报告异常，如<code>try:.......except Exception as error: coord.request_stop(errr) finally: coord.request_stop()</code>。</p>
+<!--more-->
+<h3 id="12-队列-queue">1.2 队列-Queue</h3>
+<p>像TensorFlow中的所有组件一样，队列是TensorFlow图中的一个<strong>节点</strong>。它是一个<strong>有状态</strong>的节点，像变量一样：<strong>其他节点可以修改其内容</strong>。特别地，节点可以将新元素插入队列，或者从现有队列中取出队列。在TensorFlow中，队列主要有四种类型：</p>
+<ul>
+<li><code>tf.FIFOQueue</code> ：按入列顺序出列的队列，先进先出队列</li>
+<li><code>tf.RandomShuffleQueue</code>： 随机顺序出列的队列</li>
+<li><code>tf.PaddingFIFOQueue</code> ：以固定长度批量出列的队列</li>
+<li><code>tf.PriorityQueue</code> ：带优先级出列的队列</li>
+</ul>
+<p>这些队列的使用方法都是一样，主要有：<code>dequeue</code>，<code>enqueue</code>，<code>enqueue_many</code>，<code>dequeue_many</code>等方法。enqueue操作返回计算图中的一个Operation节点，dequeue操作返回一个Tensor值，队列操作同样只是声明或定义，要通过session来运行，才能获取这个值。下面时操作queue：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">queue</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">FIFOQueue</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="c1"># 如果队列中的值超过了queue size, 在enqueue会卡主,直到queue中的值被消费</span>
+<span class="n">queue_init</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">enqueue_many</span><span class="p">(([</span><span class="mi">0</span><span class="p">],),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;init_queue&quot;</span><span class="p">)</span>  
+<span class="n">x</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">dequeue</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">queue_init</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- the </span><span class="si">%d</span><span class="s2"> times enqueue ---&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">enqueue</span><span class="p">([</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="c1"># 对一个已经取空的队列使用dequeue操作也会卡住,直到有新的数据写入</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Get value from queue:&quot;</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s2">&quot;The queue size:&quot;</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
+</code></pre></div>
+<p>还可以将上面的代码进行修改：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">index</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+<span class="n">queue</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">FIFOQueue</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="n">queue_init</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">enqueue_many</span><span class="p">(([</span><span class="mi">0</span><span class="p">],),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;init_queue&quot;</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">dequeue</span><span class="p">()</span>
+<span class="n">enqueue_op</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">enqueue</span><span class="p">([</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;enqueue&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">queue_init</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- the </span><span class="si">%d</span><span class="s2"> times enqueue ---&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">enqueue_op</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">index</span><span class="p">:</span> <span class="n">i</span><span class="p">})</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Get value from queue:&quot;</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s2">&quot;The queue size:&quot;</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
+</code></pre></div>
+<h3 id="13-queuerunner">1.3 QueueRunner</h3>
+<p>Tensorflow的计算主要在使用CPU/GPU和内存，而数据读取涉及磁盘操作，速度远低于前者操作。因此通常会使用多个线程读取数据，然后使用一个线程消费数据。QueueRunner就是来管理这些读写队列的线程的（创建线程，对队列进行enqueue或dequeue操作），QueueRunner是一个不存在于代码中的东西，而是后台运作的一个概念；可以通过两种方式来使用QueueRunner；一种是显示的使用QueueRunner，另外一种是隐式使用：<code>tf.train.start_queue_runners</code>。下面是一个多线程读取文件的例子：</p>
+<p><img src="http://wiki.jikexueyuan.com/project/tensorflow-zh/images/AnimatedFileQueues.gif" alt="img" /></p>
+<p>QueueRunner的API和关键方法create_threads的api说明：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enqueue_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">close_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cancel_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+             <span class="n">queue_closed_exception_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">queue_runner_def</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">import_scope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    queue：为tensorflow的队列对象,如FIFOQueue, RandomShuffleQueue等</span>
+<span class="sd">    enqueue_ops: 为入队操作(enqueue ops)的列表，列表的长度为定义的线程数</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<span class="k">def</span><span class="w"> </span><span class="nf">create_threads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="n">coord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sess: A session</span>
+<span class="sd">    coord: Optional `Coordinator` object </span>
+<span class="sd">    start: Boolean.  If `True` starts the threads.  If `False` the caller must call the `start()` method of the returned threads.</span>
+<span class="sd">    </span>
+<span class="sd">    return</span>
+<span class="sd">    ------</span>
+<span class="sd">    A list of threads.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</code></pre></div>
+<p>下面使用队列和QueueRunner：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">q</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">FIFOQueue</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">)</span>
+<span class="n">counter</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># 定义计数器</span>
+
+<span class="n">increment_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">counter</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># 给计数器加一</span>
+<span class="n">enqueue_op</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>  <span class="c1"># 将计数器加入队列</span>
+
+<span class="c1"># 创建QueueRunner, 用多个线程向队列添加数据, 这里实际上定义了4个线程, 两个增加计数, 两个执行入队, 但是还没有执行</span>
+<span class="n">qr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">QueueRunner</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">enqueue_ops</span><span class="o">=</span><span class="p">[</span><span class="n">increment_op</span><span class="p">,</span> <span class="n">enqueue_op</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">qr</span><span class="o">.</span><span class="n">create_threads</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 启动入队线程,开始执行</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">dequeue</span><span class="p">()))</span>
+</code></pre></div>
+<p>上面的运行结束会产生异常，但是整个运行过程是正确的。因此，QueueRunner和Coordinator会配合使用，避免这种情况。下面一起合使用。</p>
+<h3 id="14-输入流水线线程队列配合使用">1.4 输入流水线（线程队列配合使用）</h3>
+<p>下面将1.3中的示例稍加修改就可以避免后面异常的情况。修改后的代码如下所示。通过Coordinator来对所有线程进行同步和停止。</p>
+<h4 id="141-coordinator和queuerunner配合使用">1.4.1 Coordinator和QueueRunner配合使用</h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">q</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">FIFOQueue</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">)</span>
+<span class="n">counter</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># 定义计数器</span>
+
+<span class="n">increment_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">counter</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># 给计数器加一</span>
+<span class="n">enqueue_op</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>  <span class="c1"># 将计数器加入队列</span>
+
+<span class="n">qr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">QueueRunner</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">enqueue_ops</span><span class="o">=</span><span class="p">[</span><span class="n">increment_op</span><span class="p">,</span> <span class="n">enqueue_op</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># 创建多个线程</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">coord</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Coordinator</span><span class="p">()</span>
+    <span class="n">enqueue_threads</span> <span class="o">=</span> <span class="n">qr</span><span class="o">.</span><span class="n">create_threads</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">coord</span><span class="o">=</span><span class="n">coord</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># 启动入队线程</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">dequeue</span><span class="p">()))</span>
+
+    <span class="n">coord</span><span class="o">.</span><span class="n">request_stop</span><span class="p">()</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">enqueue_threads</span><span class="p">)</span>
+</code></pre></div>
+<p>使用QueueRunner有两种方式，一种是显示的使用QueueRunner，如上面的示例所示，另外一种就是隐式的使用，后面的例子中都是通过隐式（<code>tf.train.start_queue_runners</code>）的使用，在隐式的使用中也是调用的<code>QueueRunner.create_threads</code>的方法。下面将mnist的数据进行流水线操作：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.examples.tutorials.mnist</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_data</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">mnist</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">read_data_sets</span><span class="p">(</span><span class="s2">&quot;/opt/workspace/project/deep-st-nn/data/MNIST_DATA&quot;</span><span class="p">,</span> <span class="n">one_hot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">all_data</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">images</span>
+<span class="n">all_target</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">labels</span>
+<span class="n">queue</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">FIFOQueue</span><span class="p">(</span><span class="n">capacity</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">dtypes</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">shapes</span><span class="o">=</span><span class="p">[[</span><span class="mi">784</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">]])</span>
+
+<span class="n">enqueue_op</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">enqueue_many</span><span class="p">([</span><span class="n">all_data</span><span class="p">,</span> <span class="n">all_target</span><span class="p">])</span>
+
+<span class="n">data_sample</span><span class="p">,</span> <span class="n">label_sample</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">dequeue</span><span class="p">()</span>
+<span class="n">qr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">QueueRunner</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="p">[</span><span class="n">enqueue_op</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="c1"># create a coordinator, launch the queue runner threads.</span>
+    <span class="n">coord</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Coordinator</span><span class="p">()</span>
+    <span class="n">enqueue_threads</span> <span class="o">=</span> <span class="n">qr</span><span class="o">.</span><span class="n">create_threads</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">coord</span><span class="o">=</span><span class="n">coord</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+        <span class="c1"># do to 100 iterations</span>
+        <span class="k">if</span> <span class="n">coord</span><span class="o">.</span><span class="n">should_stop</span><span class="p">():</span>
+            <span class="k">break</span>
+        <span class="n">one_data</span><span class="p">,</span> <span class="n">one_label</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">data_sample</span><span class="p">,</span> <span class="n">label_sample</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">one_data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">one_label</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">request_stop</span><span class="p">()</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">enqueue_threads</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="142-流水线">1.4.2 流水线</h4>
+<p>tensorflow的输入流水线：<strong>准备文件名 -&gt; 创建一个<code>Reader</code>从文件中读取数据 -&gt; 定义文件中数据的解码规则 -&gt; 解析数据</strong>。下面是官方给的一个例子，下面的代码中对关键部分进行了注释</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+
+
+<span class="c1"># 一个Queue,用来保存文件名字.对此Queue,只读取,不dequeue</span>
+<span class="n">filename_queue</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">string_input_producer</span><span class="p">([</span><span class="s2">&quot;/opt/workspace/project/deep-st-nn/data/file0.csv&quot;</span><span class="p">,</span>
+                                                 <span class="s2">&quot;/opt/workspace/project/deep-st-nn/data/file1.csv&quot;</span><span class="p">])</span>
+
+<span class="n">reader</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">TextLineReader</span><span class="p">()</span>  <span class="c1"># 用来从文件中读取数据, LineReader, 每次读一行</span>
+<span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename_queue</span><span class="p">)</span>
+
+<span class="c1"># Default values, in case of empty columns. Also specifies the type of the</span>
+<span class="n">record_defaults</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]]</span>
+<span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span><span class="p">,</span> <span class="n">col4</span><span class="p">,</span> <span class="n">col5</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">decode_csv</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">record_defaults</span><span class="o">=</span><span class="n">record_defaults</span><span class="p">)</span>  <span class="c1"># 如果有控制就会用record_defaults填充缺失值</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span><span class="p">,</span> <span class="n">col4</span><span class="p">])</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">coord</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Coordinator</span><span class="p">()</span>
+    <span class="n">threads</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">start_queue_runners</span><span class="p">(</span><span class="n">coord</span><span class="o">=</span><span class="n">coord</span><span class="p">)</span>  <span class="c1"># 启动线程, 返回所有的线程</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="c1"># Retrieve a single instance:</span>
+        <span class="n">example</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">features</span><span class="p">,</span> <span class="n">col5</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The times: </span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">example</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">request_stop</span><span class="p">()</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+</code></pre></div>
+<p>再对上面的代码进行解析：</p>
+<p>（1）<code>tf.train.string_input_producer(['file0.csv', 'file1.csv'])</code>，下面是该函数的关键代码：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">q</span> <span class="o">=</span> <span class="n">data_flow_ops</span><span class="o">.</span><span class="n">FIFOQueue</span><span class="p">(</span><span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                                <span class="n">dtypes</span><span class="o">=</span><span class="p">[</span><span class="n">input_tensor</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">base_dtype</span><span class="p">],</span>
+                                <span class="n">shapes</span><span class="o">=</span><span class="p">[</span><span class="n">element_shape</span><span class="p">],</span>
+                                <span class="n">shared_name</span><span class="o">=</span><span class="n">shared_name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">enq</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">enqueue_many</span><span class="p">([</span><span class="n">input_tensor</span><span class="p">])</span>
+    <span class="n">queue_runner</span><span class="o">.</span><span class="n">add_queue_runner</span><span class="p">(</span>
+        <span class="n">queue_runner</span><span class="o">.</span><span class="n">QueueRunner</span><span class="p">(</span>
+            <span class="n">q</span><span class="p">,</span> <span class="p">[</span><span class="n">enq</span><span class="p">],</span> <span class="n">cancel_op</span><span class="o">=</span><span class="n">cancel_op</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">summary_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="n">summary_name</span><span class="p">,</span>
+                     <span class="n">math_ops</span><span class="o">.</span><span class="n">to_float</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">size</span><span class="p">())</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">capacity</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">q</span>
+</code></pre></div>
+<p>上面，首先创建了一个queue，进行了入队(enqueue)操作；通过QueueRunner创建了一个线程来执行enqueue_op，并将QueueRunner放入了一个collections中。并返回queue。</p>
+<p>（2）定义了数据解析的OP，主要通过TextLineReader来按行进行解析。解析完成后返回了一个Tensor的label和data。<code>TextLineReader.read()</code>方法直接接收一个Queue对象。</p>
+<p>（3）通过session来获取到真实的数据，并进行下一步操作。在session中通过<code>start_queue_runners</code>方法启动所有的线程，并返回所有线程。获取自己需要的值。</p>
+<h4 id="143-流水线的过程中准备minibatch数据">1.4.3 流水线的过程中准备minibatch数据</h4>
+<p>在数据输入流水线的过程中，利用多线程来准备好batch数据，并通过dequeue的方式来获取一个minibatch的数据集，在TensorFlow中也实现了，如下所示将上面的代码进行修改：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">read_my_file_format</span><span class="p">(</span><span class="n">filename_queue</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;定义数据的读取与解析规则&quot;&quot;&quot;</span>
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">TextLineReader</span><span class="p">()</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">record_string</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename_queue</span><span class="p">)</span>
+    <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span><span class="p">,</span> <span class="n">col4</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">decode_csv</span><span class="p">(</span><span class="n">record_string</span><span class="p">,</span> 
+                                                  <span class="n">record_defaults</span><span class="o">=</span><span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]])</span>
+    <span class="n">processed_example</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span><span class="p">,</span> <span class="n">col4</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">processed_example</span><span class="p">,</span> <span class="n">label</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">input_pipeline</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">filename_queue</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">string_input_producer</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">example</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">read_my_file_format</span><span class="p">(</span><span class="n">filename_queue</span><span class="p">)</span>
+    <span class="n">min_after_dequeue</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">capacity</span> <span class="o">=</span> <span class="n">min_after_dequeue</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">batch_size</span>  <span class="c1"># queue size</span>
+    <span class="n">example_batch</span><span class="p">,</span> <span class="n">label_batch</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">shuffle_batch</span><span class="p">([</span><span class="n">example</span><span class="p">,</span> <span class="n">label</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                                        <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                                                        <span class="n">min_after_dequeue</span><span class="o">=</span><span class="n">min_after_dequeue</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">example_batch</span><span class="p">,</span> <span class="n">label_batch</span>
+
+
+<span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;/opt/workspace/project/deep-st-nn/data/file0.csv&quot;</span><span class="p">,</span> 
+         <span class="s2">&quot;/opt/workspace/project/deep-st-nn/data/file1.csv&quot;</span><span class="p">]</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">input_pipeline</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">coord</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Coordinator</span><span class="p">()</span>
+    <span class="n">threads</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">start_queue_runners</span><span class="p">(</span><span class="n">sess</span><span class="o">=</span><span class="n">sess</span><span class="p">,</span> <span class="n">coord</span><span class="o">=</span><span class="n">coord</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">num_step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">request_stop</span><span class="p">()</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+</code></pre></div>
+<p>上面代码中最关键的部分为<code>shuffle_batch</code>方法，shuffle_batch接受的参数如下所示，该方法所做的事情主要有：</p>
+<ol>
+<li>创建一个<code>RandomShuffleQueue</code>用来保存样本。</li>
+<li>使用<code>QueueRunner</code>创建多个<code>enqueue</code>线程向<code>Queue</code>中放数据。</li>
+<li>创建一个<code>dequeue_many</code> OP。</li>
+<li>返回<code>dequeue_many</code> OP。</li>
+</ol>
+<p>然后我们就可以使用<code>dequeue</code>出来的<code>mini-batch</code>来训练网络了。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">shuffle_batch</span><span class="p">(</span><span class="n">tensors</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">min_after_dequeue</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">enqueue_many</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shapes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_smaller_final_batch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shared_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    	tensors: The list of tensors, this tensor will to enqueue.</span>
+<span class="sd">    	batch_size: The new batch size pulled from the queue.</span>
+<span class="sd">    	capacity: An integer. The maximum number of elements in the queue. </span>
+<span class="sd">    	min_after_dequeue: Minimum number elements in the queue after a dequeue, used to ensure a level of mixing of elements.</span>
+<span class="sd">    	num_threads: The number of threads enqueuing `tensor_list`.</span>
+<span class="sd">    </span>
+<span class="sd">    return</span>
+<span class="sd">    ------</span>
+<span class="sd">    Returns:</span>
+<span class="sd">    A list or dictionary of tensors with the types as `tensors`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</code></pre></div>
+<p>通过<code>shuff_batch</code>来实现mnist数据的队列就更加方便了：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">mnist</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">read_data_sets</span><span class="p">(</span><span class="s2">&quot;/opt/workspace/project/deep-st-nn/data/MNIST_DATA&quot;</span><span class="p">,</span> <span class="n">one_hot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">all_data</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">images</span>
+<span class="n">all_target</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">labels</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">batch_x</span><span class="p">,</span> <span class="n">batch_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">shuffle_batch</span><span class="p">([</span><span class="n">all_data</span><span class="p">,</span> <span class="n">all_target</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="mi">300</span><span class="o">+</span><span class="mi">1000</span><span class="p">,</span>
+                                              <span class="n">min_after_dequeue</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">coord</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Coordinator</span><span class="p">()</span>
+    <span class="n">threads</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">start_queue_runners</span><span class="p">(</span><span class="n">sess</span><span class="o">=</span><span class="n">sess</span><span class="p">,</span> <span class="n">coord</span><span class="o">=</span><span class="n">coord</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">batch_x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">batch_y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">request_stop</span><span class="p">()</span>
+    <span class="n">coord</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+</code></pre></div>
+<p>另外再介绍一个常用的方法，再后续可能会经常用到。<code>tf.train.slice_input_producer</code>，该方法的API为：·<code>slice_input_producer(tensor_list, num_epochs=None, shuffle=True, seed=None, capacity=32, shared_name=None, name=None)</code>，接收一个tensor的list，再看他的源码：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;input_producer&quot;</span><span class="p">,</span> <span class="n">tensor_list</span><span class="p">):</span>
+    <span class="n">tensor_list</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">convert_n_to_tensor_or_indexed_slices</span><span class="p">(</span><span class="n">tensor_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tensor_list</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="s2">&quot;Expected at least one tensor in slice_input_producer().&quot;</span><span class="p">)</span>
+    <span class="n">range_size</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">tensor_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># TODO(josh11b): Add an assertion that the first dimension of</span>
+    <span class="c1"># everything in TensorList matches. Maybe just check the inferred shapes?</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="n">range_input_producer</span><span class="p">(</span><span class="n">range_size</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">,</span>
+                                 <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                                 <span class="n">shared_name</span><span class="o">=</span><span class="n">shared_name</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">dequeue</span><span class="p">()</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">array_ops</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tensor_list</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">output</span>
+</code></pre></div>
+<p>该方法再内部调用<code>range_input_producer</code>方法，生成一个队列，并将出队的结果进行组合，形成一个list，返回（<code>A list of tensors, one for each element of tensor_list.  If the tensor n tensor_list has shape [N, a, b, .., z], then the corresponding outputtensor will have shape [a, b, ..., z].</code>）。返回的是一个出队后的元素。</p>
+<h3 id="1-5-refrence">1. 5 Refrence</h3>
+<p>[1].<a href="https://blog.csdn.net/rockingdingo/article/details/55652662">Tensorflow并行计算：多核(multicore)，多线程(multi-thread)，图分割(Graph Partition)</a></p>
+<p>[2].<a href="https://www.jianshu.com/p/c29965e6c40c">TensorFlow中的多线程使用</a></p>
+<p>[3].<a href="http://cwiki.apachecn.org/pages/viewpage.action?pageId=10029441">TensorFlow的线程和队列</a></p>
+<p>[4].<a href="https://blog.csdn.net/u012436149/article/details/72353313">输入流水线</a></p>
+<p>[5].<a href="https://ischlag.github.io/2016/06/19/tensorflow-input-pipeline-example/">TENSORFLOW INPUT PIPELINE EXAMPLE</a></p>
+<p>[6].<a href="http://www.enpeizhao.com/?p=514">tensorflow 管道队列模式（pipeline）读取文件</a></p>
+<p>[7].<a href="http://wiki.jikexueyuan.com/project/tensorflow-zh/how_tos/reading_data.html">数据读取</a></p>
+<p>[8].<a href="https://www.jianshu.com/p/f1aeb7ef75ca">TensorFlow-input pipeline</a></p>
+<h2 id="2共享变量">2.共享变量</h2>
+<p>在深度学习网络中，随模型复杂程度增加，模型的参数会不断的增加，因此训练模型过程中会涉及到<strong>变量共享</strong>。这样减小模型中参数的量，甚至在部分模型中需要共享变量，才能达到好的效果。</p>
+<h3 id="21-问题的提出">2.1 问题的提出</h3>
+<p>假设，我们创建一个图像过滤模型，设置模型中为2个卷积，现在要将同一个模型(相同参数的模型)应用到不同的图片下，实现大量图片的过滤。如果通过<code>tf.Variable()</code>实现如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">my_image_filter</span><span class="p">(</span><span class="n">input_images</span><span class="p">):</span>
+    <span class="n">conv1_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_weights&quot;</span><span class="p">)</span>
+    <span class="n">conv1_biases</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_biases&quot;</span><span class="p">)</span>
+    <span class="n">conv1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">input_images</span><span class="p">,</span> <span class="n">conv1_weights</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;SAME&#39;</span><span class="p">)</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">conv1</span> <span class="o">+</span> <span class="n">conv1_biases</span><span class="p">)</span>
+ 
+    <span class="n">conv2_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2_weights&quot;</span><span class="p">)</span>
+    <span class="n">conv2_biases</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2_biases&quot;</span><span class="p">)</span>
+    <span class="n">conv2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">relu1</span><span class="p">,</span> <span class="n">conv2_weights</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;SAME&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">conv2</span> <span class="o">+</span> <span class="n">conv2_biases</span><span class="p">)</span>
+</code></pre></div>
+<p>在这个模型中，我们有四个变量：<code>conv1_weight,conv1_biases,conv2_weights,conv2_biases</code>，当我们应用在每个图片上时，如下，我们应用在2个图片上：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">result1</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image1</span><span class="p">)</span>  <span class="c1"># First call creates one set of 4 variables.</span>
+<span class="n">result2</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image2</span><span class="p">)</span>  <span class="c1"># Another set of 4 variables is created in the second call.</span>
+</code></pre></div>
+<p>这样调用2次，那么会创建2组变量，每组4个变量，生成8个变量。这样就出现了问题，每张图片应用的模型是不一样的。因此需要通过共享变量的模式。那么怎么来实现呢？</p>
+<h3 id="22-python实现共享变量">2.2 python实现共享变量</h3>
+<p>在python中也是可以实现的，通过字典提前将变量进行定义，如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">parameters_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;conv1_weights&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_weights&quot;</span><span class="p">),</span>
+                  <span class="s2">&quot;conv1_biases&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1_biases&quot;</span><span class="p">),</span>
+                  <span class="s2">&quot;conv2_weights&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2_weights&quot;</span><span class="p">),</span>
+                  <span class="s2">&quot;conv2_biases&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">32</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv2_biases&quot;</span><span class="p">)}</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">my_image_filter</span><span class="p">(</span><span class="n">input_images</span><span class="p">,</span> <span class="n">variables_dict</span><span class="p">):</span>
+    <span class="n">conv1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">input_images</span><span class="p">,</span> <span class="n">variables_dict</span><span class="p">[</span><span class="s2">&quot;conv1_weights&quot;</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;SAME&#39;</span><span class="p">)</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">conv1</span> <span class="o">+</span> <span class="n">variables_dict</span><span class="p">[</span><span class="s2">&quot;conv1_biases&quot;</span><span class="p">])</span>
+ 
+    <span class="n">conv2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">relu1</span><span class="p">,</span> <span class="n">variables_dict</span><span class="p">[</span><span class="s2">&quot;conv2_weights&quot;</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;SAME&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">conv2</span> <span class="o">+</span> <span class="n">variables_dict</span><span class="p">[</span><span class="s2">&quot;conv2_biases&quot;</span><span class="p">])</span>
+
+<span class="c1"># Both calls to my_image_filter() now use the same variables</span>
+<span class="n">result1</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image1</span><span class="p">,</span> <span class="n">variables_dict</span><span class="p">)</span>
+<span class="n">result2</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image2</span><span class="p">,</span> <span class="n">variables_dict</span><span class="p">)</span>
+</code></pre></div>
+<p>这样是可以实现共享变量，但是对代码的<strong>封装不好</strong>，在构建模型时，<strong>需要提前创建好变量</strong>的名称，大小，类型等，当网络非常大时，需要维护一个非常长的参数列表，这样代码显得非常冗余；同时，这样代码显得比较死板，不灵活，扩展性很弱。因此TensorFlow提供了更加轻便的方式来实现共享变量。</p>
+<h3 id="23-在tensorflow中实现共享变量">2.3 在TensorFlow中实现共享变量</h3>
+<p>在TensorFlow中通过<code>tf.get_variable()</code>和``tf.variable_scope()`配合使用，实现变量共享。这两个方法的作用主要如下所示，下面通过这两个方法来实现变量共享。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="o">&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">shape</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">initializer</span><span class="o">&gt;</span><span class="p">)</span>  <span class="c1"># 创建或返回具有给定名称的变量</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="o">&lt;</span><span class="n">scope_name</span><span class="o">&gt;</span><span class="p">)</span>  <span class="c1"># 管理传递给的名称的名称空间tf.get_variable()</span>
+</code></pre></div>
+<p>对上面的过滤模型进行修改，如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">conv_relu</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">,</span> <span class="n">kernel_shape</span><span class="p">,</span> <span class="n">bias_shape</span><span class="p">):</span>
+    <span class="c1"># Create variable named &quot;weights&quot;.</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">,</span> <span class="n">kernel_shape</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal_initializer</span><span class="p">())</span>
+    <span class="c1"># Create variable named &quot;biases&quot;.</span>
+    <span class="n">biases</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;biases&quot;</span><span class="p">,</span> <span class="n">bias_shape</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">conv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;SAME&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">conv</span> <span class="o">+</span> <span class="n">biases</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">my_image_filter</span><span class="p">(</span><span class="n">input_images</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;conv1&quot;</span><span class="p">):</span>
+        <span class="c1"># Variables created here will be named &quot;conv1/weights&quot;, &quot;conv1/biases&quot;.</span>
+        <span class="n">relu1</span> <span class="o">=</span> <span class="n">conv_relu</span><span class="p">(</span><span class="n">input_images</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="p">[</span><span class="mi">32</span><span class="p">])</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;conv2&quot;</span><span class="p">):</span>
+        <span class="c1"># Variables created here will be named &quot;conv2/weights&quot;, &quot;conv2/biases&quot;.</span>
+        <span class="k">return</span> <span class="n">conv_relu</span><span class="p">(</span><span class="n">relu1</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="p">[</span><span class="mi">32</span><span class="p">])</span>
+    
+<span class="n">result1</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image1</span><span class="p">)</span>
+<span class="n">result2</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image2</span><span class="p">)</span>
+</code></pre></div>
+<p>上面对模型应用到两个图片上面，会提示一个错误：<code>Raises ValueError(... conv1/weights already exists ...)</code>；在conv2中会引发错误，主要因为<code>tf.get_variable()</code>默认变量是不共享的，只是检查变量名，防止重复，因此在conv2中调用的时候，发现已经存在了变量。需要共享变量，必须指定某个变量域内进行共享变量：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;image_filters&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+    <span class="n">result1</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image1</span><span class="p">)</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">reuse_variables</span><span class="p">()</span>
+    <span class="n">result2</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image2</span><span class="p">)</span>
+</code></pre></div>
+<p>经过上面的修改，变量共享就已经完成了。不需要在函数外定义变量，只需要添加变量域，tensorflow就会自动帮我管理变量。代码也非常直观。</p>
+<h3 id="24-共享变量的方式">2.4 共享变量的方式</h3>
+<p>通过<code>tf.get_variable()</code>和``tf.variable_scope()<code>有两种方式来进行共享变量。第一种就是上述所示的，通过设置域下面的共享：</code>scope.reuse_variables()`；还有一种方式，如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;image_filters&quot;</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">AUTO_REUSE</span><span class="p">)</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+    <span class="n">result1</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image1</span><span class="p">)</span>
+    <span class="n">result2</span> <span class="o">=</span> <span class="n">my_image_filter</span><span class="p">(</span><span class="n">image2</span><span class="p">)</span>
+</code></pre></div>
+<p>这种方式会自动去共享变量，当系统检测到当期变量域下之前定义了一个重名的变量，那么该变量就共享，否则就创建新的变量。这是非常智能的写法。这种方式也解决了一个问题，比如部分模型，前半部分需要共享变量，后半部分不需要共享变量，可以通过这种方式来实现。</p>
+<h3 id="25-变量域variable_scope的工作机制">2.5 变量域（variable_scope）的工作机制</h3>
+<h4 id="251-get_variable的理解">2.5.1 get_variable的理解</h4>
+<p>首先，对<code>tf.get_variable()</code>进行理解，该方法的使用主要取决于调用的域的设置：<code>tf.get_variable_scope().reuse == False or tf.get_variable_scope().reuse == True</code>。当结果值 为False时，这是<code>tf.get_variable()</code>就会初始化一个变量，并且会判断这个变量在这个域下是否存在，如果存在就会引发<code>ValueError</code>，否则就会初始化一个变量出来：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;foo/v:0&quot;</span>
+</code></pre></div>
+<p>而如果 <code>tf.get_variable_scope().reuse == True</code>，那么 TensorFlow 会执行相反的动作，就是到程序里面寻找变量名为 <code>scope name + name</code> 的变量，如果变量不存在，会抛出 <code>ValueError</code> 异常，否则，就返回找到的变量：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">assert</span> <span class="n">v1</span> <span class="ow">is</span> <span class="n">v</span>
+</code></pre></div>
+<h4 id="252-variable_scope的基本使用">2.5.2 variable_scope的基本使用</h4>
+<p>变量域时可以嵌套使用的，嵌套后，变量名会以此加上变量域作为路径。如下代码：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;foo/bar/v:0&quot;</span>
+</code></pre></div>
+<p>我们也可以通过 <code>tf.get_variable_scope()</code> 来获得当前的变量域对象，并通过 <code>reuse_variables()</code> 方法来设置是否共享变量。不过，TensorFlow 并不支持将 <code>reuse</code> 值设为 <code>False</code>，如果你要停止共享变量，可以选择离开当前所在的变量域，或者再进入一个新的变量域（比如，再进入一个 <code>with</code> 语句，然后指定新的域名）。</p>
+<p>还需注意的一点是，一旦在一个变量域内将 <code>reuse</code> 设为 <code>True</code>，那么这个变量域的子变量域也会继承这个 <code>reuse</code> 值，自动开启共享变量：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;root&quot;</span><span class="p">):</span>
+    <span class="c1"># At start, the scope is not reusing.</span>
+    <span class="k">assert</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable_scope</span><span class="p">()</span><span class="o">.</span><span class="n">reuse</span> <span class="o">==</span> <span class="kc">False</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable_scope</span><span class="p">()</span><span class="o">.</span><span class="n">reuse</span> <span class="o">==</span> <span class="kc">False</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable_scope</span><span class="p">()</span><span class="o">.</span><span class="n">reuse</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable_scope</span><span class="p">()</span><span class="o">.</span><span class="n">reuse</span> <span class="o">==</span> <span class="kc">True</span>
+    <span class="k">assert</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable_scope</span><span class="p">()</span><span class="o">.</span><span class="n">reuse</span> <span class="o">==</span> <span class="kc">False</span>
+</code></pre></div>
+<p>变量域也可以 作为一个对象，这样方便使用变量域，跳出当前变量域等。如下面的代码所示：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">foo_scope</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="n">foo_scope</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;foo&quot;</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;baz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">other_scope</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">other_scope</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;bar/baz&quot;</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">foo_scope</span><span class="p">)</span> <span class="k">as</span> <span class="n">foo_scope2</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">foo_scope2</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;foo&quot;</span>  <span class="c1"># Not changed.</span>
+</code></pre></div>
+<h4 id="253-在变量域内初始化变量">2.5.3 在变量域内初始化变量</h4>
+<p>每次初始化变量时都要传入一个 <code>initializer</code>，这实在是麻烦，而如果使用变量域的话，就可以批量初始化参数了，如下代码所示：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span> <span class="o">==</span> <span class="mf">0.4</span>  <span class="c1"># Default initializer as set above.</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)):</span>
+    <span class="k">assert</span> <span class="n">w</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span> <span class="o">==</span> <span class="mf">0.3</span>  <span class="c1"># Specific initializer overrides the default.</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span> <span class="o">==</span> <span class="mf">0.4</span>  <span class="c1"># Inherited default initializer.</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;baz&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span> <span class="o">==</span> <span class="mf">0.2</span>  <span class="c1"># Changed default initializer.</span>
+</code></pre></div>
+<h2 id="3-最新的数据处理类datadataset">3. 最新的数据处理类—data.Dataset</h2>
+<p>这部分和1中对线程和队列的功能有些类似，但是这部分更多在数据输入部分，第一部分中的还有在其他方面使用。<code>Dataset</code>API是TensorFlow在版本1.3中引入的模块，1.4版本中已经作为一个核心的模块。主要服务于数据读取，构建数据的pipeline。前面说了可以通过队列和线程构建，但是整个过程还是比较繁琐，TensorFlow便可以通过这种方式来构建。主要支持从内存和硬盘读取数。</p>
+<h3 id="31-使用dataset的步骤">3.1 使用<code>Dataset</code>的步骤</h3>
+<p>在数据输入中用<code>Dataset</code>模块，需要三个步骤：</p>
+<ol>
+<li>导入数据，从一些数据来构建dataset，创建dataset对象， 可以通过<code>from_tensors</code>，<code>from_tensors_slice</code></li>
+<li>实例化，将dataset实例化为<strong>Iterator</strong>，下图中为dataset下几个实例的关系：</li>
+</ol>
+<p><img src="http://img.blog.csdn.net/20171114112942700" alt="Dataset API 下的类图" /></p>
+<ol start="3">
+<li>消费数据，在Iterator的基础上对数据进行消费，进行下一步的计算或训练</li>
+</ol>
+<h3 id="32-基本使用">3.2 基本使用</h3>
+<p>在最开始使用时可以只关注Dataset和Iterator这两个类，再进行逐步的扩展到其他类的使用。Dataset可以看作是相同类型“元素”的有序列表。在实际使用时，单个“元素”可以是向量，也可以是字符串、图片，甚至是tuple或者dict。</p>
+<p>在消费数据的时候，是通过get_next方法获取数据。不论通过什么方式创建数据集，在返回数据时都是返回一行或多行数据。下面的几个dataset就可以看出返回数据的规律。</p>
+<h4 id="321-from-numpy的数据">3.2.1 from numpy的数据</h4>
+<p>从numpy下的array读取数据到dataset：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>  <span class="c1"># 1.import data</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span>  <span class="c1"># 2.从dataset实例化一个iterator</span>
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>  <span class="c1"># 3.消费数据</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+<span class="c1"># ---------------------- output ----------------------</span>
+<span class="c1"># 每次返回一行数据, 共返回5次, 相当于5个样本，3个特征</span>
+</code></pre></div>
+<h4 id="322-从字典中创建dataset">3.2.2 从字典中创建dataset</h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span>  <span class="c1"># &quot;可以将key-a当做label的序列&quot;</span>
+        <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">],</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">]})</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span>  <span class="c1"># 从dataset实例化一个iterator</span>
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+
+<span class="c1"># ------------------ output -----------------------</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">4.18069729</span><span class="p">,</span> <span class="mf">3.36752717</span><span class="p">])}</span>  <span class="c1"># 每次会一个lable所对应的sample，共返回5次</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">7.37556694</span><span class="p">,</span> <span class="mf">1.79710602</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">1.76684338</span><span class="p">,</span> <span class="mf">0.48396737</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">6.21267904</span><span class="p">,</span> <span class="mf">5.28298128</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">8.36019678</span><span class="p">,</span> <span class="mf">2.08220728</span><span class="p">])}</span>
+</code></pre></div>
+<h4 id="323-从tuple中创建dataset">3.2.3 从tuple中创建dataset</h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+<span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span>  <span class="c1"># 从dataset实例化一个iterator</span>
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+<span class="c1"># ---------------------- output ------------------------</span>
+<span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">2.45236335</span><span class="p">,</span> <span class="mf">9.04392201</span><span class="p">]))</span>  <span class="c1"># 这个返回方式和字典类似</span>
+<span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">5.16675082</span><span class="p">,</span> <span class="mf">4.89549424</span><span class="p">]))</span>
+<span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">3.66104816</span><span class="p">,</span> <span class="mf">3.01531896</span><span class="p">]))</span>
+<span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">8.56580726</span><span class="p">,</span> <span class="mf">3.77034437</span><span class="p">]))</span>
+<span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">8.18391386</span><span class="p">,</span> <span class="mf">6.2216879</span> <span class="p">]))</span>
+</code></pre></div>
+<h4 id="324-从生成器创建dataset">3.2.4 从生成器创建dataset</h4>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">sequence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">2.3464</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">45.253</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mf">455.22</span><span class="p">]])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generator</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">el</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span><span class="o">.</span><span class="n">from_generator</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span>
+                                           <span class="n">output_types</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span>  <span class="c1"># 从dataset实例化一个iterator</span>
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+<span class="c1"># ---------------------- output ---------------------</span>
+<span class="p">[</span><span class="mf">1.</span>     <span class="mf">2.</span>     <span class="mf">2.3464</span><span class="p">]</span>  <span class="c1"># 这个返回方式和第一种方式类似</span>
+<span class="p">[</span> <span class="mf">2.</span>     <span class="mf">3.</span>    <span class="mf">45.253</span><span class="p">]</span>
+<span class="p">[</span>  <span class="mf">3.</span>     <span class="mf">4.</span>   <span class="mf">455.22</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="33-在dataset中进行数据处理">3.3 在dataset中进行数据处理</h3>
+<p>dataset中也可以对数据进行处理，变换等。主要有的方法：map，cache，shuffle，repeat，batch，prefetch，fileter，flat_map等。这些方法在处理数据时会经常用大。</p>
+<h4 id="331-map的使用">3.3.1 map的使用</h4>
+<p>dataset中的map和python的map用法一致，接受一个处理函数。再返回处理后的数据。map主要接收两个参数，它的的api是：<code>map(map_func, num_parallel_calls=None)</code>，第一参数为map函数，用来变换数据；第二个参数为并发数，一般为cpu的线程数。如：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+<span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="mi">10</span><span class="p">),</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># map的使用，线程数为4</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span> 
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>需要注意的是，dataset有<strong>map和apply</strong>两个方法，它们是有一定<strong>区别</strong>的，map是将map_function应用到每一个函数。而apply是将function应用到整个dataset。map的参数是一个element ，而apply的函数参数是dataset，apply可用的方法<a href="https://www.tensorflow.org/versions/master/api_guides/python/input_dataset#Transformations_on_existing_datasets">在这儿</a>。如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+<span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">map_and_batch</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="mi">100</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span> 
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="332-cache的使用">3.3.2 cache的使用</h4>
+<p>cache主要是将数据进行缓存，可以缓存到内存，也可以缓存到磁盘。默认为缓存到内存中。比较好理解，具体就不介绍了。</p>
+<h4 id="333-shuffle的使用">3.3.3 shuffle的使用</h4>
+<p>shuffle的功能为打乱dataset中的元素，它有一个参数buffersize，表示打乱时使用的buffer的大小，建议舍的不要太小，一般建议是dataset的size+1，即样本数+1。如下代码，输出的顺序被打乱了。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+<span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="mi">10</span><span class="p">),</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span>  <span class="c1"># 从dataset实例化一个iterator</span>
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+<span class="c1"># --------------------- output ------------------------</span>
+<span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">2.57439552</span><span class="p">,</span> <span class="mf">3.38879843</span><span class="p">]))</span>
+<span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">7.25460172</span><span class="p">,</span> <span class="mf">3.86126726</span><span class="p">]))</span>
+<span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">9.08901095</span><span class="p">,</span> <span class="mf">1.75219504</span><span class="p">]))</span>
+<span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">5.04888193</span><span class="p">,</span> <span class="mf">3.89428254</span><span class="p">]))</span>
+<span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">array</span><span class="p">([</span><span class="mf">9.78304135</span><span class="p">,</span> <span class="mf">3.44271984</span><span class="p">]))</span>
+</code></pre></div>
+<h4 id="334-repeat的使用">3.3.4 repeat的使用</h4>
+<p>repeat的功能就是将整个序列重复多次，主要用来处理机器学习中的epoch，假设原先的数据是一个epoch，使用repeat(2)就可以将之变成2个epoch：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span> 
+                                              <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">))})</span>
+ 
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># repeat</span>
+ 
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span>
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end!&quot;</span><span class="p">)</span>
+<span class="c1"># --------------------- output --------------------</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.13072499</span><span class="p">,</span> <span class="mf">0.81223459</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.67836451</span><span class="p">,</span> <span class="mf">0.02996121</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.17338524</span><span class="p">,</span> <span class="mf">0.73540362</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.57598212</span><span class="p">,</span> <span class="mf">0.11428893</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.55184749</span><span class="p">,</span> <span class="mf">0.8721738</span> <span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.13072499</span><span class="p">,</span> <span class="mf">0.81223459</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.67836451</span><span class="p">,</span> <span class="mf">0.02996121</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.17338524</span><span class="p">,</span> <span class="mf">0.73540362</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.57598212</span><span class="p">,</span> <span class="mf">0.11428893</span><span class="p">])}</span>
+<span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">0.55184749</span><span class="p">,</span> <span class="mf">0.8721738</span> <span class="p">])}</span>
+</code></pre></div>
+<h4 id="335-batch的使用">3.3.5 batch的使用</h4>
+<p>batch就是将多个样本组合成batch，如API所说，按照输入元素第一个维度进行组合成一个batch：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># batch的使用</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+<span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="mi">10</span><span class="p">),</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span>  <span class="c1"># 从dataset实例化一个iterator</span>
+<span class="n">one_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">one_element</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">tf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+<span class="c1"># ------------------------- output ------------------------</span>
+<span class="p">(</span><span class="n">array</span><span class="p">([</span><span class="mf">4.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">]),</span> 
+ <span class="n">array</span><span class="p">([[</span><span class="mf">6.32798625</span><span class="p">,</span> <span class="mf">3.34494733</span><span class="p">],</span>
+       <span class="p">[</span><span class="mf">8.6747479</span> <span class="p">,</span> <span class="mf">6.6041502</span> <span class="p">],</span>
+       <span class="p">[</span><span class="mf">2.96699653</span><span class="p">,</span> <span class="mf">9.73854298</span><span class="p">]]))</span>
+<span class="p">(</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">]),</span> 
+ <span class="n">array</span><span class="p">([[</span><span class="mf">4.75347977</span><span class="p">,</span> <span class="mf">5.51553647</span><span class="p">],</span>
+       <span class="p">[</span><span class="mf">4.12808918</span><span class="p">,</span> <span class="mf">6.81227941</span><span class="p">]]))</span>
+</code></pre></div>
+<p>这些操作都可以组合起来使用。如上面的例子，将map，shuffle，batch进行组合使用。</p>
+<h3 id="34-模拟读取文件并通过dataset进行处理">3.4 模拟读取文件并通过dataset进行处理</h3>
+<p>可以将第一部分中读取文件数据的例子近修改，通过dataset的方式进行处理。下面再dataset中存入的是每张图片的路径，后面通过map读取数据，并后续继续使用。具体代码如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">_parse_function</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="n">image_string</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">image_decoded</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_image</span><span class="p">(</span><span class="n">image_string</span><span class="p">)</span>
+    <span class="n">image_resized</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize_images</span><span class="p">(</span><span class="n">image_decoded</span><span class="p">,</span> <span class="p">[</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">image_resized</span><span class="p">,</span> <span class="n">label</span>
+ 
+<span class="n">filenames</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="s2">&quot;/var/data/image1.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;/var/data/image2.jpg&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">((</span><span class="n">filenames</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_parse_function</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffersize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="35-创建dataset的其他方法">3.5 创建dataset的其他方法</h3>
+<p>除了<code>tf.data.Dataset.from_tensor_slices</code>外，目前Dataset API还提供了另外三种创建Dataset的方式：</p>
+<ul>
+<li>tf.data.TextLineDataset()：这个函数的输入是一个文件的列表，输出是一个dataset。dataset中的每一个元素就对应了文件中的一行。可以使用这个函数来读入CSV文件。</li>
+<li>tf.data.FixedLengthRecordDataset()：这个函数的输入是一个文件的列表和一个record_bytes，之后dataset的每一个元素就是文件中固定字节数record_bytes的内容。通常用来读取以二进制形式保存的文件，如CIFAR10数据集就是这种形式。</li>
+<li>tf.data.TFRecordDataset()：顾名思义，这个函数是用来读TFRecord文件的，dataset中的每一个元素就是一个TFExample。</li>
+</ul>
+<h3 id="36-将dataset实例化为iterator的其他方法">3.6 将dataset实例化为iterator的其他方法</h3>
+<p>除了这种one shot iterator外，还有三个更复杂的Iterator，即：<code>initializable iterator, reinitializable iterator, feedable iterator</code>.</p>
+<h4 id="361-initializable-iterator实例化">3.6.1 initializable iterator实例化</h4>
+<p><code>initializable iterator</code>方法要在使用前通过<code>sess.run()</code>来初始化，使用initializable iterator，可以将placeholder代入Iterator中，实现更为灵活的数据载入，实际上占位符引入了dataset对象创建中，我们可以通过feed来控制数据集合的实际情况。示例代码如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">limit</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[])</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">))</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_initializable_iterator</span><span class="p">()</span>
+<span class="n">next_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+ 
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">iterator</span><span class="o">.</span><span class="n">initializer</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">limit</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+      <span class="n">value</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">next_element</span><span class="p">)</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="k">assert</span> <span class="n">i</span> <span class="o">==</span> <span class="n">value</span>
+<span class="c1"># output:0 1 2 3 4 5 6 7 8 9</span>
+</code></pre></div>
+<p><code>initializable iterator</code>还有一个功能：读入较大的数组。在使用<code>tf.data.Dataset.from_tensor_slices(array)</code>时，实际上发生的事情是将<code>array</code>作为一个<code>tf.constants</code>保存到了计算图中。当<code>array</code>很大时，会导致计算图变得很大，给传输、保存带来不便。这时，我们可以用一个<code>placeholder</code>取代这里的<code>array</code>，并使用<code>initializable iterator</code>，只在需要时将<code>array</code>传进去，这样就可以避免把大数组保存在图里，示例代码为（来自官方例程）：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;/var/data/training_data.npy&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data</span><span class="p">:</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+ 
+<span class="n">features_placeholder</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">labels_placeholder</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+ 
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">((</span><span class="n">features_placeholder</span><span class="p">,</span> <span class="n">labels_placeholder</span><span class="p">))</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">make_initializable_iterator</span><span class="p">()</span>
+<span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">iterator</span><span class="o">.</span><span class="n">initializer</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">features_placeholder</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels_placeholder</span><span class="p">:</span> <span class="n">labels</span><span class="p">})</span>
+</code></pre></div>
+<p>可见，在上面程序中，feed也遵循着类似字典一样的规则，创建两个占位符(keys)，给<code>data_holder</code>去feed数据文件，给<code>label_holder</code>去feed标签文件。</p>
+<h4 id="362-reinitializable-iterator实例化">3.6.2 reinitializable iterator实例化</h4>
+<p><code>reinitializable iterator</code>可以从多个不同的Dataset对象处初始化。例如，你可能有一个training input pipeline（它对输入图片做随机扰动来提高泛化能力）；以及一个validation input pipeline（它会在未修改过的数据上进行预测的评估）。这些pipeline通常使用不同的Dataset对象，但它们具有相同的结构（例如：对每个component相同的types和shapes）。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># Define training and validation datasets with the same structure.</span>
+<span class="n">training_dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">random_uniform</span><span class="p">([],</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+<span class="n">validation_dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+
+<span class="c1"># A reinitializable iterator is defined by its structure. We could use the</span>
+<span class="c1"># `output_types` and `output_shapes` properties of either `training_dataset`</span>
+<span class="c1"># or `validation_dataset` here, because they are compatible.</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Iterator</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">training_dataset</span><span class="o">.</span><span class="n">output_types</span><span class="p">,</span> <span class="n">training_dataset</span><span class="o">.</span><span class="n">output_shapes</span><span class="p">)</span>
+<span class="n">next_element</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+
+<span class="n">training_init_op</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">make_initializer</span><span class="p">(</span><span class="n">training_dataset</span><span class="p">)</span>
+<span class="n">validation_init_op</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">make_initializer</span><span class="p">(</span><span class="n">validation_dataset</span><span class="p">)</span>
+
+<span class="c1"># Run 20 epochs in which the training dataset is traversed, followed by the</span>
+<span class="c1"># validation dataset.</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+    <span class="c1"># Initialize an iterator over the training dataset.</span>
+    <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">training_init_op</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+        <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">next_element</span><span class="p">)</span>
+
+        <span class="c1"># Initialize an iterator over the validation dataset.</span>
+        <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">validation_init_op</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+            <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">next_element</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="37-refrence">3.7 Refrence</h3>
+<p>[1].<a href="http://d0evi1.com/tensorflow/datasets/">tensorflow中的dataset</a></p>
+<p>[2].<a href="https://towardsdatascience.com/how-to-use-dataset-in-tensorflow-c758ef9e4428">How to use Dataset in TensorFlow</a></p>
+<p>[3].<a href="https://www.cnblogs.com/hellcat/p/8569651.html">TensorFlow』数据读取类_data.Dataset</a></p>
+<h2 id="4collection">4.collection</h2>
+<p>TensorFlow中有一个集合叫collection，collection主要是提供tensorflow全局存储的机制，不会受到变量名空间的影响，在一个地方保存，任何地方可用。</p>
+<p>TensorFlow自身会维护一些自己的collection，如<code>tf.GraphKeys.SUMMARIES</code>，<code>ops.GraphKeys.QUEUE_RUNNERS</code>(<code>from tensorflow.python.framework import ops</code>)，<code>GLOBAL_VARIABLES</code>，<code>ops.GraphKyes.LOCAL_VARIABLES</code>等等。在使用TensorFlow的过程中也可以获取这些collection。</p>
+<h3 id="41-向collection中存入数据">4.1 向collection中存入数据</h3>
+<p>在编程过程中可以向collection存入数据，主要通过<code>add_to_collection</code>方法将数据加入collection中。该方法是<code>tf.add_to_collection(name, value)</code>。该方法``tf.add_to_collection<code> 的作用是将value以name的名称存储在收集器(</code>self._collections<code>)中。另外还可以同时将一个value增加到多个collection中，通过方法</code>tf.add_to_collections(names, value)`。</p>
+<h3 id="42-从collection中获取数据">4.2 从collection中获取数据</h3>
+<p>如果要从collection中获取数据，需要通过<code>tf.get_collection(name, scope=None)</code>来获取集合中的变量值。将返回一个list，list中的值都是之前存入的（如果name不存在，则返回一个空的list）。必须给定一个name参数，来指定获取collection下某个name下的值。scope参数用来过滤某个scope下的值。下面是一个完整的示例：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;const&quot;</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="s2">&quot;scope_y&quot;</span><span class="p">):</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;const&quot;</span><span class="p">)</span>
+
+<span class="n">x_</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">10</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">add_to_collection</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">x_</span><span class="p">)</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">add_to_collection</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># 向一个name增加多个值, 如果增加[x, x_], 那么输出的是[[x, x_]]</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">x_</span><span class="p">))</span>
+    <span class="c1"># tf.graph.add_to_collection(&quot;x&quot;, x_)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">&quot;scope_y&quot;</span><span class="p">)))</span>  <span class="c1"># 只返回这个scope下的值</span>
+</code></pre></div>
+<p>输出如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># --------------------------- x_ --------------------------------</span>
+<span class="p">[</span>
+<span class="mf">22.296236</span>  <span class="mf">89.52586</span>   <span class="mf">94.95532</span>   <span class="mf">82.79374</span>    <span class="mf">4.5324626</span> <span class="mf">99.39854</span>  <span class="mf">54.841103</span>  <span class="mf">50.33739</span>   <span class="mf">95.65411</span>  <span class="mf">95.163025</span> 
+<span class="p">]</span>
+<span class="c1"># ------------------------ collection ---------------------------</span>
+<span class="p">[</span>
+    <span class="n">array</span><span class="p">([</span><span class="mf">22.296236</span> <span class="p">,</span> <span class="mf">89.52586</span>  <span class="p">,</span> <span class="mf">94.95532</span>  <span class="p">,</span> <span class="mf">82.79374</span>  <span class="p">,</span>  <span class="mf">4.5324626</span><span class="p">,</span>
+       <span class="mf">99.39854</span>  <span class="p">,</span> <span class="mf">54.841103</span> <span class="p">,</span> <span class="mf">50.33739</span>  <span class="p">,</span> <span class="mf">95.65411</span>  <span class="p">,</span> <span class="mf">95.163025</span> <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">),</span> 
+	<span class="n">array</span><span class="p">([</span><span class="mf">2.2296236</span> <span class="p">,</span> <span class="mf">8.952586</span>  <span class="p">,</span> <span class="mf">9.495532</span>  <span class="p">,</span> <span class="mf">8.279374</span>  <span class="p">,</span> <span class="mf">0.45324627</span><span class="p">,</span>
+       <span class="mf">9.939854</span>  <span class="p">,</span> <span class="mf">5.4841104</span> <span class="p">,</span> <span class="mf">5.033739</span>  <span class="p">,</span> <span class="mf">9.565412</span>  <span class="p">,</span> <span class="mf">9.516302</span>  <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">),</span>
+    <span class="n">array</span><span class="p">([</span><span class="mf">19.762728</span><span class="p">,</span> <span class="mf">97.20074</span> <span class="p">,</span> <span class="mf">35.839146</span><span class="p">,</span> <span class="mf">82.53057</span> <span class="p">,</span> <span class="mf">63.590633</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="c1"># ----------------------- name is not exists ---------------------</span>
+<span class="p">[]</span>
+<span class="c1"># ----------------------- scope is used --------------------------</span>
+<span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mf">19.762728</span><span class="p">,</span> <span class="mf">97.20074</span> <span class="p">,</span> <span class="mf">35.839146</span><span class="p">,</span> <span class="mf">82.53057</span> <span class="p">,</span> <span class="mf">63.590633</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)]</span>
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

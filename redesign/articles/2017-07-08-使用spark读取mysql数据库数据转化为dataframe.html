@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>使用spark读取mysql数据库数据转化为dataframe · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>spark</h2><a href="2017-08-30-spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob%2Cstage%2Ctask%E8%A7%A3%E6%9E%90.html">spark中job运行过程详解和job,stage,task解析</a><a href="2017-07-24-spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html">spark中遇到的问题汇总</a><a href="2017-07-09-spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.html">spark中创建RDD的几种方式</a><a href="2017-07-08-%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe.html" aria-current="page">使用spark读取mysql数据库数据转化为dataframe</a><a href="2017-07-03-spark%E7%AE%97%E5%AD%90aggregate%2Cfold%2Clookup%E8%AF%A6%E8%A7%A3.html">spark算子aggregate,fold,lookup详解</a><a href="2017-07-03-%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC.html">用spark对时间数据进行分组求平均值</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-07-08-%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe.md" download="2017-07-08-使用spark读取mysql数据库数据转化为dataframe.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-07-08">2017-07-08</time></p>
+        <h1>使用spark读取mysql数据库数据转化为dataframe</h1>
+      </header>
+      <div class="prose" id="body"><p>使用<code>spark</code>中的接口连接<code>mysql</code>数据库并读取并查询出数据库中的数据并转化为<code>spark</code>中的<code>dataframe</code>格式的<code>RDD</code>。其中实现了两种方式查询数据，一种单表查询和另外一种的多表关联查询数据。其中使用的方式在下面代码的<code>main</code>函数中。<!--more--></p>
+<div class="code-block"><div class="code-toolbar"><span>java</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-java"><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.spark.SparkConf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.spark.SparkContext</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.spark.sql.SQLContext</span>
+
+<span class="kd">class</span> <span class="nf">sparkConnectMySQL</span><span class="p">(</span><span class="n">host</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="n">conf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SparkConf</span><span class="p">().</span><span class="na">setMaster</span><span class="p">(</span><span class="s">&quot;local&quot;</span><span class="p">).</span><span class="na">setAppName</span><span class="p">(</span><span class="s">&quot;connection&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="n">sc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SparkContext</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;3306&quot;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="n">database</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;situation&quot;</span>
+
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="nf">this</span><span class="p">(</span><span class="n">host</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">port</span><span class="p">:</span><span class="n">String</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">this</span><span class="p">(</span><span class="n">host</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">)</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">port</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="nf">this</span><span class="p">(</span><span class="n">host</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">port</span><span class="p">:</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">database</span><span class="p">:</span><span class="n">String</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">this</span><span class="p">(</span><span class="n">host</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">port</span><span class="p">:</span><span class="n">String</span><span class="p">)</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">database</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">database</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">assert</span><span class="p">(</span><span class="n">host</span><span class="p">.</span><span class="na">isInstanceOf</span><span class="o">[</span><span class="n">String</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;The host must be string type.&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">jdbcURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;jdbc:mysql://&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">host</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">port</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">database</span><span class="w">  </span><span class="c1">// ?user=root&amp;password=root123</span>
+<span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">sqlContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SQLContext</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="n">tableName</span><span class="p">:</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">sqlScript</span><span class="p">:</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">registerTable</span><span class="p">:</span><span class="n">String</span><span class="p">):</span><span class="w"> </span><span class="n">org</span><span class="p">.</span><span class="na">apache</span><span class="p">.</span><span class="na">spark</span><span class="p">.</span><span class="na">sql</span><span class="p">.</span><span class="na">DataFrame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/**</span>
+<span class="cm">          * THis method is query one table, default table name: temp, this is register temp table name.</span>
+<span class="cm">          * tableName =&gt; The table&#39;s truth name in database.</span>
+<span class="cm">          * sqlScript =&gt; mySQL script.</span>
+<span class="cm">          * registerTable =&gt; create temp table name.</span>
+<span class="cm">          */</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">execute</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqlContext</span><span class="p">.</span><span class="na">read</span><span class="p">.</span><span class="na">format</span><span class="p">(</span><span class="s">&quot;jdbc&quot;</span><span class="p">).</span><span class="na">options</span><span class="p">(</span><span class="n">Map</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">jdbcURL</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dbtable&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">tableName</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;user&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;password&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">password</span><span class="p">)).</span><span class="na">load</span><span class="p">()</span>
+<span class="w">    </span>
+<span class="w">        </span><span class="n">execute</span><span class="p">.</span><span class="na">registerTempTable</span><span class="p">(</span><span class="n">registerTable</span><span class="p">)</span>
+<span class="w">        </span><span class="n">execute</span><span class="p">.</span><span class="na">sqlContext</span><span class="p">.</span><span class="na">sql</span><span class="p">(</span><span class="n">sqlScript</span><span class="p">)</span><span class="w">  </span><span class="cm">/* return DataFrame type class */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="nf">queryMany</span><span class="p">(</span><span class="n">tableName</span><span class="p">:</span><span class="n">Array</span><span class="o">[</span><span class="n">String</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">sqlScript</span><span class="p">:</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">registerTable</span><span class="p">:</span><span class="n">Array</span><span class="o">[</span><span class="n">String</span><span class="o">]</span><span class="p">):</span><span class="w"> </span><span class="n">org</span><span class="p">.</span><span class="na">apache</span><span class="p">.</span><span class="na">spark</span><span class="p">.</span><span class="na">sql</span><span class="p">.</span><span class="na">DataFrame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/**</span>
+<span class="cm">          * THis method is query many table by join, default table name: temp, this is register temp table name.</span>
+<span class="cm">          * tableName&#39;s size as same as registerTable size.</span>
+<span class="cm">          * tableName =&gt; The table&#39;s truth name of array in database.</span>
+<span class="cm">          * sqlScript =&gt; mySQL script.</span>
+<span class="cm">          */</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">tableZipRegister</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tableName</span><span class="p">.</span><span class="na">zip</span><span class="p">(</span><span class="n">registerTable</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">temp</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tableZipRegister</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">execute</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqlContext</span><span class="p">.</span><span class="na">read</span><span class="p">.</span><span class="na">format</span><span class="p">(</span><span class="s">&quot;jdbc&quot;</span><span class="p">).</span><span class="na">options</span><span class="p">(</span><span class="n">Map</span><span class="p">(</span><span class="s">&quot;url&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">jdbcURL</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dbtable&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<span class="w">                </span><span class="s">&quot;user&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;password&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">password</span><span class="p">)).</span><span class="na">load</span><span class="p">()</span>
+<span class="w">            </span><span class="n">execute</span><span class="p">.</span><span class="na">registerTempTable</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">sqlContext</span><span class="p">.</span><span class="na">sql</span><span class="p">(</span><span class="n">sqlScript</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">object</span><span class="w"> </span><span class="n">sparkConnectTest</span><span class="p">{</span>
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">:</span><span class="w"> </span><span class="n">Array</span><span class="o">[</span><span class="n">String</span><span class="o">]</span><span class="p">):</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="o">=</span><span class="p">{</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">scm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">sparkConnectMySQL</span><span class="p">(</span><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;10.4.5.125&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;root&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;root123&quot;</span><span class="p">)</span>
+<span class="w">    </span>
+<span class="w">        </span><span class="c1">// use method example:</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">dataframe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scm</span><span class="p">.</span><span class="na">query</span><span class="p">(</span><span class="n">tableName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;BUG_ANALYZER_RESULT&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sqlScript</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;select * from TEMP1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">registerTable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;TEMP1&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scm</span><span class="p">.</span><span class="na">queryMany</span><span class="p">(</span><span class="n">tableName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Array</span><span class="p">(</span><span class="s">&quot;GUARD_VIRUS_SCAN&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;GUARD_VIRUS_SCAN&quot;</span><span class="p">),</span>
+<span class="w">                                  </span><span class="n">sqlScript</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;select a.scan_id,a.imei, b.app_name from temp1 a, temp2 b where a.scan_id = b.scan_id &quot;</span><span class="p">,</span>
+<span class="w">                                  </span><span class="n">registerTable</span><span class="o">=</span><span class="n">Array</span><span class="p">(</span><span class="s">&quot;temp1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;temp2&quot;</span><span class="p">))</span>
+<span class="w">    </span>
+<span class="w">        </span><span class="n">dataframe</span><span class="p">.</span><span class="na">collect</span><span class="p">().</span><span class="na">take</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="na">foreach</span><span class="p">(</span><span class="n">println</span><span class="p">)</span>
+<span class="w">        </span><span class="n">frame</span><span class="p">.</span><span class="na">collect</span><span class="p">().</span><span class="na">take</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="na">foreach</span><span class="p">(</span><span class="n">println</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

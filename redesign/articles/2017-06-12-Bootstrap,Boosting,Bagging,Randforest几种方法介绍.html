@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap,Boosting,Bagging,Randforest几种方法介绍 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>机器学习</h2><a href="2020-06-11-boosting%E7%B3%BB%E5%88%97%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之NGBoost算法详解</a><a href="2019-07-23-boosting%E7%B3%BB%E5%88%97%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之CatBoost算法详解</a><a href="2019-07-16-boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之LightGBM算法详解</a><a href="2019-06-25-%E5%9F%BA%E4%BA%8E%E8%BD%A8%E8%BF%B9%E7%9A%84%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93.html">基于轨迹的数据挖掘相关技术总结</a><a href="2018-11-24-KL%E6%95%A3%E5%BA%A6%2CJS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB.html">KL散度,JS散度和wasserstein距离</a><a href="2017-09-05-%E5%9F%BA%E4%BA%8EMLE%E7%9A%84logistic%E6%A8%A1%E5%9E%8B.html">基于MLE的logistic模型</a><a href="2017-08-15-%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98.html">利用scikit-learn来分析模型欠拟合和过拟合问题</a><a href="2017-08-13-%E5%AF%B9%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%80%83.html">对梯度下降算法的思考</a><a href="2017-07-26-%E4%BF%A1%E6%81%AF%E8%AE%BA%E4%B8%ADKL%E6%95%A3%E5%BA%A6%E8%AF%A6%E8%A7%A3.html">信息论中KL散度详解</a><a href="2017-07-14-%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95.html">最优化-梯度下降算法</a><a href="2017-07-06-%E7%89%B9%E5%BE%81%E5%8F%AF%E8%A7%86%E5%8C%96%E5%92%8C%E7%89%B9%E5%BE%81%E9%99%8D%E7%BB%B4%E7%AE%97%E6%B3%95T-SNE%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3.html">特征可视化和特征降维算法T-SNE模型详解</a><a href="2017-06-12-Bootstrap%2CBoosting%2CBagging%2CRandforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D.html" aria-current="page">Bootstrap,Boosting,Bagging,Randforest几种方法介绍</a><a href="2017-06-12-%E4%BF%A1%E6%81%AF%E5%A2%9E%E7%9B%8A%E7%AD%9B%E9%80%89%E5%8F%98%E9%87%8F%E5%92%8Cpython%E5%AE%9E%E7%8E%B0.html">信息增益筛选变量和python实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-06-12-Bootstrap%2CBoosting%2CBagging%2CRandforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D.md" download="2017-06-12-Bootstrap,Boosting,Bagging,Randforest几种方法介绍.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-06-12">2017-06-12</time></p>
+        <h1>Bootstrap,Boosting,Bagging,Randforest几种方法介绍</h1>
+      </header>
+      <div class="prose" id="body"><h3 id="bagging-boosting-random-forest和boosting算法介绍">bagging, boosting, random forest和boosting算法介绍</h3>
+<p>这两天在看关于<code>boosting</code>算法时，看到一篇不错的文章讲<code>bootstrap, jackknife, bagging, boosting, random forest</code>都有介绍，以下是搜索得到的原文，没找到博客作者的地址，在这里致谢作者的研究。 一并列出一些找到的介绍<code>boosting</code>算法的资源:</p>
+<ol>
+<li>视频讲义，介绍boosting算法，主要介绍<a href="http://videolectures.net/mlss05us_schapire_b/">AdaBoosing</a></li>
+<li>在这个网站的资源项里列出了对于boosting算法来源介绍的几篇文章，可以<a href="http://www.boosting.org/tutorials">下载</a></li>
+<li>一个博客介绍了许多视觉中常用算法，作者的实验和理解，这里附录的链接是关于使用<a href="http://www.cnblogs.com/tornadomeet/archive/2012/03/28/2420936.html">opencv进行人脸检测</a>的过程和代码，可以帮助理解训练过程是如何完成的</li>
+<li>这里是一个台湾的电子期刊上关于<a href="http://140.113.87.114/cvrc/edm/vol_6/tech1.htm">AdaBoost的介绍</a> --- <code>Jackknife，Bootstraping, bagging, boosting, AdaBoosting, Rand forest</code> 和 <code>gradient boosting</code>这些术语，我经常搞混淆，现在把它们放在一起，以示区别。(部分文字来自网络，由于是之前记的笔记，忘记来源了，特此向作者抱歉）</li>
+</ol>
+<p><code>Bootstraping</code>: 名字来自成语<code>pull up by your own bootstraps</code>，意思是依靠你自己的资源，称为自助法，它是一种有放回的抽样方法，它是非参数统计中一种重要的估计统计量方差进而进行区间估计的统计方法。其核心思想和基本步骤如下：</p>
+<ol>
+<li>采用重抽样技术从原始样本中抽取一定数量（自己给定）的样本，此过程允许重复抽样。</li>
+<li>根据抽出的样本计算给定的统计量T。</li>
+<li>重复上述N次（一般大于1000），得到N个统计量T。</li>
+<li>计算上述N个统计量T的样本方差，得到统计量的方差。</li>
+</ol>
+<p>应该说Bootstrap是现代统计学较为流行的一种统计方法，在小样本时效果很好。通过方差的估计可以构造置信区间等，其运用范围得到进一步延伸。Jackknife： 和上面要介绍的Bootstrap功能类似，只是有一点细节不一样，即每次从样本中抽样时候只是去除几个样本（而不是抽样），就像小刀一样割去一部分。</p>
+<!--more-->
+<h3 id="下列方法都是上述bootstraping思想的一种应用">下列方法都是上述Bootstraping思想的一种应用。</h3>
+<h4 id="bagging算法">bagging算法</h4>
+<p><code>bagging：bootstrap aggregating</code>的缩写。让该学习算法训练多轮，每轮的训练集由从初始的训练集中随机取出的n个训练样本组成，某个初始训练样本在某轮训练集中可以出现多次或根本不出现，训练之后可得到一个预测函数序列<code>h_1，⋯ ⋯h_n</code> ，最终的预测函数H对分类问题采用投票方式，对回归问题采用简单平均方法对新示例进行判别。
+训练R个分类器<code>f_i</code>，分类器之间其他相同就是参数不同。其中<code>f_i</code>是通过从训练集合中(N篇文档)随机取(取后放回)N次文档构成的训练集合训练得到的。对于新文档d，用这R个分类器去分类，得到的最多的那个类别作为d的最终类别。</p>
+<h4 id="boosting算法">boosting算法</h4>
+<p>boosting: 其中主要的是<code>AdaBoost(Adaptive Boosting)</code>。初始化时对每一个训练例赋相等的权重<code>1／n</code>，然后用该学算法对训练集训练t轮，每次训练后，对训练失败的训练例赋以较大的权重，也就是让学习算法在后续的学习中集中对比较难的训练例进行学习，从而得到一个预测函数序列<code>h_1,⋯, h_m </code>, 其中<code>h_i</code>也有一定的权重，预测效果好的预测函数权重较大，反之较小。最终的预测函数H对分类问题采用有权重的投票方式，对回归问题采用加权平均的方法对新示例进行判别。（类似<code>Bagging</code>方法，但是训练是串行进行的，第k个分类器训练时关注对前<code>k-1</code>分类器中错分的文档，即不是随机取，而是加大取这些文档的概率。)</p>
+<h4 id="boosting和bagging的区别">boosting和bagging的区别</h4>
+<p><code>Bagging</code>与<code>Boosting</code>的区别：二者的主要区别是取样方式不同。<code>Bagging</code>采用均匀取样，而<code>Boosting</code>根据错误率来取样，因此<code>Boosting</code>的分类精度要优于<code>Bagging</code>。<code>Bagging</code>的训练集的选择是随机的，各轮训练集之间相互独立，而<code>Boostlng</code>的各轮训练集的选择与前面各轮的学习结果有关；<code>Bagging</code>的各个预测函数没有权重，而<code>Boosting</code>是有权重的；<code>Bagging</code>的各个预测函数可以并行生成，而<code>Boosting</code>的各个预测函数只能顺序生成。对于象神经网络这样极为耗时的学习方法。<code>Bagging</code>可通过并行训练节省大量时间开销。<code>bagging</code>和<code>boosting</code>都可以有效地提高分类的准确性。在大多数数据集中，<code>boosting</code>的准确性比<code>bagging</code>高。在有些数据集中，<code>boosting</code>会引起退化。</p>
+<p><code>Boosting</code>思想的一种改进型<code>AdaBoost</code>方法在邮件过滤、文本分类方面都有很好的性能。 <code>gradient boosting</code>（又叫Mart, Treenet)：<code>Boosting</code>是一种思想，<code>Gradient Boosting</code>是一种实现<code>Boosting</code>的方法，它主要的思想是，每一次建立模型是在之前建立模型损失函数的梯度下降方向。损失函数(<code>loss function</code>)描述的是模型的不靠谱程度，损失函数越大，则说明模型越容易出错。如果我们的模型能够让损失函数持续的下降，则说明我们的模型在不停的改进，而最好的方式就是让损失函数在其梯度(<code>Gradient</code>)的方向上下降。</p>
+<h4 id="randomforest算法">RandomForest算法</h4>
+<p><code>Rand forest</code>： 随机森林，顾名思义，是用随机的方式建立一个森林，森林里面有很多的决策树组成，随机森林的每一棵决策树之间是没有关联的。在得到森林之后，当有一个新的输入样本进入的时候，就让森林中的每一棵决策树分别进行一下判断，看看这个样本应该属于哪一类（对于分类算法），然后看看哪一类被选择最多，就预测这个样本为那一类。 在建立每一棵决策树的过程中，有两点需要注意 – 采样与完全分裂。首先是两个随机采样的过程，<code>random forest</code>对输入的数据要进行行、列的采样。对于行采样，采用有放回的方式，也就是在采样得到的样本集合中，可能有重复的样本。假设输入样本为N个，那么采样的样本也为N个。这样使得在训练的时候，每一棵树的输入样本都不是全部的样本，使得相对不容易出现over-fitting。然后进行列采样，从M个<code>feature</code>中，选择m个<code>(m &lt;&lt; M)</code>。之后就是对采样之后的数据使用完全分裂的方式建立出决策树，这样决策树的某一个叶子节点要么是无法继续分裂的，要么里面的所有样本的都是指向的同一个分类。一般很多的决策树算法都一个重要的步骤 – 剪枝，但是这里不这样干，由于之前的两个随机采样的过程保证了随机性，所以就算不剪枝，也不会出现<code>over-fitting</code>。 按这种算法得到的随机森林中的每一棵都是很弱的，但是大家组合起来就很厉害了。可以这样比喻随机森林算法：每一棵决策树就是一个精通于某一个窄领域的专家（因为我们从M个<code>feature</code>中选择m让每一棵决策树进行学习），这样在随机森林中就有了很多个精通不同领域的专家，对一个新的问题（新的输入数据），可以用不同的角度去看待它，最终由各个专家，投票得到结果。</p>
+<p><code>Rand forest</code>与<code>bagging</code>的区别：</p>
+<ol>
+<li><code>Rand forest</code>是选与输入样本的数目相同多的次数（可能一个样本会被选取多次，同时也会造成一些样本不会被选取到），而<code>bagging</code>一般选取比输入样本的数目少的样本；</li>
+<li><code>bagging</code>是用全部特征来得到分类器，而<code>rand forest</code>是需要从全部特征中选取其中的一部分来训练得到分类器； 一般<code>Rand forest</code>效果比<code>bagging</code>效果好！</li>
+</ol>
+<p><code>bootstrps bagging boosting</code>这几个概念经常用到，现仔细学习了一下：他们都属于集成学习方法，(如：<code>Bagging，Boosting，Stacking</code>)，将训练的学习器集成在一起,原理来源于PAC学习模型（<code>ProbablyApproximately CorrectK</code>）。Kearns和Valiant指出，在PAC学习模型中，若存在一个多项式级的学习算法来识别一组概念，并且识别正确率很高，那么这组概念是强可学习的；而如果学习算法识别一组概念的正确率仅比随机猜测略好，那么这组概念是弱可学习的。他们提出了弱学习算法与强学习算法的等价性问题，即是否可以将弱学习算法提升成强学习算法。如果两者等价，那么在学习概念时，只要找到一个比随机猜测略好的弱学习算法，就可以将其提升为强学习算法，而不必直接去找通常情况下很难获得的强学习算法。</p>
+<p>文本分类中使用的投票方法（<code>Voting</code>，也叫组合分类器）就是一种典型的集成机器学习方法。它通过组合多个弱分类器来得到一个强分类器，包括<code>Bagging</code>和<code>Boosting</code>两种方式，二者的主要区别是取样方式不同。<code>Bagging</code>采用均匀取样，而<code>Boosting</code>根据错误率来取样，因此<code>Boosting</code>的分类精度要优于<code>Bagging</code>。投票分类方法虽然分类精度较高，但训练时间较长。<code>Boostin</code>g思想的一种改进型<code>AdaBoost</code>方法在邮件过滤、文本分类方面都有很好的性能。</p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

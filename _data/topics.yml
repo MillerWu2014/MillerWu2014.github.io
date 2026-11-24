@@ -1,10 +1,11 @@
-# Topic hubs: sidebar tab + mermaid graph + ordered article list.
+# Topic hubs. Sidebar only shows 专题; each hub is a page, not a tab.
 # Files still live under _posts/<Topic>/; navigation uses categories, not folders.
 
 agent:
   title: Agent
+  url: /agent/
   category: Agent
-  # Titles must match post front matter exactly.
+  blurb: 白皮书、架构、Memory、Skills、CrewAI 与必读研究。
   reading_order:
     - "AI Agent（智能体）技术白皮书（Google，2024）"
     - "LLMs的Agent架构"
@@ -16,3 +17,17 @@ agent:
     - "crewAI框架下关键的策略和模式设计"
     - "AI Agents 初學者課程"
     - "必读的Agent相关研究"
+
+llm-architecture:
+  title: LLM架构
+  url: /llm-architecture/
+  category: LLM架构
+  blurb: Attention、Transformer、模型结构与推理系统。
+  reading_order: []
+
+post-training:
+  title: Post-training
+  url: /post-training/
+  category: Post-training
+  blurb: SFT、对齐、RLHF / 偏好优化与评测。
+  reading_order: []

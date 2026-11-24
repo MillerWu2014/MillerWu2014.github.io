@@ -145,9 +145,11 @@ image:
 
 ## 6. 专题落地页 + 图谱
 
-产品形态：侧栏 Tab 落地页（图谱 + 可点标题列表），不是独立文档站。
+产品形态：侧栏只有 **专题** 入口；各主题是独立落地页（图谱 + 可点标题列表），不是独立文档站。
 
-- 落地页：`_tabs/<topic>.md`，`layout` 默认 `page`，permalink 为 `/<文件名>/`（如 `/agent/`）。
+- 侧栏 Tab：`_tabs/topics.md`，地址 `/topics/`。
+- 主题落地页：`topics/<slug>.md`（不要放进 `_tabs/`，否则会再占一条侧栏）。permalink 为 `/agent/`、`/llm-architecture/`、`/post-training/`。
+- 文章还没有时，落地页显示空列表即可，不必硬加图谱。
 - 必须加 `mermaid: true`，否则图谱不渲染。
 - 图谱用 Mermaid `flowchart` 表示阅读路径；节点本身不挂链接（避免 html-proofer / mermaid click 配置问题）。文章入口是下方标题列表。
 - 列表：落地页里 include `_includes/topic-post-list.html`，传入 `topic` 键；数据在 `_data/topics.yml`。

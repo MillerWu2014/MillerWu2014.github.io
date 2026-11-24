@@ -53,6 +53,36 @@
   color: var(--text-muted-color);
 }
 
+.topic-hub-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.topic-hub {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--main-border-color);
+  border-radius: 6px;
+  text-decoration: none !important;
+}
+
+.topic-hub:hover {
+  background: var(--main-bg);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.04);
+}
+
+.topic-hub strong {
+  color: var(--heading-color);
+}
+
+.topic-hub span {
+  color: var(--text-muted-color);
+  font-size: 0.875rem;
+}
+
+
 /* Home page: keep Chirpy's post list and pagination, and restyle their presentation. */
 #post-list {
   --home-accent: #147d79;

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CrewAI的相关概念和框架 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>Agent</h2><a href="2025-07-27-%E5%BF%85%E8%AF%BB%E7%9A%84Agent%E7%9B%B8%E5%85%B3%E7%A0%94%E7%A9%B6.html">必读的Agent相关研究</a><a href="2025-07-17-AI-Agents-%E5%88%9D%E5%AD%B8%E8%80%85%E8%AA%B2%E7%A8%8B.html">AI Agents 初學者課程</a><a href="2025-07-08-crewAI%E6%A1%86%E6%9E%B6%E4%B8%8B%E5%85%B3%E9%94%AE%E7%9A%84%E7%AD%96%E7%95%A5%E5%92%8C%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1.html">crewAI框架下关键的策略和模式设计</a><a href="2025-07-01-CrewAI%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%E5%92%8C%E6%A1%86%E6%9E%B6.html" aria-current="page">CrewAI的相关概念和框架</a><a href="2025-06-28-%E9%AB%98%E6%89%8B%E9%83%BD%E5%9C%A8%E7%94%A8%E7%9A%84-Skill-2.0-%E6%9E%B6%E6%9E%84%E6%8C%87%E5%8D%97%E9%99%84%E5%AE%8C%E6%95%B4%E6%AD%A5%E9%AA%A4.html">高手都在用的 Skill 2.0 架构指南（附完整步骤）</a><a href="2025-06-20-Agent%E7%9A%84Skills%E8%A7%84%E8%8C%83%E5%8E%9F%E7%90%86%E5%8F%8A%E5%BA%94%E7%94%A8.html">Agent的Skills规范原理及应用</a><a href="2025-06-16-%E8%AE%B0%E5%BF%86Memory%E6%A8%A1%E5%9D%97%E7%9A%84%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90.html">记忆(Memory)模块的深度解析</a><a href="2025-06-13-Agent%E5%8E%9F%E7%90%86%E3%80%81%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5.html">Agent：原理、架构与工程实践</a><a href="2025-06-06-LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84.html">LLMs的Agent架构</a><a href="2025-06-01-AI-Agent%E6%99%BA%E8%83%BD%E4%BD%93%E6%8A%80%E6%9C%AF%E7%99%BD%E7%9A%AE%E4%B9%A6Google%EF%BC%8C2024.html">AI Agent（智能体）技术白皮书（Google，2024）</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2025-07-01-CrewAI%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%E5%92%8C%E6%A1%86%E6%9E%B6.md" download="2025-07-01-CrewAI的相关概念和框架.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2025-07-01">2025-07-01</time></p>
+        <h1>CrewAI的相关概念和框架</h1>
+      </header>
+      <div class="prose" id="body"><p>CrewAI是一个基于Python的、非常精简、非常快速的AI-Agent构建框架，与其他的智能体框架（如AutoGen, LangGraph等）完成独立。CrewAI赋予开发者高级别的简单性和精确的低级别控制，非常适合创建适用于任何场景的自主 AI 代理，主要包含了两种场景：</p>
+<!--more-->
+<ol>
+<li>**<a href="https://docs.crewai.com/en/guides/crews/first-crew">CrewAI Crews</a>：**自主优化和智能协作的团队型智能体，能够创建每个代理具有特定角色、工具和目标的 AI 团队。</li>
+<li>Flows：实现粒度化、事件驱动的控制，通过单个LLM调用进行精确的任务编排，并原生支持Crews。</li>
+</ol>
+<h2 id="crews团队协作型">Crews(团队协作型)</h2>
+<p>不同的Agent具有不同的分工和任务，逐个任务的实现，最终实现整个目标的实现。整体结构如下图所示：</p>
+<p><img src="../assets/img/posts/CrewAI%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%E5%92%8C%E6%A1%86%E6%9E%B6/Image.png" alt="Image.png" /></p>
+<p>整个框架主要包含了如下几个组件：Crew，Agents，Process，Tasks等。不同组件的主要功能说明如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th><strong>组件</strong></th>
+<th><strong>描述</strong></th>
+<th><strong>主要功能</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Crew</strong></td>
+<td>最高层级的组织，Crew 组织整体运营</td>
+<td>- 管理 AI 代理团队  <br/>- 监督工作流程  <br/>- 确保协作  <br/>- 完成成果</td>
+</tr>
+<tr>
+<td><strong>AI Agents</strong></td>
+<td>专业团队成员AI 代理，处理其专业任务</td>
+<td>- 具有特定角色（研究员、作家）  <br/>- 使用指定工具  <br/>- 可以分配任务  <br/>- 可以自主决策</td>
+</tr>
+<tr>
+<td><strong>Process</strong></td>
+<td>工作流管理系统，流程确保顺畅协作</td>
+<td>- 定义协作模式  <br/>- 控制任务分配  <br/>- 管理交互  <br/>- 确保高效执行</td>
+</tr>
+<tr>
+<td><strong>Tasks</strong></td>
+<td>个人分配，完成任务以实现目标</td>
+<td>- 具有明确目标  <br/>- 使用具体工具  <br/>- 输入到更大的流程中  <br/>- 产出可执行的结果</td>
+</tr>
+</tbody>
+</table>
+<h2 id="flows流程型">Flows(流程型)</h2>
+<p>Flows提供结构化的自动化，为工作流执行提供精细控制。Flows确保任务可靠、安全、高效地执行，精确处理条件逻辑、循环和动态状态管理。Flows与Crews可无缝集成，使开发者能够在高度自主与严格控制之间取得平衡。其结构下图所示：</p>
+<p><img src="../assets/img/posts/CrewAI%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%E5%92%8C%E6%A1%86%E6%9E%B6/Image_2.png" alt="Image.png" /></p>
+<p>流程型框架主要组件包括Flow，Events，States和Support。具体的描述和具体的功能如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th><strong>组件</strong></th>
+<th><strong>描述</strong></th>
+<th><strong>主要功能</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Flow</strong></td>
+<td>结构化工作流编排</td>
+<td>- 管理执行路径  <br/>- 处理状态转换  <br/>- 控制任务排序  <br/>- 确保可靠执行</td>
+</tr>
+<tr>
+<td><strong>Events</strong></td>
+<td>工作流操作的触发器</td>
+<td>- 启动特定流程  <br/>- 支持动态响应  <br/>- 实现条件分支  <br/>- 允许实时适应</td>
+</tr>
+<tr>
+<td><strong>States</strong></td>
+<td>工作流执行上下文</td>
+<td>- 维护执行数据  <br/>- 实现持久化  <br/>- 支持可恢复性  <br/>- 确保执行完整性</td>
+</tr>
+<tr>
+<td><strong>Crew Support</strong></td>
+<td>增强工作流程自动化</td>
+<td>- 在需要时注入一定的自主性  <br/>- 适用于结构化工作流程  <br/>- 平衡自动化与智能化  <br/>- 支持自适应决策</td>
+</tr>
+</tbody>
+</table>
+<h2 id="如何选择crews团队协作型和flows流程型">如何选择Crews(团队协作型)和Flows(流程型)</h2>
+<ul>
+<li>Crews: 当需要自主解决问题、创意协作或探索性任务时；</li>
+<li>Flows：需要确定性结果、可审计性或对执行的精确控制；</li>
+<li>结合：您的应用程序需要结构化流程和自主智能的局部区域。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>用例</strong></th>
+<th><strong>推荐方法</strong></th>
+<th><strong>原因</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>开放式研究</strong></td>
+<td><a href="https://docs.crewai.com/en/guides/crews/first-crew">Crews</a></td>
+<td>当任务需要创造性思维、探索和适应</td>
+</tr>
+<tr>
+<td><strong>内容生成</strong></td>
+<td><a href="https://docs.crewai.com/en/guides/crews/first-crew">Crews</a></td>
+<td>用于协作创作文章、报告或营销材料</td>
+</tr>
+<tr>
+<td><strong>决策工作流</strong></td>
+<td><a href="https://docs.crewai.com/en/guides/flows/first-flow">Flows</a></td>
+<td>需要可预测、可审计的决策路径和精确控制时</td>
+</tr>
+<tr>
+<td><strong>API 编排</strong></td>
+<td><a href="https://docs.crewai.com/en/guides/flows/first-flow">Flows</a></td>
+<td>为在特定顺序中与多个外部服务进行可靠集成</td>
+</tr>
+<tr>
+<td><strong>混合应用</strong></td>
+<td>组合方法</td>
+<td>使用流程来协调整体流程，由团队处理复杂的子任务</td>
+</tr>
+</tbody>
+</table>
+<h2 id="crew提供的tools">crew提供的tools</h2>
+<p>CrewAI提供了40多种工具，涵盖多个类别。主要包括：</p>
+<p><strong>文件与文档工具</strong>：FileReadTool、FileWriteTool、PDFSearchTool、DOCXSearchTool、JSONSearchTool、CSVSearchTool、XMLSearchTool、DirectoryReadTool等</p>
+<p><strong>搜索与研究工具</strong>：SerperDevTool（Google搜索）、BraveSearchTool、EXASearchTool、GithubSearchTool、WebsiteSearchTool、YoutubeChannelSearchTool、TavilySearchTool等</p>
+<p><strong>网页抓取工具</strong>：ScrapeWebsiteTool、FirecrawlScrapeWebsiteTool、SerperScrapeWebsiteTool等</p>
+<p><strong>AI与机器学习工具</strong>：DALL-E Tool、Vision Tool、CodeInterpreterTool、RagTool、LlamaIndexTool等</p>
+<p><strong>数据库工具</strong>：PGSearchTool（PostgreSQL），NL2SQLTool，MySQLSearchTool等</p>
+<p><strong>自动化工具</strong>：ApifyActorsTool、ComposioTool、MultiOnTool等</p>
+<h2 id="对agent的观测">对Agent的观测</h2>
+<p><strong>Langfuse</strong>： Langfuse 是一个开源的 LLM 工程平台。它为 LLM 应用提供追踪和监控功能，帮助开发者调试、分析和优化他们的 AI 系统。Langfuse 通过原生集成、OpenTelemetry 以及 API/SDK 与各种工具和框架进行集成。</p>
+<h3 id="准备postgres">准备postgres</h3>
+<div class="code-block"><div class="code-toolbar"><span>bash</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-bash">psql<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>-h<span class="w"> </span>your-postgres-host
+
+CREATE<span class="w"> </span>DATABASE<span class="w"> </span>langfuse<span class="p">;</span><span class="w">  </span>--创建数据库
+
+--<span class="w"> </span>创建专用用户（可选，推荐）
+CREATE<span class="w"> </span>USER<span class="w"> </span>langfuse_user<span class="w"> </span>WITH<span class="w"> </span>ENCRYPTED<span class="w"> </span>PASSWORD<span class="w"> </span><span class="s1">&#39;123456&#39;</span><span class="p">;</span>
+GRANT<span class="w"> </span>ALL<span class="w"> </span>PRIVILEGES<span class="w"> </span>ON<span class="w"> </span>DATABASE<span class="w"> </span>langfuse<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+
+<span class="c1"># 使用langfuse2, langfuse3依赖postgres和clickhouse(最新版本是langfuse3)</span>
+docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span>langfuse<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span><span class="m">3000</span>:3000<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://langfuse_user:123456@192.168.102.160:8432/langfuse&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">NEXTAUTH_URL</span><span class="o">=</span><span class="s2">&quot;http://localhost:3000&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">NEXTAUTH_SECRET</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">32</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">SALT</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">32</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--restart<span class="w"> </span>unless-stopped<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>langfuse/langfuse:2.78.0
+</code></pre></div>
+<h3 id="数据库授权">数据库授权</h3>
+<div class="code-block"><div class="code-toolbar"><span>bash</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-bash"><span class="c1"># 以 postgres 超级用户身份连接</span>
+psql<span class="w"> </span>-h<span class="w"> </span><span class="m">192</span>.168.102.160<span class="w"> </span>-p<span class="w"> </span><span class="m">8432</span><span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>-d<span class="w"> </span>langfuse
+
+--<span class="w"> </span><span class="m">1</span>.<span class="w"> </span>授予用户创建对象的权限
+ALTER<span class="w"> </span>USER<span class="w"> </span>langfuse_user<span class="w"> </span>CREATEDB<span class="p">;</span>
+
+--<span class="w"> </span><span class="m">2</span>.<span class="w"> </span>设置数据库所有者
+ALTER<span class="w"> </span>DATABASE<span class="w"> </span>langfuse<span class="w"> </span>OWNER<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+
+--<span class="w"> </span><span class="m">3</span>.<span class="w"> </span>授予<span class="w"> </span>schema<span class="w"> </span>权限
+GRANT<span class="w"> </span>ALL<span class="w"> </span>ON<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+ALTER<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>OWNER<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+
+--<span class="w"> </span><span class="m">4</span>.<span class="w"> </span>授予现有对象的权限
+GRANT<span class="w"> </span>ALL<span class="w"> </span>PRIVILEGES<span class="w"> </span>ON<span class="w"> </span>ALL<span class="w"> </span>TABLES<span class="w"> </span>IN<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+GRANT<span class="w"> </span>ALL<span class="w"> </span>PRIVILEGES<span class="w"> </span>ON<span class="w"> </span>ALL<span class="w"> </span>SEQUENCES<span class="w"> </span>IN<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+GRANT<span class="w"> </span>ALL<span class="w"> </span>PRIVILEGES<span class="w"> </span>ON<span class="w"> </span>ALL<span class="w"> </span>FUNCTIONS<span class="w"> </span>IN<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+
+--<span class="w"> </span><span class="m">5</span>.<span class="w"> </span>设置未来创建对象的默认权限
+ALTER<span class="w"> </span>DEFAULT<span class="w"> </span>PRIVILEGES<span class="w"> </span>IN<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>GRANT<span class="w"> </span>ALL<span class="w"> </span>ON<span class="w"> </span>TABLES<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+ALTER<span class="w"> </span>DEFAULT<span class="w"> </span>PRIVILEGES<span class="w"> </span>IN<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>GRANT<span class="w"> </span>ALL<span class="w"> </span>ON<span class="w"> </span>SEQUENCES<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+ALTER<span class="w"> </span>DEFAULT<span class="w"> </span>PRIVILEGES<span class="w"> </span>IN<span class="w"> </span>SCHEMA<span class="w"> </span>public<span class="w"> </span>GRANT<span class="w"> </span>ALL<span class="w"> </span>ON<span class="w"> </span>FUNCTIONS<span class="w"> </span>TO<span class="w"> </span>langfuse_user<span class="p">;</span>
+
+--<span class="w"> </span><span class="m">6</span>.<span class="w"> </span>确保<span class="w"> </span>uuid-ossp<span class="w"> </span>扩展存在
+CREATE<span class="w"> </span>EXTENSION<span class="w"> </span>IF<span class="w"> </span>NOT<span class="w"> </span>EXISTS<span class="w"> </span><span class="s2">&quot;uuid-ossp&quot;</span><span class="p">;</span>
+
+--<span class="w"> </span><span class="m">7</span>.<span class="w"> </span>验证权限设置
+<span class="se">\d</span>u<span class="w"> </span>langfuse_user
+</code></pre></div>
+<p>即可访问<a href="http://192.168.101.231:3000/">http://host:3000/</a>，并通过注册来访问</p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

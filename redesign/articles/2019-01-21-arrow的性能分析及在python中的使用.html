@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>arrow的性能分析及在python中的使用 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>Python</h2><a href="2020-04-29-Python3%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0%E6%96%B9%E6%B3%95%E5%AE%9E%E7%8E%B0%E8%8C%83%E5%9E%8B.html">Python3中的函数(方法)实现范型</a><a href="2019-06-25-Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%9A%84%E6%8E%A2%E7%B4%A2.html">Python中实现多线程(真正的)的探索</a><a href="2019-04-09-python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3.html">python中的元类编程详解</a><a href="2019-04-018-python%E4%B8%8B%E7%9A%84cc%2B%2B%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3.html">python下的c/c++扩展方式详解</a><a href="2019-01-21-arrow%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%8F%8A%E5%9C%A8python%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8.html" aria-current="page">arrow的性能分析及在python中的使用</a><a href="2018-04-14-python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F.html">python科学计算加速</a><a href="2017-10-13-%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C.html">使用python连接hive数据库并进行数据操作</a><a href="2017-10-10-%E5%AF%B9pyc%E5%92%8Cpyo%E6%96%87%E4%BB%B6%E7%9A%84%E7%90%86%E8%A7%A3.html">对pyc和pyo文件的理解</a><a href="2017-07-20-abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8.html">abc中的元类和six模块配合使用</a><a href="2017-07-09-docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83.html">docker部署anaconda开发环境</a><a href="2017-07-09-jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html">jupyter-notebook远程登陆配置以及spark多语言环境配置</a><a href="2017-07-09-numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C.html">numba加速python程序运行</a><a href="2017-06-06-nohup%E5%91%BD%E4%BB%A4%E5%8F%8A%E5%85%B6%E8%BE%93%E5%87%BA%E6%96%87%E4%BB%B6.html">nohup命令及其输出文件</a><a href="2017-06-06-%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95__getattr__%E5%92%8C__getattribute__%E7%9A%84%E8%AF%A6%E8%A7%A3.html">魔法方法__getattr__和__getattribute__的详解</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2019-01-21-arrow%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%8F%8A%E5%9C%A8python%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8.md" download="2019-01-21-arrow的性能分析及在python中的使用.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2019-01-21">2019-01-21</time></p>
+        <h1>arrow的性能分析及在python中的使用</h1>
+      </header>
+      <div class="prose" id="body"><p>Apache Arrow 是 Apache 基金会全新孵化的一个顶级项目。它设计的目的在于作为一个跨平台的数据层，来加快大数据分析项目的运行速度。</p>
+<p>现在大数据处理模型很多，用户在应用大数据分析时，除了将 Hadoop 等大数据平台作为一个存储和批处理平台之外，同样也得关注系统的扩展性和性能。过去开源社区已经发布了很多工具来完善大数据分析的生态系统，这些工具包含了数据分析的各个层面，例如列式存储格式（Parquet，ORC），内存计算模型（Drill，Spark，Impala 和 Storm）以及其强大的 API 接口。而 Arrow 则是最新加入的一员，它提供了一种跨平台应用的内存数据交换格式。
+<img src="../assets/img/posts/arrow%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%8F%8A%E5%9C%A8python%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8/arrow_f.png" alt="使用arrow之前" />
+<img src="../assets/img/posts/arrow%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%8F%8A%E5%9C%A8python%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8/arrow_b.png" alt="使用arrow之后" /><!--more--></p>
+<h2 id="arrow的python版本安装">arrow的python版本安装</h2>
+<p>arrow是apache下的一个顶级项目，它是一个跨平台的内存数据交换格式。通过conda来进行安装：<code>conda install -c conda-forge pyarrow</code>，官方的安装推荐使用conda，具体可以见<a href="https://arrow.apache.org/docs/python/install.html">apache arrow documentation</a>.</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;ddgkdfkgfdlgl8439495435043050883483495&#39;</span>
+<span class="n">buf</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">py_buffer</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">buf</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">&lt;pyarrow.lib.Buffer at 0x7f46706d0ab0&gt;
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">buf</span><span class="o">.</span><span class="n">size</span>  <span class="c1"># 38</span>
+</code></pre></div>
+<h3 id="结合numpy使用">结合numpy使用</h3>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">pa_array</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">pa_array</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">&lt;pyarrow.lib.DoubleArray object at 0x7f467b68aea8&gt;
+[
+  0.688175,
+  0.979032,
+  0.91343,
+  0.725985,
+  0.469235,
+  0.373089,
+  0.792048,
+  0.472252,
+  0.615361,
+  0.693604,
+  ...
+  0.240511,
+  0.162609,
+  0.518071,
+  0.816558,
+  0.736163,
+  0.509702,
+  0.914533,
+  0.879404,
+  0.979877,
+  0.883003
+]
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">np_array</span> <span class="o">=</span> <span class="n">pa_array</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">np_array</span>
+</code></pre></div>
+<h3 id="结合pandas使用">结合pandas使用</h3>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;column_a&quot;</span><span class="p">,</span> <span class="s2">&quot;column_b&quot;</span><span class="p">,</span> <span class="s2">&quot;column_c&quot;</span><span class="p">,</span> <span class="s2">&quot;column_d&quot;</span><span class="p">])</span>
+<span class="n">pa_df</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">pa_df</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)]</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">[&#39;_column&#39;,
+ &#39;_validate&#39;,
+ &#39;add_column&#39;,
+ &#39;append_column&#39;,
+ &#39;cast&#39;,
+ &#39;column&#39;,
+ &#39;columns&#39;,
+ &#39;drop&#39;,
+ &#39;equals&#39;,
+ &#39;flatten&#39;,
+ &#39;from_arrays&#39;,
+ &#39;from_batches&#39;,
+ &#39;from_pandas&#39;,
+ &#39;itercolumns&#39;,
+ &#39;num_columns&#39;,
+ &#39;num_rows&#39;,
+ &#39;remove_column&#39;,
+ &#39;replace_schema_metadata&#39;,
+ &#39;schema&#39;,
+ &#39;set_column&#39;,
+ &#39;shape&#39;,
+ &#39;to_batches&#39;,
+ &#39;to_pandas&#39;,
+ &#39;to_pydict&#39;]
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">pa_df</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="导入csv格式的数据">导入csv格式的数据</h3>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="kn">import</span> <span class="n">csv</span>
+
+<span class="n">csv_file_path</span> <span class="o">=</span> <span class="s1">&#39;/opt/workspace/project/ModisResistModule/data/FirmsPoint/fire_nrt_V1_21640.csv&#39;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">to_df_arrow</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+<span class="o">%</span><span class="n">timeit</span> <span class="n">df_pa</span> <span class="o">=</span> <span class="n">to_df_arrow</span><span class="p">(</span><span class="n">csv_file_path</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">26 ms ± 97.9 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="o">%</span><span class="n">timeit</span> <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_file_path</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">164 ms ± 1.18 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</code></pre></div>
+<h2 id="arrow的io操作">arrow的IO操作</h2>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">py_write</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;./test_py_string.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        
+<span class="k">def</span><span class="w"> </span><span class="nf">pa_write</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">pa</span><span class="o">.</span><span class="n">OSFile</span><span class="p">(</span><span class="s2">&quot;./test_pa_string.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;abvndjfklfljklluuillllldjdsfhdsfjhdskf2r73564385435934953475742742&quot;</span>        
+<span class="o">%</span><span class="n">timeit</span> <span class="n">py_write</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">pa_write</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">934 µs ± 23.3 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+969 µs ± 88 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">py_reader</span><span class="p">():</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;./test_py_string.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+        <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">pa_reader1</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">pa</span><span class="o">.</span><span class="n">OSFile</span><span class="p">(</span><span class="s2">&quot;./test_pa_string.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">pa_reader2</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">pa</span><span class="o">.</span><span class="n">memory_map</span><span class="p">(</span><span class="s2">&quot;./test_pa_string.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">read_buffer</span><span class="p">()</span>  <span class="c1"># writer.read()</span>
+        <span class="n">buf</span><span class="o">.</span><span class="n">to_pybytes</span><span class="p">()</span>
+
+<span class="o">%</span><span class="n">timeit</span> <span class="n">py_reader</span><span class="p">()</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">pa_reader1</span><span class="p">()</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">pa_reader2</span><span class="p">()</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">8.76 µs ± 24.3 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+5.73 µs ± 9.02 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+8.26 µs ± 28.8 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+</code></pre></div>
+<h2 id="pickle和arrow的对比">pickle和arrow的对比</h2>
+<p>这儿有pickle，msgpack和pyarrow的对比测试：http://satoru.rocks/2018/08/fastest-way-to-serialize-array/</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">i</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">buf</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">to_buffer</span><span class="p">()</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">restored_data</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">207 µs ± 1.78 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">pickled</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">unpickled_data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pickled</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="mf">56.6</span> <span class="n">ms</span> <span class="err">±</span> <span class="mi">165</span> <span class="n">µs</span> <span class="n">per</span> <span class="n">loop</span> <span class="p">(</span><span class="n">mean</span> <span class="err">±</span> <span class="n">std</span><span class="o">.</span> <span class="n">dev</span><span class="o">.</span> <span class="n">of</span> <span class="mi">7</span> <span class="n">runs</span><span class="p">,</span> <span class="mi">10</span> <span class="n">loops</span> <span class="n">each</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pyarrow.feather</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_feather</span><span class="p">,</span> <span class="n">read_feather</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">1000000</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s1">&#39;abcd&#39;</span><span class="p">))</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">save_file</span> <span class="o">=</span> <span class="s2">&quot;./tmp_frame.feather&quot;</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">write_feather</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">save_file</span><span class="p">)</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">df</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="s2">&quot;./tmp_frame.pickle&quot;</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">200 ms ± 5.59 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+206 ms ± 7.8 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="o">%</span><span class="n">timeit</span> <span class="n">read_feather</span><span class="p">(</span><span class="n">save_file</span><span class="p">)</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s2">&quot;./tmp_frame.pickle&quot;</span><span class="p">)</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">4.72 ms ± 18.9 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+12.4 ms ± 42.2 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

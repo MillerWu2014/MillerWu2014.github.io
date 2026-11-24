@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>spark中job运行过程详解和job,stage,task解析 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>spark</h2><a href="2017-08-30-spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob%2Cstage%2Ctask%E8%A7%A3%E6%9E%90.html" aria-current="page">spark中job运行过程详解和job,stage,task解析</a><a href="2017-07-24-spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html">spark中遇到的问题汇总</a><a href="2017-07-09-spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.html">spark中创建RDD的几种方式</a><a href="2017-07-08-%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe.html">使用spark读取mysql数据库数据转化为dataframe</a><a href="2017-07-03-spark%E7%AE%97%E5%AD%90aggregate%2Cfold%2Clookup%E8%AF%A6%E8%A7%A3.html">spark算子aggregate,fold,lookup详解</a><a href="2017-07-03-%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC.html">用spark对时间数据进行分组求平均值</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-08-30-spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob%2Cstage%2Ctask%E8%A7%A3%E6%9E%90.md" download="2017-08-30-spark中job运行过程详解和job,stage,task解析.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-08-30">2017-08-30</time></p>
+        <h1>spark中job运行过程详解和job,stage,task解析</h1>
+      </header>
+      <div class="prose" id="body"><p>了解了spark的基础后一直想清楚在spark整个执行过程。在spark客户端提交任务后，从<code>job，stage，task</code>，在到<code>worker</code>上执行，整过流程必须清楚，对后续的调优，spark中job运行原理都有很大的帮助。下面对spark中job运行过程进行详细解析，整个过程如下图所示。</p>
+<p><img src="../assets/img/posts/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob,stage,task%E8%A7%A3%E6%9E%90/spark%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E8%A7%A3%E6%9E%90.png" alt="enter description here" /></p>
+<!--more-->
+<h2 id="job运行流程">Job运行流程</h2>
+<p>在client端提交Job，而Job会生成一个<code>sparkcontext</code>对象，该对象向集群申请Executor资源，将job分解成可并行的task，然后将task分发到各个<code>executor</code>上执行，执行完成后将<code>executor</code>的结果全部返回到<code>sparkcontext</code>中。下面对整个过程进行详细说明。</p>
+<h3 id="job到dagscheduler过程">Job到DAGScheduler过程</h3>
+<p>Job的概念：包含很多<code>task</code>的并行计算，可以认为是<code>Spark RDD</code> 里面的<code>action</code>，每个<code>action</code>的触发会生成一个job。而这个过程中主要是将RDD中的依赖关系形成DAG，并将DAG传递到<code>DAGScheduler</code>中。</p>
+<h3 id="dagscheduler对dag的处理">DAGScheduler对DAG的处理</h3>
+<p><code>DAGSchedule</code>对DAG进行<code>stage</code>的划分，并在每个<code>Stage</code>内化为出一系列可并行处理的<code>task</code>,再将<code>task</code>传递到下一层; <code>DAGScheduler</code>会记录哪个RDD或者<code>Stage</code>会被物化，从而寻找一个最佳调度方案。将<code>TaskSet</code>提交给<code>Task Tracker</code>。重新提交输出<code>lost</code>的<code>Stage</code>。在这个过程中涉及到了很重要的环节—<code>stage</code>的划分,后面会着重进行说明。</p>
+<h3 id="task运行">task运行</h3>
+<p>在1.2中生成了一系列的<code>task</code>，<code>task</code>和底层的资源交互，而这个资源交互的协调人就是<code>TaskScheduler</code>，<code>taskset</code>提交到<code>TaskScheduler</code>等待调度执行。<code>TaskScheduler</code>提供了对外的接口，<code>TaskScheduler</code>对接的是不同的<code>SchedulerBackend</code>的实现(比如<code>mesos</code>，<code>yarn</code>，<code>standalone</code>)，都是通过<code>TaskScheduler</code>来进行协作。<code>TaskScheduler</code>在初始化后会启动<code>SchedulerBackend</code>(yarn, mesos等)，它(<code>SchedulerBackend</code>)负责跟外界打交道，接收<code>Executor</code>的注册信息，并维护<code>Executor</code>的状态，所以说<code>SchedulerBackend</code>是管资源(<code>worker</code>)的，同时它在启动后会定期地去“询问”<code>TaskScheduler</code>有没有任务要运行，<code>TaskScheduler</code>在<code>SchedulerBackend</code>“问”它的时候，会从调度队列中按照指定的调度策略选择<code>TaskSetManager</code>去调度运行。</p>
+<p><code>TaskScheduler</code>支持两种调度策略，一种是<code>FIFO</code>，也是默认的调度策略，另一种是<code>FAIR</code>。这两种调度策略可以通过资料去查具体的实现方式。</p>
+<p>Spark实现了三种不同的<code>TaskScheduler</code>，包括<code>LocalSheduler</code>、<code>ClusterScheduler</code>和<code>MesosScheduler</code>。<code>LocalSheduler</code>是一个在本地执行的线程池，<code>DAGScheduler</code>提交的所有task会在线程池中被执行，并将结果返回给<code>DAGScheduler</code>。<code>TaskScheduler</code>的启动会伴随<code>SparkDeploySchedulerBackend</code>的启动，而<code>backend</code>会将自己分为两个角色：首先是<code>driver</code>，<code>driver</code>是一个<code>local</code>运行的<code>actor</code>，负责与<code>remote</code>的<code>executor</code>进行通行，提交任务，控制<code>executor</code>；其次是<code>StandaloneExecutorBackend</code>，Spark会在每一个slave node上启动一个<code>StandaloneExecutorBackend</code>进程，负责执行任务，返回执行结果。具体过程如下图<code>TaskScheduler</code>部分所示：</p>
+<p><img src="../assets/img/posts/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob,stage,task%E8%A7%A3%E6%9E%90/TaskScheduler%E8%AF%A6%E8%A7%A3.png" alt="TaskScheduler详解" /></p>
+<p>上图中是一个完整的spark任务调度过程中<code>ApplicationMaster</code>、<code>Driver</code>以及<code>Executor</code>的交互过程。<code>Driver</code>初始化<code>SparkContext</code>过程中，会分别初始化<code>DAGScheduler</code>、<code>TaskScheduler</code>、<code>SchedulerBackend</code>以及<code>HeartbeatReceiver</code>，并启动<code>SchedulerBackend</code>以及<code>HeartbeatReceiver</code>。<code>SchedulerBackend</code>通过<code>ApplicationMaster</code>申请资源，并不断从<code>TaskScheduler</code>中拿到合适的<code>Task</code>分发到<code>Executor</code>执行。<code>HeartbeatReceiver</code>负责接收<code>Executor</code>的心跳信息，监控<code>Executor</code>的存活状况，并通知到<code>TaskScheduler</code>。</p>
+<p>上面对spark中任务执行过程有了大概的了解之后，现在可以对其中部分的细节进行了解。如job，task，stage的划分等。其中stage的划分是非常重要的。</p>
+<h2 id="jobstage和task理解">job,stage和task理解</h2>
+<h3 id="job的理解">job的理解</h3>
+<p><code>job</code>是<code>rdd</code>的<code>action</code>所触发的一个动作，当<code>rdd</code>执行<code>action</code>的时候即触发一个<code>job</code>。在触发<code>job</code>后，<code>RDD</code>的<code>runJob</code>则在<code>SparkContext</code>的<code>runJob</code>中调用，<code>SparkContext</code>的<code>runJo</code>b底层会调用<code>DAGScheduler</code>的<code>runJob</code>方法。在<code>DAGScheduler</code>会将每个<code>job</code>划分为多个<code>stage</code>，并分析他们之间的关系，会寻找最优的运行策略，再进行下一步操作。</p>
+<p>另外<code>job</code>也分为不含有<code>shuffle</code>和<code>reduce</code>，含有<code>shuffle</code>和<code>reduce</code>的<code>job</code>,对于两种<code>job</code>，第一种<code>job</code>只会产生一个<code>finalStage</code>，而第二种<code>job</code>会产生<code>finalStage</code>和<code>mapStage</code>。</p>
+<h3 id="stage的划分">stage的划分</h3>
+<p>一个job会被分成1组或1组以上task，其中每组task就是一个stage，就像map stage和reduce stage一样。另外一个说法：stage是job的组成单元，一个job会被切分为一个或者多个stage。那么stage是怎么划分的呢？</p>
+<p>官方的说明：调度器从<code>DAG</code>图末端出发，逆向遍历整个依赖关系链，遇到<code>ShuffleDependency</code>（宽依赖关系的一种叫法）就断开，遇到<code>NarrowDependency</code>就将其加入到当前<code>stage</code>。从触发<code>action</code>操作的<code>RDD</code>往前倒推，如果发现了某个<code>RDD</code>是宽依赖，那么就会将宽依赖的<code>RDD</code>创建为一个新的<code>stage</code>。那个<code>RDD</code>是新的<code>stage</code>中最后一个<code>RDD</code>，这样依次遍历，知道所有的<code>RDD</code>全部遍历。结合官方的图来解释。</p>
+<p><img src="../assets/img/posts/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob,stage,task%E8%A7%A3%E6%9E%90/RDD%E4%B8%ADstage%E5%88%92%E5%88%86.jpg" alt="RDD中stage划分" /></p>
+<p>从图中可以看出在宽依赖关系处就会断开依赖链，划分<code>stage</code>，宽依赖的<code>RDD</code>是<code>stage</code>中的最后一个<code>RDD</code>。这里的<code>stage1</code>不需要计算，只需要计算<code>stage2</code>和<code>stage3</code>，就可以完成整个<code>Job</code>。</p>
+<h4 id="宽依赖和窄依赖的定义">宽依赖和窄依赖的定义</h4>
+<p>RDD每一次transformation都会生成一个新的RDD，这样就会建立RDD之间的前后依赖关系，在Spark中，依赖关系被定义为两种类型，分别是窄依赖和宽依赖：</p>
+<ul>
+<li>窄依赖：父RDD的分区最多只会被子RDD的一个分区使用</li>
+<li>宽依赖：父RDD的一个分区会被子RDD的多个分区使用</li>
+</ul>
+<p>下图中为宽依赖和窄依赖的官方说明：</p>
+<p><img src="../assets/img/posts/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob,stage,task%E8%A7%A3%E6%9E%90/%E5%AE%BD%E4%BE%9D%E8%B5%96%E5%92%8C%E7%AA%84%E4%BE%9D%E8%B5%96.jpg" alt="宽依赖和窄依赖" /></p>
+<p>下面根据stage划分的算法对<code>wordcount</code>进行<code>stage</code>划分示意图：</p>
+<p><img src="../assets/img/posts/spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob,stage,task%E8%A7%A3%E6%9E%90/wordcount%E7%9A%84stage%E5%88%92%E5%88%86%E8%BF%87%E7%A8%8B.jpg" alt="wordcount的stage划分过程" /></p>
+<h3 id="task的理解">task的理解</h3>
+<p><code>task</code>实在<code>stage</code>的基础上进行，计算是以<code>partition</code>为单元，<code>task</code>的数量和<code>partition</code>的数据相同。<code>partition</code>的划分依据很多，可以根据<code>key</code>划分，可以自定义，以文件的<code>block</code>来划分等。</p>
+<h2 id="参考资料">参考资料</h2>
+<ol>
+<li><a href="https://ieevee.com/tech/2016/07/11/spark-scheduler.html">Task调度算法，FIFO还是FAIR</a></li>
+<li><a href="https://litaotao.github.io/deep-into-spark-exection-model">深入研究 spark 运行原理之 job, stage, task</a></li>
+<li><a href="http://sharkdtu.com/posts/spark-scheduler.html">Spark Scheduler内部原理剖析</a></li>
+<li><a href="http://jerryshao.me/architecture/2013/04/21/Spark%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8B-scheduler%E6%A8%A1%E5%9D%97/">Spark源码分析之-scheduler模块</a></li>
+</ol>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

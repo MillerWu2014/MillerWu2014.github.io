@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>利用scikit-learn来分析模型欠拟合和过拟合问题 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>机器学习</h2><a href="2020-06-11-boosting%E7%B3%BB%E5%88%97%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之NGBoost算法详解</a><a href="2019-07-23-boosting%E7%B3%BB%E5%88%97%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之CatBoost算法详解</a><a href="2019-07-16-boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之LightGBM算法详解</a><a href="2019-06-25-%E5%9F%BA%E4%BA%8E%E8%BD%A8%E8%BF%B9%E7%9A%84%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93.html">基于轨迹的数据挖掘相关技术总结</a><a href="2018-11-24-KL%E6%95%A3%E5%BA%A6%2CJS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB.html">KL散度,JS散度和wasserstein距离</a><a href="2017-09-05-%E5%9F%BA%E4%BA%8EMLE%E7%9A%84logistic%E6%A8%A1%E5%9E%8B.html">基于MLE的logistic模型</a><a href="2017-08-15-%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98.html" aria-current="page">利用scikit-learn来分析模型欠拟合和过拟合问题</a><a href="2017-08-13-%E5%AF%B9%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%80%83.html">对梯度下降算法的思考</a><a href="2017-07-26-%E4%BF%A1%E6%81%AF%E8%AE%BA%E4%B8%ADKL%E6%95%A3%E5%BA%A6%E8%AF%A6%E8%A7%A3.html">信息论中KL散度详解</a><a href="2017-07-14-%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95.html">最优化-梯度下降算法</a><a href="2017-07-06-%E7%89%B9%E5%BE%81%E5%8F%AF%E8%A7%86%E5%8C%96%E5%92%8C%E7%89%B9%E5%BE%81%E9%99%8D%E7%BB%B4%E7%AE%97%E6%B3%95T-SNE%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3.html">特征可视化和特征降维算法T-SNE模型详解</a><a href="2017-06-12-Bootstrap%2CBoosting%2CBagging%2CRandforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D.html">Bootstrap,Boosting,Bagging,Randforest几种方法介绍</a><a href="2017-06-12-%E4%BF%A1%E6%81%AF%E5%A2%9E%E7%9B%8A%E7%AD%9B%E9%80%89%E5%8F%98%E9%87%8F%E5%92%8Cpython%E5%AE%9E%E7%8E%B0.html">信息增益筛选变量和python实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-08-15-%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98.md" download="2017-08-15-利用scikit-learn来分析模型欠拟合和过拟合问题.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-08-15">2017-08-15</time></p>
+        <h1>利用scikit-learn来分析模型欠拟合和过拟合问题</h1>
+      </header>
+      <div class="prose" id="body"><p>当你运行一个学习算法时，如果这个算法的表现不理想，那么多半是出现两种情况：要么是偏差比较大、要么是方差比较大。换句话说，出现的情况要么是欠拟合、要么是过拟合问题。在建模的过程中经常会遇到模型拟合度不够或者过拟合，但是怎么去分析模型是否存在欠拟合和过拟合呢？一般通过模型的学习曲线和评估曲线来分析欠拟合和过拟合。并在实际应用中针对性的提出解决方案。下图为理论上识别欠拟合和过拟合的方法，如下：
+<img src="../assets/img/posts/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/poly_nihe.png" alt="polynline.png" /></p>
+<h3 id="1-使用学习曲线判别偏差和方差问题">1. 使用学习曲线判别偏差和方差问题</h3>
+<p>如果一个模型过于复杂，则参数太多，可能导致模型过拟合。解决过拟合问题，可以通过增加训练数据集，降低模型复杂度，交叉检验等。根据上图中，我们可以逐渐增加模型训练集，观察模型的偏差和方差变化，确定这种方式是否有效。
+<img src="../assets/img/posts/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/bias_variance.png" alt="biasvariance.png" />
+上图中左上角的情况，模型偏差较大，训练和测试效果曲线都很差，精度太低，可能是欠拟合，解决欠拟合问题：一般通过增加模型参数，增加特征或者减小正则项等。</p>
+<p>下面通过<code>python</code>中<code>scikit-learn</code>的学习曲线来对欠拟合和过拟合进行说明，主要通过不同的数据量来逐步分析模型效果，看欠拟合和过拟合的情况。</p>
+<!--more-->
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_iris</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">learning_curve</span><span class="p">,</span> <span class="n">validation_curve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">f1_score</span><span class="p">,</span> <span class="n">make_scorer</span>
+
+<span class="n">load_data</span> <span class="o">=</span> <span class="n">load_iris</span><span class="p">()</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">load_data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">load_data</span><span class="o">.</span><span class="n">target</span>
+
+<span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">150</span><span class="p">)</span>
+<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+<span class="n">random_x</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="p">:]</span>
+<span class="n">random_y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+<span class="n">estimator</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">penalty</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">fit_intercept</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">f1</span> <span class="o">=</span> <span class="n">make_scorer</span><span class="p">(</span><span class="n">f1_score</span><span class="p">)</span>
+<span class="n">train_size</span><span class="p">,</span> <span class="n">train_scores</span><span class="p">,</span> <span class="n">test_scores</span> <span class="o">=</span> <span class="n">learning_curve</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">random_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">random_y</span><span class="p">,</span>
+                                                       <span class="n">train_sizes</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">cv</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                                                       <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">)</span>
+
+<span class="n">train_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">train_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">train_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">train_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">test_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">test_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">test_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">test_scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">train_size</span><span class="p">,</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;train line&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">train_size</span><span class="p">,</span> <span class="n">train_mean</span><span class="o">+</span><span class="n">train_std</span><span class="p">,</span> <span class="n">train_mean</span><span class="o">-</span><span class="n">train_std</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">train_size</span><span class="p">,</span> <span class="n">test_mean</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;test line&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">train_size</span><span class="p">,</span> <span class="n">test_mean</span><span class="o">+</span><span class="n">test_std</span><span class="p">,</span> <span class="n">test_mean</span><span class="o">-</span><span class="n">test_std</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower right&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<p><img src="../assets/img/posts/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/output_5_0.png" alt="png" /></p>
+<p><code>learning_curve</code>中的<code>train_sizes</code>参数控制产生学习曲线的训练样本的绝对/相对数量，此处，我们设置的<code>train_sizes=np.linspace(0.1, 1.0, 10)</code>，将训练集大小划分为10个相等的区间。<code>learning_curve</code>默认使用分层k折交叉验证计算交叉验证的准确率，我们通过cv设置k。从上图中可以看出模型的效果非常好，在数据量达到80以上时，训练和测试的准确率基本重合。因此基本是没有过拟合情况，而模型的整个准确率在95%以上，因此模型也不存在欠拟合的情况。</p>
+<h3 id="2-用验证曲线解决过拟合和欠拟合">2. 用验证曲线解决过拟合和欠拟合</h3>
+<p>验证曲线可以调整模型的参数，从而解决过拟合或者欠拟合问题，验证曲线和学习曲线近似，但是意义不一样，可以通过<code>validation_curve</code>来实现。还能对模型进行优化，加强模型的精度以及泛化能力。下图(借用网上一张图表示)中则为模型的随着参数的不同，模型效果变化。</p>
+<ol>
+<li>当<code>cross validation error (Jcv)</code> 跟<code>training error(Jtrain)</code>差不多，且<code>Jtrain</code>较大时，当前模型更可能存在欠拟合。</li>
+<li>当<code>Jcv &gt;&gt; Jtrain</code>且<code>Jtrain</code>较小时，当前模型更可能存在过拟合
+<img src="../assets/img/posts/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/param_bias_variance.png" alt="parambiasvariance.png" /></li>
+</ol>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">param_c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+<span class="n">train_scores</span><span class="p">,</span> <span class="n">test_scores</span> <span class="o">=</span> <span class="n">validation_curve</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">random_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">random_y</span><span class="p">,</span> <span class="n">param_name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="n">param_range</span><span class="o">=</span><span class="n">param_c</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                 <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">)</span>
+<span class="n">train_mean</span> <span class="o">=</span> <span class="n">train_scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">train_std</span> <span class="o">=</span> <span class="n">train_scores</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">test_mean</span> <span class="o">=</span> <span class="n">test_scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">test_std</span> <span class="o">=</span> <span class="n">test_scores</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">param_c</span><span class="p">,</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;train_acc&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">param_c</span><span class="p">,</span> <span class="n">train_mean</span><span class="o">+</span><span class="n">train_std</span><span class="p">,</span> <span class="n">train_mean</span><span class="o">-</span><span class="n">train_std</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">param_c</span><span class="p">,</span> <span class="n">test_mean</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;test_acc&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">param_c</span><span class="p">,</span> <span class="n">test_mean</span><span class="o">+</span><span class="n">test_std</span><span class="p">,</span> <span class="n">test_mean</span><span class="o">-</span><span class="n">test_std</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">param_c</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="p">(</span><span class="n">train_mean</span><span class="o">-</span><span class="n">test_mean</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;0.2&#39;</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">test_std</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">param_c</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;center right&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<p><img src="../assets/img/posts/%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/output_8_0.png" alt="png" /></p>
+<h3 id="3-参考文档">3. 参考文档</h3>
+<p><a href="http://studyai.site/2016/10/24/%E6%96%AF%E5%9D%A6%E7%A6%8F%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E8%AF%BE%E7%A8%8B%20%E7%AC%AC%E5%85%AD%E5%91%A8%20%282%29%E5%81%8F%E5%B7%AEVS%E6%96%B9%E5%B7%AE/">斯坦福机器学习课程 第六周 (2)偏差VS方差</a>
+<a href="http://studyai.site/2016/09/04/%E6%96%AF%E5%9D%A6%E7%A6%8F%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E8%AF%BE%E7%A8%8B%20%E7%AC%AC%E4%B8%89%E5%91%A8%20%284%29%E6%AD%A3%E5%88%99%E5%8C%96%EF%BC%9A%E8%A7%A3%E5%86%B3%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98/">斯坦福机器学习课程 第三周 (4)正则化：解决过拟合问题</a>
+<a href="http://www.cnblogs.com/instant7/p/4135416.html">欠拟合还是过拟合的判断</a>
+<a href="https://ljalphabeta.gitbooks.io/python-/content/debugging.html">使用学习曲线和验证曲线 调试算法</a></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

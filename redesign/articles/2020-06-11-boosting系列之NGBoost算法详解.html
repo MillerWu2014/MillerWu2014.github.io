@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>boosting系列之NGBoost算法详解 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>机器学习</h2><a href="2020-06-11-boosting%E7%B3%BB%E5%88%97%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html" aria-current="page">boosting系列之NGBoost算法详解</a><a href="2019-07-23-boosting%E7%B3%BB%E5%88%97%E4%B9%8BCatBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之CatBoost算法详解</a><a href="2019-07-16-boosting%E7%B3%BB%E5%88%97%E4%B9%8BLightGBM%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.html">boosting系列之LightGBM算法详解</a><a href="2019-06-25-%E5%9F%BA%E4%BA%8E%E8%BD%A8%E8%BF%B9%E7%9A%84%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E7%9B%B8%E5%85%B3%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93.html">基于轨迹的数据挖掘相关技术总结</a><a href="2018-11-24-KL%E6%95%A3%E5%BA%A6%2CJS%E6%95%A3%E5%BA%A6%E5%92%8Cwasserstein%E8%B7%9D%E7%A6%BB.html">KL散度,JS散度和wasserstein距离</a><a href="2017-09-05-%E5%9F%BA%E4%BA%8EMLE%E7%9A%84logistic%E6%A8%A1%E5%9E%8B.html">基于MLE的logistic模型</a><a href="2017-08-15-%E5%88%A9%E7%94%A8scikit-learn%E6%9D%A5%E5%88%86%E6%9E%90%E6%A8%A1%E5%9E%8B%E6%AC%A0%E6%8B%9F%E5%90%88%E5%92%8C%E8%BF%87%E6%8B%9F%E5%90%88%E9%97%AE%E9%A2%98.html">利用scikit-learn来分析模型欠拟合和过拟合问题</a><a href="2017-08-13-%E5%AF%B9%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%80%83.html">对梯度下降算法的思考</a><a href="2017-07-26-%E4%BF%A1%E6%81%AF%E8%AE%BA%E4%B8%ADKL%E6%95%A3%E5%BA%A6%E8%AF%A6%E8%A7%A3.html">信息论中KL散度详解</a><a href="2017-07-14-%E6%9C%80%E4%BC%98%E5%8C%96-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E7%AE%97%E6%B3%95.html">最优化-梯度下降算法</a><a href="2017-07-06-%E7%89%B9%E5%BE%81%E5%8F%AF%E8%A7%86%E5%8C%96%E5%92%8C%E7%89%B9%E5%BE%81%E9%99%8D%E7%BB%B4%E7%AE%97%E6%B3%95T-SNE%E6%A8%A1%E5%9E%8B%E8%AF%A6%E8%A7%A3.html">特征可视化和特征降维算法T-SNE模型详解</a><a href="2017-06-12-Bootstrap%2CBoosting%2CBagging%2CRandforest%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D.html">Bootstrap,Boosting,Bagging,Randforest几种方法介绍</a><a href="2017-06-12-%E4%BF%A1%E6%81%AF%E5%A2%9E%E7%9B%8A%E7%AD%9B%E9%80%89%E5%8F%98%E9%87%8F%E5%92%8Cpython%E5%AE%9E%E7%8E%B0.html">信息增益筛选变量和python实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2020-06-11-boosting%E7%B3%BB%E5%88%97%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3.md" download="2020-06-11-boosting系列之NGBoost算法详解.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2020-06-11">2020-06-11</time></p>
+        <h1>boosting系列之NGBoost算法详解</h1>
+      </header>
+      <div class="prose" id="body"><p>去年末看过NGBoost的论文，由于时间原因没有仔细的去了解，现在终于可以花点时间来补一下NGBoost，NGBoost是斯坦福的研究团队提出的一种梯度提升方法，解决概率预测中的问题，在现实中预测问题带有很多不确定性，比如天气的预测，顾客流失率，信用等等。传统的机器学习一般是一个点的估计，NGBoost则是对概率预测，可以得到概率分布的预测。</p>
+<p>论文中通过模块化描述了NGBoost模型的整体结构，如下图所示.NGBoost通过自然梯度来实现拟合，其中模块主要包括<strong>基础学习器</strong>，<strong>参数的概率分布</strong>，<strong>评分规则</strong>这三大部分。</p>
+<p><img src="../assets/img/posts/boosting%E7%B3%BB%E5%88%97%E4%B9%8BNGBoost%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/model_struct.png" alt="NGBoost三个模块" /></p>
+<p>通过优化评分规则（例如最大似然估计（MLE）或更稳健的连续排名概率评分（CRPS）），对模型进行了训练，以使锐度(sharpness)最大化，并进行校准，最后会得到经过校准的估计。</p>
+<h2 id="自然梯度nature-gradient">自然梯度(Nature Gradient)</h2>
+<p>NGBoost是一种概率预测的监督性学习法，通过概率分布的形式将不确定行带入了梯度计算中，再以函数的形式来预测条件概率(<span class="math inline">\(P(y|x)\)</span>)分布的参数。</p>
+<p>在标准预测中，目标对象是标量函数<span class="math inline">\(E[y|x]\)</span>的估计，其中<span class="math inline">\(x\)</span>是观察到的特征的向量，<span class="math inline">\(y\)</span>是预测目标。 在NGBoost中，通过预测参数<span class="math inline">\(θ∈R\)</span>来生成概率密度为<span class="math inline">\(P_θ(y|x)\)</span>，<span class="math inline">\(\theta\)</span>的概率预测， 相应的累积密度表示为<span class="math inline">\(F_\theta\)</span>。</p>
+<p>此处会有KL散度来定义预测分布P和真实分布Q之间的距离，通过KL散度来定义规则评分，因此最终的目标就是最小化这个规则评分S。在每次迭代中，参数的更新就会影响分布的更新，从而影响规则评分。因此参数的更新非常重要，即分布的移动和更新，论文中是通过自然梯度解决。</p>
+<h2 id="模块化">模块化</h2>
+<p>NGBoost主要通过基础学习器，参数概率分布和评分规则三大模块：</p>
+<ul>
+<li>基础学习器为学习函数<span class="math inline">\(f\)</span>，比如决策树</li>
+<li>参数概率分布（<span class="math inline">\(P_\theta\)</span>），如正太分布，多变量正太分布，拉普拉斯分布（开源代码中未实现），伯努利分布，指数分布等。</li>
+<li>评分规则(<span class="math inline">\(S\)</span>)，如MLE，CRPS等</li>
+</ul>
+<h3 id="评分规则">评分规则</h3>
+<p>评分规则对「预测的概率分布」和「目标分布」的进行对照观察，评分规则<span class="math inline">\(S\)</span>将一个预测的概率分布<span class="math inline">\(P\)</span>和一个观测值<span class="math inline">\(y\)</span>（结果）作为输入，并给预测赋分<span class="math inline">\(S(P;y)\)</span>。得出结果的真实分布可获得预期中的最佳分数。在目前的实现中支持MLE和CRPS，CRPS可以提供更加稳定的结果。</p>
+<p>从上图中的模块化流程中可以看出，从输入X到Y，预测<span class="math inline">\(Y|X\)</span>，是由条件分布<span class="math inline">\(P_\theta\)</span>经过评分规则<span class="math inline">\(S\)</span>产生的，其中<span class="math inline">\(\theta\)</span>可以是一个值也可以是一个向量，它最终影响预测结果。</p>
+<h3 id="算法流程">算法流程</h3>
+<p>整个算法流程比较简单，和一般的GBDT算法流程相同，整个算法需要提前确定概率分布，迭代次数，学习率，评分规则和基础学习器。在算法中有一个缩放因子，该缩放因子在每次迭代中都会进行更新。</p>
+<img src="../assets/img/posts/boosting系列之NGBoost算法详解/ngboost_alg_flow.png" alt="image-20200609152114311" style="zoom:50%;" />
+<p>从算法流程中可以看出模型是按序列学习的，每个阶段都有一组函数<span class="math inline">\(f\)</span>和一个缩放因子<span class="math inline">\(\varphi\)</span>。算法在开始时，首先会估计一个共同的初始分布<span class="math inline">\(\theta(0)\)</span>，并通过训练使它能最小化评分规则<span class="math inline">\(S\)</span>，在所有训练样本的影响了变量上的总和，在本质上就是拟合y的边际分布。</p>
+<p>在每次迭代过程中，每批次的样本都会通过评分规则<span class="math inline">\(S\)</span>，计算自然梯度<span class="math inline">\(g\)</span>，再通过自然梯度在基学习器上进行投影(Projection)，基学习器上投影结果通过缩放因子进行梯度缩放，再引入学习率参数<span class="math inline">\(\eta\)</span>等，来更新参数<span class="math inline">\(\theta\)</span>：
+<div class="math inline">\[y|x \sim P_{\theta}(x), \theta = \theta^{(0)}-\eta\sum_{m=1}^{M}\varphi^{(m)}*f^{(m)}(x)\]</div>
+其中，<span class="math inline">\(\varphi\)</span>为缩放因子，在每次迭代中都会进行更新。</p>
+<h3 id="训练过程源码解析">训练过程源码解析</h3>
+<p>在官方开源的NGBoost源码中，对训练过程进行了详细的分析，目前的代码主要基于scikit-learn之上实现了NGBoost，目前实现了回归和分类(分类本身具有概率预测，因此一般都用于回归预测)。下面对源码关键部分进行注释，若要更详细了解可以参考官方开源代码：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">X_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Y_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">train_loss_monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">val_loss_monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">early_stopping_rounds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fits an NGBoost model to the data</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    X                       : DataFrame object or List or numpy array of predictors (n x p) in Numeric format</span>
+<span class="sd">    Y                       : Type same as X. Should be floats for regression and integers from 0 to K-1 for K-class classification</span>
+<span class="sd">    X_val                   : DataFrame object or List or numpy array</span>
+<span class="sd">    Y_val                   : DataFrame object or List or numpy array</span>
+<span class="sd">    sample_weight           : how much to weigh each example in the training set. (defaults to 1)</span>
+<span class="sd">    val_sample_weight       : how much to weigh each example in the validation set. (defaults to 1)</span>
+<span class="sd">    train_loss_monitor      : Defaults to the score defined in the NGBoost constructor</span>
+<span class="sd">    val_loss_monitor        : Defaults to the score defined in the NGBoost constructor</span>
+<span class="sd">    early_stopping_rounds   : the number of consecutive boosting iterations during which the loss has to increase before the algorithm stops early</span>
+
+<span class="sd">    Output:</span>
+<span class="sd">        A fit NGBRegressor object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">Y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y cannot be None&quot;</span><span class="p">)</span>
+    
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">y_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">loss_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">fit_init_params_to_marginal</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>  <span class="c1"># 初始化分布的参数</span>
+
+    <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred_param</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># 参数初始化，在该方法中将使用self.fit_init_params_to_marginal(Y)的初始化参数结果</span>
+    
+    <span class="c1"># -------- 此处省略部分非核心代码 ----------------</span>
+    
+    <span class="k">for</span> <span class="n">itr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_estimators</span><span class="p">):</span>  <span class="c1"># n_estimators为迭代次数和gbdt类似</span>
+         <span class="c1"># 首先对全量样本进行下采样, 默认为所有数据, 获得每次迭代的下采用数据, P_batch为该batch下的参数</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">X_batch</span><span class="p">,</span> <span class="n">Y_batch</span><span class="p">,</span> <span class="n">weight_batch</span><span class="p">,</span> <span class="n">P_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">,</span> <span class="n">params</span>
+        <span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">col_idxs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_idx</span><span class="p">)</span>
+
+        <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Manifold</span><span class="p">(</span><span class="n">P_batch</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="c1"># 获取参数分布,对应论文中的统计流形,通过Score规则和分布生成</span>
+
+        <span class="n">loss_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">train_loss_monitor</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">Y_batch</span><span class="p">,</span> <span class="n">weight_batch</span><span class="p">)]</span>  <span class="c1"># 记录评分(score),评分规则的输入为分布和目标Y</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">grads</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">Y_batch</span><span class="p">,</span> <span class="n">natural</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">natural_gradient</span><span class="p">)</span>  <span class="c1"># 求梯度，自然梯度</span>
+
+        <span class="n">proj_grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_base</span><span class="p">(</span><span class="n">X_batch</span><span class="p">,</span> <span class="n">grads</span><span class="p">,</span> <span class="n">weight_batch</span><span class="p">)</span>  <span class="c1"># 将自然梯度在base learner上projection</span>
+        <span class="c1"># 下面更新缩放因子,每次迭代都会更新一次缩放因子,缩放因子的更新会参考初始参数和梯度值</span>
+        <span class="c1"># line_search方法中有向上和向下缩放,根据初始分布和Y的评分结果选择更新策略</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_search</span><span class="p">(</span><span class="n">proj_grad</span><span class="p">,</span> <span class="n">P_batch</span><span class="p">,</span> <span class="n">Y_batch</span><span class="p">,</span> <span class="n">weight_batch</span><span class="p">)</span>  
+		<span class="c1"># 开始更新分布的参数</span>
+        <span class="n">params</span> <span class="o">-=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span>
+            <span class="o">*</span> <span class="n">scale</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">col_idx</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_models</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
+        <span class="p">)</span>  
+
+        <span class="c1"># -------------------- 省略非核心代码 -------------------------------</span>
+
+        <span class="c1"># 模型训练的停止条件,将自然梯度在基学习器上映射后的梯度值进行norm后计算均值</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">proj_grad</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;== Quitting at iteration / GRAD </span><span class="si">{</span><span class="n">itr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">evals_result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">metric</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Score</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">evals_result</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="n">loss_list</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">X_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">Y_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evals_result</span><span class="p">[</span><span class="s2">&quot;val&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="n">val_loss_list</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="bp">self</span>
+</code></pre></div>
+<p><code>NGBoost</code>和其他<code>boosting</code>算法不同的是可以预测概率分布，因此可以使用<code>pred_dist</code>方法返回每个预测的概率分布。同时也支持<code>predict</code>接口，直接返回预测值。</p>
+<p>上面训练过程中其中统计流形的定义也是非常重要的。定义是通过评分规则和参数的分布混合定义统计流形。流行包含了分布的所有参数，而且有<code>fit</code>和<code>sample</code>方法，通过<code>Distribution</code>实现；还有<code>total_score</code>和<code>grad</code>方法，通过<code>Score</code>实现。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">manifold</span><span class="p">(</span><span class="n">Score</span><span class="p">,</span> <span class="n">Distribution</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mixes a scoring rule and a distribution together to create the resultant &quot;Reimannian Manifold&quot;</span>
+<span class="sd">    (thus the name of the function). The resulting object has all the parameters of the distribution </span>
+<span class="sd">    can be sliced and indexed like one, and carries the distributions `fit` and `sample` methods, but </span>
+<span class="sd">    it also carries the appropriate `total_score` and `grad` methods that are inherited through </span>
+<span class="sd">    distribution-specific inheritence of the relevant implementation of the scoring rule</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Manifold</span><span class="p">(</span><span class="n">Distribution</span><span class="o">.</span><span class="n">implementation</span><span class="p">(</span><span class="n">Score</span><span class="p">),</span> <span class="n">Distribution</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">Manifold</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Score</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span> <span class="n">weights</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">natural</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_score</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">natural</span><span class="p">:</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">()</span>
+            <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">grad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">grad</span>
+
+    
+<span class="k">class</span><span class="w"> </span><span class="nc">Normal</span><span class="p">(</span><span class="n">RegressionDistn</span><span class="p">):</span>
+    <span class="n">n_params</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">NormalLogScore</span><span class="p">,</span> <span class="n">NormalCRPScore</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist</span> <span class="o">=</span> <span class="n">dist</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">m</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s</span><span class="p">)])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">rvs</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span>
+    <span class="p">):</span>  <span class="c1"># gives us Normal.mean() required for RegressionDist.predict()</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">}</span>
+</code></pre></div>
+<h2 id="总结">总结</h2>
+<ol>
+<li>从官方的测试结果来看，NGBoost和其他Boosting算法的预测效果不分上下，甚至效果更好。</li>
+<li>效率上比其他模型差，目前的实现中使用了batch的模式。但是目前主要是通过python实现，核心部分并没有通过C/C++实现。</li>
+<li>目前官方开源的代码还没有实现<code>early stop</code>，基础学习器也支持较少。</li>
+<li>NGBoost的核心主要是自然梯度和评分规则的结合，并将自然梯度进行了一般化的简易实现。这部分也是很难理解的部分。</li>
+</ol>
+<h2 id="参考">参考</h2>
+<p>1.https://medium.com/@benbenbang/ngboost-intro-and-comparisons-df72adf94096</p>
+<p>2.论文地址<a href="https://arxiv.org/pdf/1910.03225v1.pdf">NGBoost: Natural Gradient Boosting for Probabilistic Prediction</a></p>
+<p>3.源码: https://github.com/stanfordmlgroup/ngboost</p>
+<p>4.自然梯度：https://www.zhihu.com/question/21923317</p>
+<p>5.NGBoost(自然梯度提升)：https://zhuanlan.zhihu.com/p/100271626</p>
+<p>6.NGBoost论文研读：https://blog.csdn.net/weixin_44750583/article/details/103940140?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.nonecase</p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLMs的Agent架构 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>Agent</h2><a href="2025-07-27-%E5%BF%85%E8%AF%BB%E7%9A%84Agent%E7%9B%B8%E5%85%B3%E7%A0%94%E7%A9%B6.html">必读的Agent相关研究</a><a href="2025-07-17-AI-Agents-%E5%88%9D%E5%AD%B8%E8%80%85%E8%AA%B2%E7%A8%8B.html">AI Agents 初學者課程</a><a href="2025-07-08-crewAI%E6%A1%86%E6%9E%B6%E4%B8%8B%E5%85%B3%E9%94%AE%E7%9A%84%E7%AD%96%E7%95%A5%E5%92%8C%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1.html">crewAI框架下关键的策略和模式设计</a><a href="2025-07-01-CrewAI%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%E5%92%8C%E6%A1%86%E6%9E%B6.html">CrewAI的相关概念和框架</a><a href="2025-06-28-%E9%AB%98%E6%89%8B%E9%83%BD%E5%9C%A8%E7%94%A8%E7%9A%84-Skill-2.0-%E6%9E%B6%E6%9E%84%E6%8C%87%E5%8D%97%E9%99%84%E5%AE%8C%E6%95%B4%E6%AD%A5%E9%AA%A4.html">高手都在用的 Skill 2.0 架构指南（附完整步骤）</a><a href="2025-06-20-Agent%E7%9A%84Skills%E8%A7%84%E8%8C%83%E5%8E%9F%E7%90%86%E5%8F%8A%E5%BA%94%E7%94%A8.html">Agent的Skills规范原理及应用</a><a href="2025-06-16-%E8%AE%B0%E5%BF%86Memory%E6%A8%A1%E5%9D%97%E7%9A%84%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90.html">记忆(Memory)模块的深度解析</a><a href="2025-06-13-Agent%E5%8E%9F%E7%90%86%E3%80%81%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5.html">Agent：原理、架构与工程实践</a><a href="2025-06-06-LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84.html" aria-current="page">LLMs的Agent架构</a><a href="2025-06-01-AI-Agent%E6%99%BA%E8%83%BD%E4%BD%93%E6%8A%80%E6%9C%AF%E7%99%BD%E7%9A%AE%E4%B9%A6Google%EF%BC%8C2024.html">AI Agent（智能体）技术白皮书（Google，2024）</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2025-06-06-LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84.md" download="2025-06-06-LLMs的Agent架构.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2025-06-06">2025-06-06</time></p>
+        <h1>LLMs的Agent架构</h1>
+      </header>
+      <div class="prose" id="body"><h2 id="react架构"><a href="https://react-lm.github.io/">ReAct</a>架构</h2>
+<p>reasoning traces help the model induce, track, and update action plans as well as handle exceptions, while actions allow it to interface with external sources, such as knowledge bases or environments, to gather additional information. We apply our approach, named ReAct, to a diverse set of language and decision making tasks and demonstrate its effectiveness over state-of-the-art baselines, as well as improved human interpretability and trustworthiness over methods without reasoning or acting components.</p>
+<!--more-->
+<p><img src="../assets/img/posts/LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84/Image.png" alt="Image.png" /></p>
+<p><img src="../assets/img/posts/LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84/Image_2.png" alt="Image.png" /></p>
+<p><strong>参考</strong>：</p>
+<p>[1]<a href="https://til.simonwillison.net/llms/python-react-pattern">A simple Python implementation of the ReAct pattern for LLMs</a></p>
+<p>[2] <a href="https://react-lm.github.io/">ReAct: Synergizing Reasoning and Acting in Language Models</a></p>
+<h2 id="plan-and-solve架构"><a href="https://arxiv.org/abs/2305.04091">Plan-and-Solve</a>架构</h2>
+<p>改进零样本链式思维（Zero-shot chain-of-thought）推理模型来提高大型语言模型在多步推理任务中的表现。作者提出了“计划和解决问题”（Plan-and-Solve）提示策略，该策略由两个组件组成：首先，将整个任务分解为更小的子任务，并根据计划执行这些子任务；其次，为了消除计算错误并提高生成的推理步骤的质量，作者还扩展了PS提示策略，得到了PS+提示策略。</p>
+<p><img src="../assets/img/posts/LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84/Image_3.png" alt="Image.png" /></p>
+<p><strong>参考资料</strong>：</p>
+<p>[1]<a href="https://arxiv.org/pdf/2305.04091">Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models</a></p>
+<p>[2]<a href="https://github.com/AGI-Edgerunners/Plan-and-Solve-Prompting">Plan-and-Solve-Prompting</a></p>
+<h2 id="self-discover模式"><a href="https://arxiv.org/pdf/2402.03620">Self-Discover</a>模式</h2>
+<p>SELF-DISCOVER是一个通用框架，用于让LLMs自我发现任务内在的推理结构，以解决对典型提示方法具有挑战性的复杂推理问题。该框架的核心是一个自我发现过程，在这个过程中，LLMs选择多个原子推理模块，比如批判性思维和逐步思维，并将它们组合成一个明确的推理结构，供LLMs在解码过程中遵循。</p>
+<p><img src="../assets/img/posts/LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84/Image_4.png" alt="Image.png" /></p>
+<p>Self-Discovering Reasoning Structures for Problem-Solving，如下图。<strong>Stage 1: Self-Discover Task-Specific Structures</strong> . The first stage consists of three actions: 1) SELECT, where relevant reasoning modules for task-solving are chosen from the set of reasoning module descriptions; 2) ADAPT, where descriptions of selected reasoning modules are rephrased to be more specific to the task at hand; and 3) IMPLEMENT, where the adapted reasoning descriptions are implemented into a structured actionable plan so that the task can be solved by following the structure.</p>
+<p><img src="../assets/img/posts/LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84/Image_5.png" alt="Image.png" /></p>
+<p><strong>Stage 2: Tackle Tasks Using Discovered Structures</strong>. we can simply append the reasoning structure to all instances of the task and prompt models to follow the reasoning structure to generate an answer。</p>
+<p><img src="../assets/img/posts/LLMs%E7%9A%84Agent%E6%9E%B6%E6%9E%84/Image_6.png" alt="Image.png" /></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

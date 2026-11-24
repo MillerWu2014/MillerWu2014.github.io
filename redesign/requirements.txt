@@ -1,0 +1,4 @@
+markdown-it-py==3.0.0
+mdit-py-plugins==0.4.2
+PyYAML==6.0.3
+Pygments==2.19.2

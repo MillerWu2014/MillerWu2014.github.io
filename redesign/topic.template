@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>$title · 专题 · Miller Wu</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="header.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./">MILLER WU <span>/ NOTES</span></a>
+    $navigation
+  </header>
+  <main class="topic-page">
+    $content
+  </main>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jupyter-notebook远程登陆配置以及spark多语言环境配置 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>Python</h2><a href="2020-04-29-Python3%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0%E6%96%B9%E6%B3%95%E5%AE%9E%E7%8E%B0%E8%8C%83%E5%9E%8B.html">Python3中的函数(方法)实现范型</a><a href="2019-06-25-Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%9A%84%E6%8E%A2%E7%B4%A2.html">Python中实现多线程(真正的)的探索</a><a href="2019-04-09-python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3.html">python中的元类编程详解</a><a href="2019-04-018-python%E4%B8%8B%E7%9A%84cc%2B%2B%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3.html">python下的c/c++扩展方式详解</a><a href="2019-01-21-arrow%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%8F%8A%E5%9C%A8python%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8.html">arrow的性能分析及在python中的使用</a><a href="2018-04-14-python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F.html">python科学计算加速</a><a href="2017-10-13-%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C.html">使用python连接hive数据库并进行数据操作</a><a href="2017-10-10-%E5%AF%B9pyc%E5%92%8Cpyo%E6%96%87%E4%BB%B6%E7%9A%84%E7%90%86%E8%A7%A3.html">对pyc和pyo文件的理解</a><a href="2017-07-20-abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8.html">abc中的元类和six模块配合使用</a><a href="2017-07-09-docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83.html">docker部署anaconda开发环境</a><a href="2017-07-09-jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html" aria-current="page">jupyter-notebook远程登陆配置以及spark多语言环境配置</a><a href="2017-07-09-numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C.html">numba加速python程序运行</a><a href="2017-06-06-nohup%E5%91%BD%E4%BB%A4%E5%8F%8A%E5%85%B6%E8%BE%93%E5%87%BA%E6%96%87%E4%BB%B6.html">nohup命令及其输出文件</a><a href="2017-06-06-%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95__getattr__%E5%92%8C__getattribute__%E7%9A%84%E8%AF%A6%E8%A7%A3.html">魔法方法__getattr__和__getattribute__的详解</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-07-09-jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.md" download="2017-07-09-jupyter-notebook远程登陆配置以及spark多语言环境配置.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-07-09">2017-07-09</time></p>
+        <h1>jupyter-notebook远程登陆配置以及spark多语言环境配置</h1>
+      </header>
+      <div class="prose" id="body"><p><code>jupyter notebook</code>是一个基于浏览器的<code>python</code>数据分析工具，使用起来非常方便，具有极强的交互方式和富文本的展示效果。<code>jupyter</code>是它的升级版，它的安装也非常方便，一般<code>Anaconda</code>安装包中会自带。安装好以后直接输入<code>jupyter notebook</code>便可以在浏览器中使用。但是它默认只能在本地访问，如果想把它安装在服务器上，然后在本地远程访问，则需要进行如下配置：<!--more--></p>
+<ol>
+<li>
+<p>登陆远程服务器</p>
+</li>
+<li>
+<p>生成配置文件<code>$jupyter notebook --generate-config</code></p>
+</li>
+<li>
+<p>生成密码打开<code>ipython</code>，创建一个密文的密码：</p>
+<div class="code-block"><div class="code-toolbar"><span>shell</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-shell">In<span class="w"> </span><span class="o">[</span><span class="m">1</span><span class="o">]</span>:<span class="w"> </span>from<span class="w"> </span>notebook.auth<span class="w"> </span>import<span class="w"> </span>passwd
+In<span class="w"> </span><span class="o">[</span><span class="m">2</span><span class="o">]</span>:<span class="w"> </span>passwd<span class="o">()</span>
+<span class="w">  </span>Enter<span class="w"> </span>password:
+<span class="w">  </span>Verify<span class="w"> </span>password:
+Out<span class="o">[</span><span class="m">2</span><span class="o">]</span>:<span class="w"> </span><span class="s1">&#39;sha1:ce23d945972f:34769685a7ccd3d08c84a18c63968a41f1140274&#39;</span>
+</code></pre></div>
+<p>把生成的密文<code>sha1:ce… </code>复制下来</p>
+</li>
+<li>
+<p>修改默认配置文件
+<code>$vim ~/.jupyter/jupyter_notebook_config.py</code>
+进行如下修改：</p>
+</li>
+</ol>
+<div class="code-block"><div class="code-toolbar"><span>shell</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-shell">c.NotebookApp.ip<span class="o">=</span><span class="s1">&#39;*&#39;</span>
+c.NotebookApp.password<span class="w"> </span><span class="o">=</span><span class="w"> </span>u<span class="s1">&#39;sha:ce...  # 刚才复制的那个密文&#39;</span>
+c.NotebookApp.open_browser<span class="w"> </span><span class="o">=</span><span class="w"> </span>False
+c.NotebookApp.port<span class="w"> </span><span class="o">=</span><span class="m">8888</span><span class="w"> </span><span class="c1">#随便指定一个端口</span>
+</code></pre></div>
+<ol start="5">
+<li>启动<code>jupyter notebook：$jupyter notebook</code></li>
+<li>远程访问
+此时应该可以直接从本地浏览器直接访问<code>http://address_of_remote:8888</code>就可以看到<code>jupyter</code>的登陆界面。</li>
+<li>建立<code>ssh</code>通道
+如果登陆失败，则有可能是服务器防火墙设置的问题，此时最简单的方法是在本地建立一个<code>ss</code>h通道：在本地终端中输入<code>ssh username@address_of_remote -L127.0.0.1:1234:127.0.0.1:8888</code>便可以在<code>localhost:1234</code>直接访问远程的<code>jupyter</code>了。</li>
+<li>给<code>jupyter-notebook</code>服务器换个皮肤</li>
+</ol>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">pip install jupyterthemes
+jt -l`  #　看看有哪些皮肤，再用
+jt -t {皮肤名} -cellw 960 -T -tfs 11 -f source -nf ubuntu -tf source -fs 10
+</code></pre></div>
+<p>重启<code>jupyter-notebook</code>服务器，即可享受新皮肤。</p>
+<ol start="9">
+<li>给<code>jupyter</code>安装插件</li>
+</ol>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text"># 安装`Jupyter Notebook extensions`
+conda install -c conda-forge jupyter_contrib_nbextensions 
+or
+pip install https://github.com/ipython-contrib/IPython-notebook-xtensions/archive/master.zip --user
+pip install jupyter_contrib_nbextensions
+jupyter contrib nbextension install --user
+</code></pre></div>
+<p>运行<code>Jupyter Notebook</code>, 在打开的<code>Notebook</code>界面里, 你会发现多了一个<code>Nbextensions</code>,点击这个<code>tab</code>勾选<code>Table of Contents</code> (有的版本是<code>toc2</code>). 然后创建或者打开一个<code>Jupter Notebook</code>。</p>
+<ol start="10">
+<li>部署不同版本的spark jupyter-notes</li>
+</ol>
+<p>为了使用<code>jupyter</code>开发<code>spark</code>,需要对<code>spark</code>的<code>jupyter</code>环境进行开发,一般可以使用<code>toree</code>进行安装，方便快捷。也可以安装组件,但是相对复杂。使用<code>apache</code>的<code>toree</code>来安装<code>jupyter-scala</code>和<code>jupyter-spark</code>，很方便实用。既可以安装<code>pyspark</code>还是可以安装<code>scala</code>版本的<code>jupyter-spark</code>。主要安装过程如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">pip install toree   # 安装toree`包
+jupyter toree install --spark_home=$SPARK_HOME  # 用户jupyter配置Apache Toree
+&quot;&quot;&quot;
+    $ jupyter kernelspec list
+    Available kernels:
+    python3 /Users/myuser/Library/Jupyter/kernels/python3
+    apache_toree_scala /usr/local/share/jupyter/kernels/apache_toree_scala
+&quot;&quot;&quot;
+# 安装jupyter notebook 和 pyspark
+jupyter toree install --interpreters=PySpark
+or
+jupyter toree install --spark_home=$SPARK_HOME --interpreters=PySpark
+or
+jupyter toree install --spark_home=$SPARK_HOME --interpreters=Scala,PySpark,SparkR,SQL
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

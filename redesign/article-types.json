@@ -1,0 +1,46 @@
+{
+  "论文阅读": [
+    "Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测",
+    "基于DNN的多维时间异常检测",
+    "Convolutional Pose Machines论文记录",
+    "MetNet网络对未来降雨量预测",
+    "AI Agent（智能体）技术白皮书（Google，2024）",
+    "boosting系列之NGBoost算法详解",
+    "boosting系列之CatBoost算法详解",
+    "boosting系列之LightGBM算法详解"
+  ],
+  "技术笔记": [],
+  "工程实践": [
+    "高手都在用的 Skill 2.0 架构指南（附完整步骤）",
+    "Python中实现多线程(真正的)的探索",
+    "多级网络优化的规划问题简化-Python预演",
+    "arrow的性能分析及在python中的使用",
+    "TensorBoard的使用教程",
+    "AWS上EC2主机(ubuntu)下对某个端口的开放",
+    "python科学计算加速",
+    "使用python连接hive数据库并进行数据操作",
+    "spark中遇到的问题汇总",
+    "docker部署anaconda开发环境",
+    "jupyter-notebook远程登陆配置以及spark多语言环境配置",
+    "numba加速python程序运行",
+    "使用spark读取mysql数据库数据转化为dataframe",
+    "用spark对时间数据进行分组求平均值",
+    "信息增益筛选变量和python实现"
+  ],
+  "知识体系": [
+    "必读的Agent相关研究",
+    "AI Agents 初學者課程",
+    "Agent：原理、架构与工程实践",
+    "基于轨迹的数据挖掘相关技术总结"
+  ],
+  "专题": [],
+  "随想": [
+    "智能陷进观后感",
+    "[WWDC]机器学习与产品设计笔记",
+    "改善(今井正明)读书笔记",
+    "生命形态的思考",
+    "Youth青春-塞缪尔·厄尔曼",
+    "对梯度下降算法的思考",
+    "蝙蝠侠前传黑暗骑士观后感"
+  ]
+}

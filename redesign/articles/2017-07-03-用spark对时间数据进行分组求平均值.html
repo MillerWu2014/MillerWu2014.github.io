@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>用spark对时间数据进行分组求平均值 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>spark</h2><a href="2017-08-30-spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob%2Cstage%2Ctask%E8%A7%A3%E6%9E%90.html">spark中job运行过程详解和job,stage,task解析</a><a href="2017-07-24-spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html">spark中遇到的问题汇总</a><a href="2017-07-09-spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.html">spark中创建RDD的几种方式</a><a href="2017-07-08-%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe.html">使用spark读取mysql数据库数据转化为dataframe</a><a href="2017-07-03-spark%E7%AE%97%E5%AD%90aggregate%2Cfold%2Clookup%E8%AF%A6%E8%A7%A3.html">spark算子aggregate,fold,lookup详解</a><a href="2017-07-03-%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC.html" aria-current="page">用spark对时间数据进行分组求平均值</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-07-03-%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC.md" download="2017-07-03-用spark对时间数据进行分组求平均值.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-07-03">2017-07-03</time></p>
+        <h1>用spark对时间数据进行分组求平均值</h1>
+      </header>
+      <div class="prose" id="body"><h3 id="实现过程">实现过程</h3>
+<p>数据格式为key,timestrap,value。需求是按照<code>key</code>并对<code>timestrap</code>固定时间间隔计算，再将<code>key</code>和时间间隔作为<code>key</code>进行分组统计<code>value</code>的均值。其中利用了<code>spark</code>的<code>gourpbykey</code>操作，并对时间进行了转换。实现过程如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>java</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-java"><span class="kn">package</span><span class="w"> </span><span class="nn">org.app.spark</span>
+
+<span class="cm">/**</span>
+<span class="cm">  * Created by root on 17-7-2.</span>
+<span class="cm">  */</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.spark.rdd.RDD</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.spark.</span><span class="p">{</span><span class="n">HashPartitioner</span><span class="p">,</span><span class="w"> </span><span class="n">SparkConf</span><span class="p">,</span><span class="w"> </span><span class="n">SparkContext</span><span class="p">}</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.text.SimpleDateFormat</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.</span><span class="p">{</span><span class="n">Calendar</span><span class="p">,</span><span class="w"> </span><span class="n">Date</span><span class="p">}</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">scala.collection.mutable.ArrayBuffer</span>
+
+
+<span class="kd">class</span> <span class="nf">ParseTimeSeries</span><span class="p">(</span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">conf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SparkConf</span><span class="p">().</span><span class="na">setAppName</span><span class="p">(</span><span class="s">&quot;ParseSeries&quot;</span><span class="p">).</span><span class="na">setMaster</span><span class="p">(</span><span class="s">&quot;local[2]&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">val</span><span class="w"> </span><span class="n">sc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SparkContext</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="n">getData</span><span class="p">:</span><span class="w"> </span><span class="n">RDD</span><span class="o">[</span><span class="p">(</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Date</span><span class="p">,</span><span class="w"> </span><span class="n">Int</span><span class="p">)</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">line</span><span class="p">:</span><span class="w"> </span><span class="n">RDD</span><span class="o">[</span><span class="n">Array</span><span class="o">[</span><span class="n">String</span><span class="o">]]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="na">textFile</span><span class="p">(</span><span class="n">path</span><span class="p">).</span><span class="na">map</span><span class="p">(</span><span class="n">s</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">))</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">newLine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="na">map</span><span class="p">(</span><span class="n">line</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">timeString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="na">apply</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">tf</span><span class="p">:</span><span class="w"> </span><span class="n">SimpleDateFormat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SimpleDateFormat</span><span class="p">(</span><span class="s">&quot;yyyy/MM/dd HH:mm&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">timeFormat</span><span class="p">:</span><span class="w"> </span><span class="n">Date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tf</span><span class="p">.</span><span class="na">parse</span><span class="p">(</span><span class="n">timeString</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="n">line</span><span class="p">.</span><span class="na">apply</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">timeFormat</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="na">apply</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="na">toInt</span><span class="p">)</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">        </span><span class="n">newLine</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="nf">processSeriesByKey</span><span class="p">(</span><span class="n">rdd</span><span class="p">:</span><span class="w"> </span><span class="n">RDD</span><span class="o">[</span><span class="p">(</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Date</span><span class="p">,</span><span class="w"> </span><span class="n">Int</span><span class="p">)</span><span class="o">]</span><span class="p">):</span><span class="w"> </span><span class="n">RDD</span><span class="o">[</span><span class="p">(</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Int</span><span class="p">)</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">toCalendar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Calendar</span><span class="p">.</span><span class="na">getInstance</span><span class="p">()</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayBuffer</span><span class="o">[</span><span class="p">(</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Int</span><span class="p">)</span><span class="o">]</span><span class="p">()</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">rdd</span><span class="p">.</span><span class="na">collect</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">toCalendar</span><span class="p">.</span><span class="na">setTime</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="na">_2</span><span class="p">)</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toCalendar</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">Calendar</span><span class="p">.</span><span class="na">HOUR_OF_DAY</span><span class="p">)</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span>
+<span class="w">            </span><span class="n">array</span><span class="p">.</span><span class="o">+=</span><span class="p">((</span><span class="n">x</span><span class="p">.</span><span class="na">_1</span><span class="p">,</span><span class="w"> </span><span class="n">flag</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="na">_3</span><span class="p">))</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">sc</span><span class="p">.</span><span class="na">parallelize</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">object</span><span class="w"> </span><span class="n">testParseTimeSeries</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">:</span><span class="w"> </span><span class="n">Array</span><span class="o">[</span><span class="n">String</span><span class="o">]</span><span class="p">):</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">file</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/opt/Project/spark_project/data/TimeValue.csv&quot;</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">parse</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ParseTimeSeries</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">new_rdd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse</span><span class="p">.</span><span class="na">processSeriesByKey</span><span class="p">(</span><span class="n">parse</span><span class="p">.</span><span class="na">getData</span><span class="p">)</span>
+<span class="w">        </span><span class="n">new_rdd</span><span class="p">.</span><span class="na">collect</span><span class="p">().</span><span class="na">foreach</span><span class="p">(</span><span class="n">println</span><span class="p">)</span>
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_rdd</span><span class="p">.</span><span class="na">keyBy</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="na">_1</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="na">_2</span><span class="p">)).</span><span class="na">map</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="na">_1</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="na">_2</span><span class="p">.</span><span class="na">_3</span><span class="p">)).</span><span class="na">groupByKey</span><span class="p">().</span>
+<span class="w">            </span><span class="n">map</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="na">_1</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="na">_2</span><span class="p">.</span><span class="na">sum</span><span class="o">/</span><span class="n">x</span><span class="p">.</span><span class="na">_2</span><span class="p">.</span><span class="na">count</span><span class="p">(</span><span class="n">x</span><span class="o">=&gt;</span><span class="kc">true</span><span class="p">).</span><span class="na">toDouble</span><span class="p">))</span>
+<span class="w">        </span><span class="n">other</span><span class="p">.</span><span class="na">foreach</span><span class="p">(</span><span class="n">println</span><span class="p">)</span>
+<span class="w">        </span><span class="n">other</span><span class="p">.</span><span class="na">aggregate</span><span class="p">()</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<!--more-->
+<h3 id="部分数据">部分数据</h3>
+<div class="code-block"><div class="code-toolbar"><span>text</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-text">a,2016/1/2 12:12,41
+a,2016/1/2 13:12,19
+a,2016/1/2 14:12,12
+a,2016/1/2 15:12,84
+a,2016/1/2 16:12,67
+a,2016/1/2 17:12,50
+a,2016/1/2 18:12,72
+a,2016/1/2 19:12,82
+a,2016/1/2 20:12,77
+a,2016/1/2 21:12,12
+a,2016/1/2 22:12,16
+a,2016/1/2 23:12,16
+a,2016/1/3 0:12,28
+a,2016/1/3 1:12,67
+a,2016/1/3 2:12,86
+a,2016/1/3 3:12,93
+a,2016/1/3 4:12,6
+a,2016/1/3 5:12,57
+a,2016/1/3 6:12,78
+a,2016/1/3 7:12,39
+a,2016/1/3 8:12,45
+a,2016/1/3 9:12,2
+a,2016/1/3 10:12,71
+a,2016/1/3 11:12,26
+a,2016/1/3 12:12,1
+a,2016/1/3 13:12,99
+a,2016/1/3 14:12,51
+a,2016/1/3 15:12,66
+b,2016/1/3 16:12,67
+b,2016/1/3 17:12,51
+b,2016/1/3 18:12,75
+b,2016/1/3 19:12,90
+b,2016/1/3 20:12,2
+b,2016/1/3 21:12,90
+b,2016/1/3 22:12,95
+b,2016/1/3 23:12,7
+b,2016/1/4 0:12,32
+b,2016/1/4 1:12,14
+b,2016/1/4 2:12,82
+b,2016/1/4 3:12,29
+b,2016/1/4 4:12,74
+b,2016/1/4 5:12,57
+b,2016/1/4 6:12,13
+b,2016/1/4 7:12,75
+b,2016/1/4 8:12,100
+b,2016/1/4 9:12,49
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

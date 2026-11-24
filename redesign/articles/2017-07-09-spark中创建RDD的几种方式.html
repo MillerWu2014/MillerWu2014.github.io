@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>spark中创建RDD的几种方式 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>spark</h2><a href="2017-08-30-spark%E4%B8%ADjob%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3%E5%92%8Cjob%2Cstage%2Ctask%E8%A7%A3%E6%9E%90.html">spark中job运行过程详解和job,stage,task解析</a><a href="2017-07-24-spark%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB.html">spark中遇到的问题汇总</a><a href="2017-07-09-spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.html" aria-current="page">spark中创建RDD的几种方式</a><a href="2017-07-08-%E4%BD%BF%E7%94%A8spark%E8%AF%BB%E5%8F%96mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8C%96%E4%B8%BAdataframe.html">使用spark读取mysql数据库数据转化为dataframe</a><a href="2017-07-03-spark%E7%AE%97%E5%AD%90aggregate%2Cfold%2Clookup%E8%AF%A6%E8%A7%A3.html">spark算子aggregate,fold,lookup详解</a><a href="2017-07-03-%E7%94%A8spark%E5%AF%B9%E6%97%B6%E9%97%B4%E6%95%B0%E6%8D%AE%E8%BF%9B%E8%A1%8C%E5%88%86%E7%BB%84%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC.html">用spark对时间数据进行分组求平均值</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-07-09-spark%E4%B8%AD%E5%88%9B%E5%BB%BARDD%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.md" download="2017-07-09-spark中创建RDD的几种方式.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-07-09">2017-07-09</time></p>
+        <h1>spark中创建RDD的几种方式</h1>
+      </header>
+      <div class="prose" id="body"><p>创建<code>RDD</code>主要有三种方式：从外部数据创建<code>RDD</code>，从另外一个<code>RDD</code>创建，对现有的数据列表或者数据集合进行创建。三种方式均能够创建<code>RDD</code>对象。<code>RDD</code>可以包含<code>Scala</code>，<code>Python</code>，<code>Java</code>的任意类型的对象，因此任何数据均可以创建<code>RDD</code>。<code>spark</code>创建<code>RDD</code>时首先需要通过<code>SpakContext</code>作为对象，创建一个<code>sc</code>对象，再通过<code>sc</code>来创建<code>RDD</code>。<code>sc</code>对象之前可以通过<code>sparkconf</code>对象对<code>SpakContex</code>t进行设置。如集群的<code>URL</code>和应用名等等。下面是对<code>SpakContext</code>对象设置。如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkContext</span><span class="p">,</span> <span class="n">SparkConf</span>
+
+<span class="n">conf</span> <span class="o">=</span> <span class="n">SparkConf</span><span class="p">()</span><span class="o">.</span><span class="n">setAppName</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setMaster</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setSparkHome</span><span class="p">(</span><span class="s2">&quot;/opt/spark1.6.0/&quot;</span><span class="p">)</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">)</span>
+</code></pre></div>
+<p>上面通过<code>SparkConf</code>对象设置了<code>conf</code>. 再创建<code>sc</code>对象，并将设置传给<code>sc</code>对象。<code>SparkConf</code>对象的方法有：<code>set(key,value),setIfMissing(key,value),setMaster(value),setAppName(value)，setSparkHome(value)，setExecutorEnv(key=None, value=None, pairs=None)，setAll(pairs)</code>并对应了<code>get</code>方法。</p>
+<!--more-->
+<ul>
+<li><strong>外部数据创建RDD</strong></li>
+</ul>
+<p><code>spark</code>提供很多外部数据创建的接口，如下面所示的<code>textFile</code>.还有<code>hadoopFile</code>,<code>pickleFile</code>以及<code>sqlContext.jsonFile</code>，还提供<code>sql</code>以及<code>hadoop</code>的接口。基本包含了主要的数据格式的读入接口。下面是通过<code>textFile</code>对文本数据进行创建<code>RDD</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.mllib</span><span class="w"> </span><span class="kn">import</span> <span class="n">classification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.mllib.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabeledPoint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.mllib.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">BinaryClassificationMetrics</span>
+
+<span class="n">logFile</span> <span class="o">=</span> <span class="s2">&quot;/opt/spark1.6.0/data/mllib/sample_svm_data.txt&quot;</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">,</span> <span class="s2">&quot;Simple App&quot;</span><span class="p">)</span>
+<span class="n">logData</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">textFile</span><span class="p">(</span><span class="n">logFile</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</code></pre></div>
+<ul>
+<li><strong>从集合数据中创建RDD</strong></li>
+</ul>
+<p>比如从<code>Python</code>的<code>array</code>中创建<code>RDD</code>。这种创建方式为最简单的一种方式。直接通过<code>SpakContext</code>的<code>paralleliza()</code>方法即可。这种方法可以快速的创建<code>RDD</code>对象，再对<code>RDD</code>对象进行转化操作及行动操作等等。下面例子中就是通过<code>paralleliza</code>方法创建<code>RDD</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># _*_ coding:utf8 _*_</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_iris</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkContext</span><span class="p">,</span> <span class="n">SparkConf</span>
+
+<span class="n">conf</span> <span class="o">=</span> <span class="n">SparkConf</span><span class="p">()</span><span class="o">.</span><span class="n">setAppName</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setMaster</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setSparkHome</span><span class="p">(</span><span class="s2">&quot;/opt/spark1.6.0/&quot;</span><span class="p">)</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">)</span>
+<span class="n">data_set</span> <span class="o">=</span> <span class="n">load_iris</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">data_set</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+<span class="n">spark_data</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">parallelize</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="nb">print</span> <span class="n">spark_data</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</code></pre></div>
+<ul>
+<li><strong>从其他RDD创建</strong></li>
+</ul>
+<p>这种创建方式也相对简单，便捷。比如<code>RDD</code>的转化操作便是这样的操作。下面就不再对该中方式进行举例说明。
+在<code>spark</code>中也提供了<code>dataframe</code>类型的接口。可以创建<code>dataframe</code>,和<code>pandas</code>下的<code>dataframe</code>非常相似，并且有很多相同的操作。创建的方式有很多，可以从数据库中创建，如<code>mysql，hive，hdfs，json</code>等等。下面是各个接口创建<code>dataframe</code>的例子。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 从Hive中的users表构造DataFrame</span>
+<span class="n">users</span> <span class="o">=</span> <span class="n">sqlContext</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+<span class="c1"># 加载S3上的JSON文件</span>
+<span class="n">logs</span> <span class="o">=</span> <span class="n">sqlContext</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;s3n://path/to/data.json&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">)</span>
+<span class="c1"># 加载HDFS上的Parquet文件</span>
+<span class="n">clicks</span> <span class="o">=</span> <span class="n">sqlContext</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;hdfs://path/to/data.parquet&quot;</span><span class="p">,</span> <span class="s2">&quot;parquet&quot;</span><span class="p">)</span>
+<span class="c1"># 通过JDBC访问MySQL</span>
+<span class="n">comments</span> <span class="o">=</span> <span class="n">sqlContext</span><span class="o">.</span><span class="n">jdbc</span><span class="p">(</span><span class="s2">&quot;jdbc:mysql://localhost/comments&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">)</span>
+<span class="c1"># 将普通RDD转变为DataFrame</span>
+<span class="n">rdd</span> <span class="o">=</span> <span class="n">sparkContext</span><span class="o">.</span><span class="n">textFile</span><span class="p">(</span><span class="s2">&quot;article.txt&quot;</span><span class="p">)</span> \
+                  <span class="o">.</span><span class="n">flatMap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">line</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> \
+                  <span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">word</span><span class="p">:</span> <span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> \
+                  <span class="o">.</span><span class="n">reduceByKey</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> \
+<span class="n">wordCounts</span> <span class="o">=</span> <span class="n">sqlContext</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">rdd</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;word&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">])</span>
+
+<span class="c1"># 将本地数据容器转变为DataFrame</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Bob&quot;</span><span class="p">,</span> <span class="mi">24</span><span class="p">)]</span>
+<span class="n">people</span> <span class="o">=</span> <span class="n">sqlContext</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">])</span>
+<span class="c1"># 将Pandas DataFrame转变为Spark DataFrame（Python API特有功能）</span>
+<span class="n">sparkDF</span> <span class="o">=</span> <span class="n">sqlContext</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">pandasDF</span><span class="p">)</span>
+
+<span class="c1"># 完整的例子</span>
+<span class="c1">#!/usr/bin/env python</span>
+<span class="c1"># _*_ coding:utf-8 _*_</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_iris</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkContext</span><span class="p">,</span> <span class="n">SparkConf</span><span class="p">,</span> <span class="n">SQLContext</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">conf</span> <span class="o">=</span> <span class="n">SparkConf</span><span class="p">()</span><span class="o">.</span><span class="n">setAppName</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setMaster</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setSparkHome</span><span class="p">(</span><span class="s2">&quot;/opt/spark-1.6.0/&quot;</span><span class="p">)</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">)</span>
+<span class="n">data_set</span> <span class="o">=</span> <span class="n">load_iris</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">data_set</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+<span class="n">s_data</span> <span class="o">=</span> <span class="n">SQLContext</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="nb">print</span> <span class="n">s_data</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="nb">print</span> <span class="n">s_data</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">s_data</span><span class="o">.</span><span class="n">columns</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</code></pre></div>
+<p>若要收集<code>RDD</code>中的信息可以使用<code>token</code>方法，对<code>RDD</code>的对象进行收集，入下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">s_data</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="nb">print</span> <span class="n">line</span>
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

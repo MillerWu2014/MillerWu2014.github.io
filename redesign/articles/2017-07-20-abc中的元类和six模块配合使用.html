@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>abc中的元类和six模块配合使用 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>Python</h2><a href="2020-04-29-Python3%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0%E6%96%B9%E6%B3%95%E5%AE%9E%E7%8E%B0%E8%8C%83%E5%9E%8B.html">Python3中的函数(方法)实现范型</a><a href="2019-06-25-Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%9A%84%E6%8E%A2%E7%B4%A2.html">Python中实现多线程(真正的)的探索</a><a href="2019-04-09-python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3.html">python中的元类编程详解</a><a href="2019-04-018-python%E4%B8%8B%E7%9A%84cc%2B%2B%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3.html">python下的c/c++扩展方式详解</a><a href="2019-01-21-arrow%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%8F%8A%E5%9C%A8python%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8.html">arrow的性能分析及在python中的使用</a><a href="2018-04-14-python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F.html">python科学计算加速</a><a href="2017-10-13-%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C.html">使用python连接hive数据库并进行数据操作</a><a href="2017-10-10-%E5%AF%B9pyc%E5%92%8Cpyo%E6%96%87%E4%BB%B6%E7%9A%84%E7%90%86%E8%A7%A3.html">对pyc和pyo文件的理解</a><a href="2017-07-20-abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8.html" aria-current="page">abc中的元类和six模块配合使用</a><a href="2017-07-09-docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83.html">docker部署anaconda开发环境</a><a href="2017-07-09-jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html">jupyter-notebook远程登陆配置以及spark多语言环境配置</a><a href="2017-07-09-numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C.html">numba加速python程序运行</a><a href="2017-06-06-nohup%E5%91%BD%E4%BB%A4%E5%8F%8A%E5%85%B6%E8%BE%93%E5%87%BA%E6%96%87%E4%BB%B6.html">nohup命令及其输出文件</a><a href="2017-06-06-%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95__getattr__%E5%92%8C__getattribute__%E7%9A%84%E8%AF%A6%E8%A7%A3.html">魔法方法__getattr__和__getattribute__的详解</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2017-07-20-abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8.md" download="2017-07-20-abc中的元类和six模块配合使用.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2017-07-20">2017-07-20</time></p>
+        <h1>abc中的元类和six模块配合使用</h1>
+      </header>
+      <div class="prose" id="body"><p><code>metaclass</code>是类的类或者元类，秉承<code>Python</code>一切皆对象的理念，<code>Python</code>中的类也是一类对象，<code>metaclass</code>的实例就是类(<code>class</code>)，自己写<code>metaclass</code>时需要让其继承自<code>type</code>对象。关于<code>metaclass</code>的介绍，可以看<code>python</code>学习手册中的元类概念部分。
+<code>ABC</code>（抽象基类），主要定义了基本类和最基本的抽象方法，可以为子类定义共有的<code>API</code>，不需要具体实现。<code>abc</code>模块，<code>Python</code>对于<code>ABC</code>的支持模块，定义了一个特殊的<code>metaclass-ABCMeta</code> 还有一些装饰器— <code>@abstractmethod</code>和<code> @abstarctproperty</code> 。<code>abc.ABCMeta</code> 是一个<code>metaclass</code>，用于在<code>Python</code>程序中创建抽象基类。<!--more--></p>
+<p>抽象基类可以不实现具体的方法(也可以实现)，可以留给子类去实现。这类方法在抽象基类中是通过 <code>@abstractmethod</code>去实现的。抽象基类可以被子类直接继承，也可以将其他的类”注册“<code>(register)</code>到其门下当虚拟子类，虚拟子类的好处是你实现的第三方子类不需要直接继承自基类但是仍然可以声称自己子类中的方法实现了基类规定的接口<code>issubclass(), issubinstance()</code>！虚拟子类是通过调用<code>metaclass</code>是 <code>abc.ABCMeta</code> 的抽象基类的 <code>register</code>方法注册到抽象基类门下的，可以实现抽象基类中的部分<code>API</code>接口，也可以根本不实现，但是<code>issubclass(), issubinstance()</code>进行判断时仍然返回真值。</p>
+<p>直接继承抽象基类的子类就没有这么灵活，在<code>metaclass</code>是 <code>abc.ABCMeta</code>的抽象基类中可以声明”抽象方法“和“抽象属性”，直接继承自抽象基类的子类虽然判断<code>issubclass()</code>时为真，但只有完全覆写（实现）了抽象基类中的“抽象”内容后，才能被实例化，而通过注册的虚拟子类则不受此影响。</p>
+<p><code>metaclass</code>为 <code>abc.ABCMeta</code> 的抽象基类如果想要声明“抽象方法”，可以使用<code>abc</code>模块中的装饰器 <code>@abstractmethod</code>，如果想声明“抽象属性”，可以使用<code>abc</code>模块中的<code>@abstractproperty</code> 。最后，为什么要提<code>six</code>模块呢，<code>six</code>模块是<code>Python</code>为了兼容<code>Python 2.x</code> 和<code>Python 3.x</code>提供的一个模块，该模块中有一个针对类的装饰器<code>@six.add_metaclass(MetaClass)</code>可以为两个版本的<code>Python</code>类方便地添加<code>metaclass</code>。这样我们就可以同时利用<code>Python</code>中的<code>abc</code>模块和<code>six</code>模块在类的定义前添加<code>@six.add_metaclass(abc.ABCMeta)</code>来优雅地声明一个抽象基础类了！</p>
+<p>在<code>python2.x</code>和<code>python3.x</code>下都可以通过下面的代码来实现：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">six</span>
+
+<span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyClass1</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span>
+   	
+    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">():</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span>
+    
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;子类中实现该方法&quot;</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">metaTest</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="nb">object</span><span class="p">)):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;需要实现这个类的方法&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">3</span>
+</code></pre></div>
+<p>而原始在<code>python2</code>和<code>python3</code>中需要使用不同的方式：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># python2</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">ABCMeta</span>
+    <span class="k">pass</span>
+
+<span class="c1"># python3</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyClass3</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="k">pass</span>
+</code></pre></div>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

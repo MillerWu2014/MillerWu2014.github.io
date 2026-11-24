@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>python科学计算加速 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>Python</h2><a href="2020-04-29-Python3%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0%E6%96%B9%E6%B3%95%E5%AE%9E%E7%8E%B0%E8%8C%83%E5%9E%8B.html">Python3中的函数(方法)实现范型</a><a href="2019-06-25-Python%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%9A%84%E6%8E%A2%E7%B4%A2.html">Python中实现多线程(真正的)的探索</a><a href="2019-04-09-python%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E7%BC%96%E7%A8%8B%E8%AF%A6%E8%A7%A3.html">python中的元类编程详解</a><a href="2019-04-018-python%E4%B8%8B%E7%9A%84cc%2B%2B%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F%E8%AF%A6%E8%A7%A3.html">python下的c/c++扩展方式详解</a><a href="2019-01-21-arrow%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%8F%8A%E5%9C%A8python%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8.html">arrow的性能分析及在python中的使用</a><a href="2018-04-14-python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F.html" aria-current="page">python科学计算加速</a><a href="2017-10-13-%E4%BD%BF%E7%94%A8python%E8%BF%9E%E6%8E%A5hive%E6%95%B0%E6%8D%AE%E5%BA%93%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C.html">使用python连接hive数据库并进行数据操作</a><a href="2017-10-10-%E5%AF%B9pyc%E5%92%8Cpyo%E6%96%87%E4%BB%B6%E7%9A%84%E7%90%86%E8%A7%A3.html">对pyc和pyo文件的理解</a><a href="2017-07-20-abc%E4%B8%AD%E7%9A%84%E5%85%83%E7%B1%BB%E5%92%8Csix%E6%A8%A1%E5%9D%97%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8.html">abc中的元类和six模块配合使用</a><a href="2017-07-09-docker%E9%83%A8%E7%BD%B2anaconda%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83.html">docker部署anaconda开发环境</a><a href="2017-07-09-jupyter-notebook%E8%BF%9C%E7%A8%8B%E7%99%BB%E9%99%86%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8Aspark%E5%A4%9A%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html">jupyter-notebook远程登陆配置以及spark多语言环境配置</a><a href="2017-07-09-numba%E5%8A%A0%E9%80%9Fpython%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C.html">numba加速python程序运行</a><a href="2017-06-06-nohup%E5%91%BD%E4%BB%A4%E5%8F%8A%E5%85%B6%E8%BE%93%E5%87%BA%E6%96%87%E4%BB%B6.html">nohup命令及其输出文件</a><a href="2017-06-06-%E9%AD%94%E6%B3%95%E6%96%B9%E6%B3%95__getattr__%E5%92%8C__getattribute__%E7%9A%84%E8%AF%A6%E8%A7%A3.html">魔法方法__getattr__和__getattribute__的详解</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2018-04-14-python%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E5%8A%A0%E9%80%9F.md" download="2018-04-14-python科学计算加速.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2018-04-14">2018-04-14</time></p>
+        <h1>python科学计算加速</h1>
+      </header>
+      <div class="prose" id="body"><h2 id="1使用gpu">1.使用GPU</h2>
+<p>使用GPU有两种方式：numba和pycuda，可以通过这两个package和python实现CUDA程序。</p>
+<h3 id="11-numba">1.1 numba</h3>
+<p>CUDA官方加速是通过numba来使用GPU或CPU加速，在很早以前是通过numbapro实现的，属于收费版本，后面全部整合成了numba和accelerate，而且免费开放，在Anaconda环境下已经安装了numba，只需要使用即可。使用numba的GPU加速需要进行配置。具体配置方式可查看官方文档。</p>
+<p>Refrence</p>
+<p>[1].numba官方地址：<a href="http://numba.pydata.org/">http://numba.pydata.org/</a></p>
+<p>[2].numba官方文档：<a href="http://numba.pydata.org/doc.html">http://numba.pydata.org/doc.html</a></p>
+<p>[3].numba配置CUDA的GPU：<a href="http://blog.csdn.net/u013975830/article/details/78822919">http://blog.csdn.net/u013975830/article/details/78822919</a><!--more--></p>
+<h3 id="12-pycudapy">1.2 pycudapy</h3>
+<p>cuda也是提供python到gpu的接口，简单可以使用pycuda自身的接口实现，复杂的就需要自己实现cuda程序再通过pycuda实现。</p>
+<p>Refrence</p>
+<p>[1].CUDA和pycuda环境的配置：<a href="http://blog.csdn.net/zhouqingtaostudy/article/details/50896948">http://blog.csdn.net/zhouqingtaostudy/article/details/50896948</a></p>
+<p>[2].pycuda的官网：<a href="https://documen.tician.de/pycuda/">https://documen.tician.de/pycuda/</a>    <a href="https://mathema.tician.de/software/pycuda/">https://mathema.tician.de/software/pycuda/</a></p>
+<p>[3].pycuda的tutorial翻译：<a href="http://blog.cycleuser.org/pycuda-tutorial-zhong-wen-ban.html">http://blog.cycleuser.org/pycuda-tutorial-zhong-wen-ban.html</a></p>
+<p>[4].pycuda的notebook：<a href="http://nbviewer.jupyter.org/github/Kivy-CN/Duke-STA-633-CN/tree/master/%E5%B7%B2%E7%BB%8F%E7%BF%BB%E8%AF%91%E7%9A%84%E8%AE%B2%E5%BA%A7%E5%86%85%E5%AE%B9/Topic21_GPU_Computing/">http://nbviewer.jupyter.org/github/Kivy-CN/Duke-STA-633-CN/tree/master/已经翻译的讲座内容/Topic21_GPU_Computing/</a></p>
+<p>[5].pycuda的翻译：<a href="https://zhuanlan.zhihu.com/p/32062796">https://zhuanlan.zhihu.com/p/32062796</a></p>
+<h2 id="2使用c加速">2.使用C加速</h2>
+<p>python中可以使用c实现部分功能来进行加速，比如Cython，Cython也可以和numpy配合使用，来对numpy进行加速。</p>
+<h3 id="21-cython加速">2.1 Cython加速</h3>
+<p>(1) 使用Cython和numpy结合    将两者结合使用可以有效的加速python中的核心代码，下面通过示例说明怎么结合。下面通过cython的形式实现一个矩阵点乘的方法，具体代码如下，文件名为<code>multi.pyx</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span>
+<span class="n">cimport</span> <span class="n">cython</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="n">cimport</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="n">DTYPE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+<span class="n">ctypedef</span> <span class="n">np</span><span class="o">.</span><span class="n">float64_t</span> <span class="n">DTYPE_t</span>
+
+
+<span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">multi_product</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">        a: np.ndarray, the shape of (m, n)</span>
+<span class="sd">        b: np.ndarray, the shape of (m, n)</span>
+<span class="sd">    return</span>
+<span class="sd">    ------</span>
+<span class="sd">        np.ndarray, return the array shape of (m, n)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">a_array_r</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">a_array_c</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">b_array_r</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">b_array_c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">a_array_r</span> <span class="o">!=</span> <span class="n">b_array_r</span> <span class="ow">or</span> <span class="n">a_array_c</span> <span class="o">!=</span> <span class="n">b_array_c</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;ValueError: operands could not be broadcast together with shapes </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span>
+                       <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">((</span><span class="n">a_array_r</span><span class="p">,</span> <span class="n">a_array_c</span><span class="p">)),</span> <span class="nb">str</span><span class="p">((</span><span class="n">b_array_r</span><span class="p">,</span> <span class="n">b_array_c</span><span class="p">))))</span>
+     <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">a_array_r</span><span class="p">,</span> <span class="n">a_array_c</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">_r_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a_array_r</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_c_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a_array_c</span><span class="p">):</span>
+             <span class="n">out</span><span class="p">[</span><span class="n">_r_</span><span class="p">,</span> <span class="n">_c_</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">_r_</span><span class="p">,</span> <span class="n">_c_</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">_r_</span><span class="p">,</span> <span class="n">_c_</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">out</span>
+</code></pre></div>
+<p>创建一个setup.py的文件，类似c++中的makefile配置文件，setup.py文件内容主要时配置编译，具体代码如下所示：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">distutils.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">Extension</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Cython.Distutils</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_ext</span>
+
+<span class="n">setup</span><span class="p">(</span>
+    <span class="n">cmdclass</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;build_ext&#39;</span><span class="p">:</span> <span class="n">build_ext</span><span class="p">},</span>
+    <span class="n">ext_modules</span><span class="o">=</span><span class="p">[</span>
+                 <span class="n">Extension</span><span class="p">(</span><span class="s2">&quot;multi&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;multi.pyx&quot;</span><span class="p">],</span>
+                 <span class="n">include_dirs</span><span class="o">=</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">get_include</span><span class="p">()])</span>
+              <span class="p">]</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>上面setup.py文件中的include_dirs非常重要，否则在后面编译pyx文件时会出现一些错误：找不到&quot;numpy/arrayobject.h&quot;,因此需要在setup.py文件中将依赖的.h文件给添加上。下面通过命令进行编译即可：</p>
+<div class="code-block"><div class="code-toolbar"><span>shell</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-shell">python<span class="w"> </span>setup.py<span class="w"> </span>build_ext<span class="w"> </span>--inplace
+</code></pre></div>
+<p>编译后会生成<code>.so</code>文件(linux，windows下为dll文件)。后面通过python直接引用该文件，调用其中的方法即可。下面对使用cython实现的点乘方法和numpy包的<code>multiply</code>方法效率进行对比：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">timeit</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span><span class="n">stmt</span><span class="o">=</span><span class="s2">&quot;multi.multi_product(x, y)&quot;</span><span class="p">,</span> <span class="n">setup</span><span class="o">=</span><span class="s2">&quot;import multi; import numpy as np; x = np.array([[1, 2, 3], [2.4, 89.0, 11]]); y = np.array([[1, 2, 3], [2.4, 89.0, 11]])&quot;</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">10000</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span><span class="n">stmt</span><span class="o">=</span><span class="s2">&quot;np.multiply(x, y)&quot;</span><span class="p">,</span> <span class="n">setup</span><span class="o">=</span><span class="s2">&quot;import numpy as np; x = np.array([[1, 2, 3], [2.4, 89.0, 11]]); y = np.array([[1, 2, 3], [2.4, 89.0, 11]])&quot;</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">10000</span><span class="p">))</span>
+
+<span class="c1"># -------- output -------------------</span>
+<span class="mf">0.03196066700184019</span>
+<span class="mf">0.006172515997604933</span>
+</code></pre></div>
+<p>效率上还是比不上numpy，主要是因为numpy在这方面做了深度优化。但是比纯python实现的方法要快很多。
+Refrence</p>
+<p>[1]Cython官方文档：<a href="http://cython.org/">http://cython.org/</a></p>
+<p>[2].Cython基础教程中文版：<a href="https://moonlet.gitbooks.io/cython-document-zh_cn/content/ch1-basic_tutorial.html">https://moonlet.gitbooks.io/cython-document-zh_cn/content/ch1-basic_tutorial.html</a></p>
+<p>[3].Cython中<code>def</code>, <code>cdef</code>和<code>cpdef</code>区别和使用：<a href="http://notes-on-cython.readthedocs.io/en/latest/index.html">http://notes-on-cython.readthedocs.io/en/latest/index.html</a></p>
+<p>[4].<a href="http://www.cnblogs.com/lidyan/p/7474244.html">Cython中def,cdef,cpdef的区别</a>: <a href="http://www.cnblogs.com/lidyan/p/7474244.html">http://www.cnblogs.com/lidyan/p/7474244.html</a></p>
+<h3 id="22-pypy-加速">2.2 <a href="http://pypy.org/">PyPy</a> 加速</h3>
+<p>PyPy是用<a href="https://baike.baidu.com/item/Python">Python</a>实现的Python解释器。</p>
+<p>[1].用 Psyco 让 Python 运行得像 C 一样快：<a href="https://www.ibm.com/developerworks/cn/linux/sdk/python/charm-28/">https://www.ibm.com/developerworks/cn/linux/sdk/python/charm-28/</a></p>
+<h3 id="23-numexpr加速">2.3 numexpr加速</h3>
+<p>使用numexpr[<a href="http://numexpr.readthedocs.io/en/latest/index.html">http://numexpr.readthedocs.io/en/latest/index.html</a>]</p>
+<p>Refrence</p>
+<p>[1].优化 Python 性能：PyPy、Numba 与 Cython比较：<a href="https://www.zhihu.com/question/24695645">https://www.zhihu.com/question/24695645</a></p>
+<p>[2].numpy的c-api接口：<a href="http://python.usyiyi.cn/documents/NumPy_v111/reference/c-api.html">http://python.usyiyi.cn/documents/NumPy_v111/reference/c-api.html</a></p>
+<p>[3].python中使用C代码-以numpy为例：<a href="https://segmentfault.com/a/1190000000479951">https://segmentfault.com/a/1190000000479951</a></p>
+<p>[4].<a href="https://github.com/johnnylee/python-numpy-c-extension-examples">python-numpy-c-extension-examples</a>：<a href="https://github.com/johnnylee/python-numpy-c-extension-examples">https://github.com/johnnylee/python-numpy-c-extension-examples</a></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

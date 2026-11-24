@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>深度学习-详解LSTM网络和TensorFlow实现 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>deep learning</h2><a href="2021-10-16-Autoformer%E5%9F%BA%E4%BA%8E%E5%BA%8F%E5%88%97%E5%88%86%E8%A7%A3%E7%BB%93%E6%9E%84Transformer%E5%92%8CAuto-Correlation%E7%9A%84%E9%95%BF%E5%BA%8F%E5%88%97%E9%A2%84%E6%B5%8B.html">Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测</a><a href="2021-04-16-%E5%9F%BA%E4%BA%8EDNN%E7%9A%84%E5%A4%9A%E7%BB%B4%E6%97%B6%E9%97%B4%E5%BC%82%E5%B8%B8%E6%A3%80%E6%B5%8B.html">基于DNN的多维时间异常检测</a><a href="2020-09-27-Convolutional-Pose-Machines%E8%AE%BA%E6%96%87%E8%AE%B0%E5%BD%95.html">Convolutional Pose Machines论文记录</a><a href="2018-11-06-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-GAN%E7%BD%91%E7%BB%9C%E8%AF%A6%E8%A7%A3%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0.html">深度学习-GAN网络详解及TensorFlow实现</a><a href="2018-07-03-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3CNN%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0.html">深度学习-详解CNN网络和TensorFlow实现</a><a href="2018-06-21-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0.html" aria-current="page">深度学习-详解LSTM网络和TensorFlow实现</a><a href="2018-05-01-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3RNN%E7%BD%91%E7%BB%9C%E5%8F%8ATensorFlow%E5%AE%9E%E7%8E%B0.html">深度学习-详解RNN网络及TensorFlow实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2018-06-21-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0.md" download="2018-06-21-深度学习-详解LSTM网络和TensorFlow实现.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2018-06-21">2018-06-21</time></p>
+        <h1>深度学习-详解LSTM网络和TensorFlow实现</h1>
+      </header>
+      <div class="prose" id="body"><p>LSTM网络是RNN网络中的特殊网络，再RNN文章中已经提到，RNN在时间步过长时，学习不到依赖关系。主要是RNN会引起梯度消失和梯度爆炸这两个问题，因此为了解决问题，研究者们提出了很多方式，其中GRU和LSTM网络就是这样诞生的。LSTM网络在应用中也取得了非凡的成就，特别是在语音识别，语言建模，翻译等等方面。</p>
+<p>##1.长期依赖问题</p>
+<p>RNN的核心就是能将历史的信息连接到当前的场景下，即RNN对历史是有记忆功能的，能对一定时间步的信息进行记忆。但是<code>time step</code>过长的时候，就会出现问题，对过久(时间跨度太大的信息)信息没有记忆。从理论的角度RNN是有这样的功能，在应用中却不尽人意。为了解决这种长期依赖的问题，研究者提出了新的RNN模型，如GRU，LSTM等网络，来解决这种长期依赖的问题。</p>
+<h2 id="2什么是lstm网络">2.什么是LSTM网络</h2>
+<p>LSTM，全称为长短期记忆网络（Long Short Term Memory networks）,它也是一种特殊的RNN网络，但是可以学习到长期依赖的关系。那么LSTM是如何解决长期依赖的问题呢？</p>
+<p>在RNN中我们也提到了，可以通过gate的方式来解决梯度消失和梯度爆炸的问题，而LSTM就是通过gate的方式来实现的。下面是LSTM的cell单元可视化结构。</p>
+<p>下面是在整个时间序列上LSTM的整体结构，<span class="math inline">\(X_t\)</span>表示不同时间点的输入序列，<span class="math inline">\(h_t\)</span>为每个时间点的输出，从下面的结构图中可以看出LSTM网络中比RNN网络多了一个循环结构，从上面的结构中可以看出，<code>LSTM Cell</code>中多出了一个<span class="math inline">\(C_t\)</span>的的变量，在LSTM中被称为记忆单元，记忆单元贯穿整个时间步，不会被输出，只会在循环过程中进行更新，并输出到下一时间步作为输入。<span class="math inline">\(C_t\)</span>在每个cell中会进行简单的线性交互，上面承载了一些历史的输入信息。</p>
+<img src="../assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/LSTM.png" alt="LSTM 网络结构" style="zoom:30" />
+<!--more-->
+<h2 id="3lstm结构详解">3.LSTM结构详解</h2>
+<p>从上面中也提出了<code>LSTM Cell</code>中主要通过gate的方式在RNN基础上进行变换的。具体<code>LSTM Cell</code>的结构如下所示，主要通过三道<code>gate</code>（门）来控制输入，输出等，这个门来选择性的控制信息的是否通过。主要是通过sigmod神经网络层和一个元素的乘积实现门的控制。</p>
+<img src="../assets/img/posts/深度学习-详解LSTM网络和TensorFlow实现/lstm_cell.png" alt="LSTM Cell 结构" style="zoom:50%" />
+<h3 id="31-lstm分步详解">3.1 LSTM分步详解</h3>
+<p><code>LSTM Cell</code>的整体输入有：<span class="math inline">\(X_t\)</span>，<span class="math inline">\(h_{t-1}\)</span>，<span class="math inline">\(c_{t-1}\)</span>，而整体输出和RNN的输出一致，主要是<span class="math inline">\(h_t\)</span>，<span class="math inline">\(z_t\)</span>；而<span class="math inline">\(c_t\)</span>主要是在循环过程中使用。而<code>LSTM Cell</code>中最关键的就是<code>gate</code>实现，而<code>LSTM</code>的三道门主要作用是不一样的，分别为&quot;遗忘门&quot;，&quot;输入门&quot;，&quot;输出门&quot;；下面分别对这三道门进行分别详细说明。</p>
+<h4 id="311-forget-gate">3.1.1 Forget Gate</h4>
+<p>遗忘门主要对<span class="math inline">\(h_{t-1}\)</span>和<span class="math inline">\(x_t\)</span>进行观察，对记忆单元<span class="math inline">\(C_{t-1}\)</span>的元素选择性的遗忘，遗忘门输出的是0-1的数，1表示完全保留该消息，0表示遗忘该消息。遗忘门输出一个<span class="math inline">\(f_t\)</span>，公式为：
+<div class="math inline">\[f_t=\sigma(W_f \cdot [x_t, h_{t-1}] + b_f)\]</div>
+输出后的<span class="math inline">\(f_t\)</span>再和<span class="math inline">\(c_{t-1}\)</span>相乘，来更新记忆单元。在应用过程中的意义时，选择性的忘记一些历史信息(不是所有的历史信息都是有意义的)。</p>
+<h4 id="312-input-gate">3.1.2 Input Gate</h4>
+<p>这一步的主要作用是将旧的记忆单元<span class="math inline">\(c_{t-1}\)</span>更新到新的记忆单元<span class="math inline">\(c_t\)</span>上。这一步只需要将<span class="math inline">\(c_{t-1}\)</span>乘以<span class="math inline">\(f_t\)</span>在加上<span class="math inline">\(i_t\)</span>*<span class="math inline">\(c_{t}^-\)</span>即可。<span class="math inline">\(i_t\)</span>则为输入门，可以理解为对本次的输入更新程度。，具体公式如下：
+<div class="math inline">\[i_t = \sigma(W_i \cdot [x_t, h_{t-1}] + b_i)\\
+c_t^-=tanh(W_c \cdot [x_t, h_{t-1})] + b_c)\]</div>
+<span class="math inline">\(i_t\)</span>输出的为0-1的值，<span class="math inline">\(c_{t}^-\)</span>的计算方式和RNN中的state更新方式一致，再乘以<span class="math inline">\(i_t\)</span>后，表示对最新<span class="math inline">\(c_t\)</span>的更新程度。这儿一步的意义是，添加了当前时间步的信息，随后添加到记忆单元中。这一步输出们计算完成后随后需要更新<span class="math inline">\(C_t\)</span>：
+<div class="math inline">\[c_t = c_{t-1} * f_t + i_t*c_t^-\]</div></p>
+<h4 id="313-output-gate">3.1.3 Output Gate</h4>
+<p>最后需要决定最终的输出，输出会基于当前的信息，并且可能会进行一些过滤，并用于下一步和<span class="math inline">\(C_t\)</span>的结合中，确定最终的输出值：
+<div class="math inline">\[o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o) \\
+h_t = o_t * tanh(C_t)\]</div>
+最终的输出，结合当前的信息和记忆单元信息进行输出。</p>
+<h3 id="32-lstm网络结构可视化">3.2 LSTM网络结构可视化</h3>
+<p>根据LSTM Cell的结构，即内部的计算公式进行内部结构可视化，从输入，到计算，再到输出的过程进行详细的结构可视化，如下图所示：<img src="../assets/img/posts/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/LSTM_X.png" alt="LSTM内部结构可视化" /></p>
+<p>上面将LSTM Cell进行了划分，主要划分为三个部分，第一部分主要是三道门和输入的转换；第二部分可以看作是记忆单元<span class="math inline">\(C_t\)</span>的更新；第三部分就是输出部分。</p>
+<p>在上面的结构中也给出了输入，输出的数据<code>shape</code>，明白数据在整个计算过程中是怎么流通和计算的。并可以根据输入的情况，知道参数的<code>shape</code>等。在计算过程中，三道门中的参数<span class="math inline">\(W\)</span>的<code>shape</code>分为两种情况：</p>
+<ul>
+<li>当<span class="math inline">\(X_t\)</span>和<span class="math inline">\(H_{t-1}\)</span>进行<code>concat</code>后，参数<code>W</code>的<code>shape</code>为<code>(depth+n_hidden_units， n_hidden_units)</code>，参数<span class="math inline">\(b\)</span>的<code>shape</code>为<code>(n_hidden_units)</code>。</li>
+<li>当<span class="math inline">\(X_t\)</span>和<span class="math inline">\(H_{t-1}\)</span>分别和参数<span class="math inline">\(W\)</span>进行运算，那么参数<span class="math inline">\(W\)</span>就会存在两个，<span class="math inline">\(W_x\)</span>的<code>shape</code>为<code>(depth, n_hidden_units)</code>，<span class="math inline">\(W_h\)</span>的<span class="math inline">\(shape\)</span>为<code>(n_hidden_units, n_hidden_units)</code>；参数<span class="math inline">\(b\)</span>的<code>shape</code>为<code>(n_hidden_units)</code>。</li>
+</ul>
+<p>三个gate的输出分别为<span class="math inline">\(f_t\)</span>，<span class="math inline">\(i_t\)</span>，<span class="math inline">\(o_t\)</span>；这三个值的输出<code>shape</code>均为<code>(batch_size, n_hidden_units)</code>。</p>
+<h2 id="4lstm网络在tensorflow中的实现">4.LSTM网络在TensorFlow中的实现</h2>
+<p>LSTM也是RNN网络中的一种，因此在TensorFlow实现时，和RNN模型实现的方式一致，唯一不同的地方在RNN中定义<code>cell</code>的地方。在TensorFlow中实现了<code>LSTM Cell</code>的基本结构，实现了两种<code>LSTM Cell</code>的结构<code>BasicLSTMCell</code>和<code>LSTMCell</code>，下面依次对两种结构进行说明。</p>
+<h3 id="41-basiclstmcell实现">4.1 <code>BasicLSTMCell</code>实现</h3>
+<p>这个Cell的实现是以最基本的LSTM结构为基础，在TensorFlow中实现了该结构，也是基于<code>LayerRNNCell</code>实现的，主要实现了<code>build</code>和<code>call</code>方法，下面为<code>call</code>方法的源码：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python">  <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Long short-term memory cell (LSTM).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inputs: `2-D` tensor with shape `[batch_size, input_size]`.</span>
+<span class="sd">      state: An `LSTMStateTuple` of state tensors, each shaped</span>
+<span class="sd">        `[batch_size, self.state_size]`, if `state_is_tuple` has been set to</span>
+<span class="sd">        `True`.  Otherwise, a `Tensor` shaped</span>
+<span class="sd">        `[batch_size, 2 * self.state_size]`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A pair containing the new hidden state, and the new state (either a</span>
+<span class="sd">        `LSTMStateTuple` or a concatenated state, depending on</span>
+<span class="sd">        `state_is_tuple`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sigmoid</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">sigmoid</span>
+    <span class="n">one</span> <span class="o">=</span> <span class="n">constant_op</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtypes</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="c1"># Parameters of gates are concatenated into one multiply for efficiency.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+      <span class="n">c</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">state</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">c</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">num_or_size_splits</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">one</span><span class="p">)</span>
+
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+        <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">h</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">)</span>
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">gate_inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span><span class="p">)</span>
+
+    <span class="c1"># i = input_gate, j = new_input, f = forget_gate, o = output_gate</span>
+    <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">o</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">gate_inputs</span><span class="p">,</span> <span class="n">num_or_size_splits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">one</span><span class="p">)</span>
+
+    <span class="n">forget_bias_tensor</span> <span class="o">=</span> <span class="n">constant_op</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c1"># Note that using `add` and `multiply` instead of `+` and `*` gives a</span>
+    <span class="c1"># performance improvement. So using those at the cost of readability.</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">add</span>
+    <span class="n">multiply</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">multiply</span>
+    <span class="n">new_c</span> <span class="o">=</span> <span class="n">add</span><span class="p">(</span><span class="n">multiply</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">add</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">forget_bias_tensor</span><span class="p">))),</span>
+                <span class="n">multiply</span><span class="p">(</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">j</span><span class="p">)))</span>
+    <span class="n">new_h</span> <span class="o">=</span> <span class="n">multiply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">new_c</span><span class="p">),</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">o</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+      <span class="n">new_state</span> <span class="o">=</span> <span class="n">LSTMStateTuple</span><span class="p">(</span><span class="n">new_c</span><span class="p">,</span> <span class="n">new_h</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">new_state</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">new_c</span><span class="p">,</span> <span class="n">new_h</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_h</span><span class="p">,</span> <span class="n">new_state</span>
+</code></pre></div>
+<p>源码中主要对四个<code>gate</code>进行计算，并更新<code>C</code>和<code>H</code>，并返回输出和<code>state</code>，<code>LSTM</code>中的<code>state</code>包括了<code>C</code>和<code>H</code>。上面代码中对四个<code>gate</code>的计算，是一次性生成权重变量，再和输入的<span class="math inline">\(X_t\)</span>和<span class="math inline">\(H_{t-1}\)</span>进行运算，再拆分为四部分，权重变量的定义如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_shape</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected inputs.shape[-1] to be known, saw shape: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                         <span class="o">%</span> <span class="n">inputs_shape</span><span class="p">)</span>
+
+        <span class="n">input_depth</span> <span class="o">=</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">h_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+            <span class="n">_WEIGHTS_VARIABLE_NAME</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">input_depth</span> <span class="o">+</span> <span class="n">h_depth</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+            <span class="n">_BIAS_VARIABLE_NAME</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+            <span class="n">initializer</span><span class="o">=</span><span class="n">init_ops</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+<p>在定义<code>LSTM</code>中四道<code>gate</code>的权重变量<code>W</code>和<code>B</code>时，是一次性定义了4个，并在一个变量中。后续在计算时，做一次计算，再进行拆分成四道<code>gate</code>的输出：<code>i,j,f,o</code>。</p>
+<h3 id="42-lstmcell的实现">4.2 <code>LSTMCell</code>的实现</h3>
+<p><code>LSTMCell</code>是<code>BasicLSTMCell</code>扩展实现，增加了窥视的窥视孔的功能，<code>LSTMCell</code>的初始化参数如下所示，先对初始化的参数进行详细说明。</p>
+<p><img src="../assets/img/posts/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E8%AF%A6%E8%A7%A3LSTM%E7%BD%91%E7%BB%9C%E5%92%8CTensorFlow%E5%AE%9E%E7%8E%B0/LSTM-diag.png" alt="" /></p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_units</span><span class="p">,</span> <span class="n">use_peepholes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cell_clip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_proj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+             <span class="n">proj_clip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_unit_shards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_proj_shards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forget_bias</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+             <span class="n">state_is_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the parameters for an LSTM cell.</span>
+<span class="sd">    Args:</span>
+<span class="sd">      num_units: int, The number of units in the LSTM cell.</span>
+<span class="sd">      use_peepholes: bool, 是否使用窥视孔, 当设置为True时则使用窥视孔.</span>
+<span class="sd">      cell_clip: (optional) A float value, 单元(四个gate)输出的值被限制在`±cell_clip`内.</span>
+<span class="sd">      initializer: (optional) 用于权重和投影矩阵(projection matrices)的初始值设定.</span>
+<span class="sd">      num_proj: (optional) int, 投影矩阵的输出维数. 如果设置为None则不执行`投影`操作.</span>
+<span class="sd">      proj_clip: (optional) A float value. 如果设置了 `num_proj &gt; 0` 和 `proj_clip`, 则投影值将被限制在`[-proj_clip, proj_clip]`范围内.</span>
+<span class="sd">      num_unit_shards: Deprecated, 已经弃用.</span>
+<span class="sd">      num_proj_shards: Deprecated, 已经弃用.</span>
+<span class="sd">      forget_bias: Biases of the forget gate are initialized by default to 1 in order to reduce the scale of forgetting at the beginning of the training. Must set it manually to `0.0` when restoring from CudnnLSTM trained checkpoints.</span>
+<span class="sd">      state_is_tuple: If True, accepted and returned states are 2-tuples of the `c_state` and `m_state`.  If False, they are concatenated along the column axis.  This latter behavior will soon be deprecated.</span>
+<span class="sd">      activation: Activation function of the inner states.  Default: `tanh`.</span>
+<span class="sd">      reuse: (optional) Python boolean describing whether to reuse variables in an existing scope.  If not `True`, and the existing scope already has the given variables, an error is raised.</span>
+<span class="sd">      name: String, the name of the layer. Layers with the same name will share weights, but to avoid mistakes we require reuse=True in such cases.</span>
+
+<span class="sd">      When restoring from CudnnLSTM-trained checkpoints, use `CudnnCompatibleLSTMCell` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</code></pre></div>
+<p>从上面参数说明，可以看出<code>LSTMCell</code>中主要多处了一个<code>窥视孔</code>的功能，当参数<code>use_peepholes</code>设置为<code>True</code>时，就使用了窥视孔的功能。后续的几个参数也是对窥视功能的设置参数。下面对实现的<code>call</code>方法进行简要说明：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one step of LSTM.</span>
+<span class="sd">    Args:</span>
+<span class="sd">      inputs: input Tensor, 2D, `[batch, num_units].</span>
+<span class="sd">      state: if `state_is_tuple` is False, this must be a state Tensor, `2-D, [batch, state_size]`.  If `state_is_tuple` is True, this must be a tuple of state Tensors, both `2-D`, with column sizes `c_state` and `m_state`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing:</span>
+<span class="sd">      - A `2-D, [batch, output_dim]`, Tensor representing the output of the LSTM after reading `inputs` when previous state was `state`.</span>
+<span class="sd">        Here output_dim is:</span>
+<span class="sd">           num_proj if num_proj was set, num_units otherwise.</span>
+<span class="sd">      - Tensor(s) representing the new state of LSTM after reading `inputs` when the previous state was `state`.  Same type and shape(s) as `state`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: If input size cannot be inferred from inputs via static shape inference.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_proj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span>
+    <span class="n">sigmoid</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">sigmoid</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+      <span class="p">(</span><span class="n">c_prev</span><span class="p">,</span> <span class="n">m_prev</span><span class="p">)</span> <span class="o">=</span> <span class="n">state</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">c_prev</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">])</span>
+      <span class="n">m_prev</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_proj</span><span class="p">])</span>
+
+    <span class="n">input_size</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">with_rank</span><span class="p">(</span><span class="mi">2</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">input_size</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not infer input size from inputs.get_shape()[-1]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># i = input_gate, j = new_input, f = forget_gate, o = output_gate</span>
+    <span class="n">lstm_matrix</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+        <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">m_prev</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">)</span>
+    <span class="n">lstm_matrix</span> <span class="o">=</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">lstm_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span><span class="p">)</span>
+
+    <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">o</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">lstm_matrix</span><span class="p">,</span> <span class="n">num_or_size_splits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Diagonal connections</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_peepholes</span><span class="p">:</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w_f_diag</span> <span class="o">*</span> <span class="n">c_prev</span><span class="p">)</span> <span class="o">*</span> <span class="n">c_prev</span> <span class="o">+</span>
+           <span class="n">sigmoid</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w_i_diag</span> <span class="o">*</span> <span class="n">c_prev</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>  
+    <span class="c1"># sigmoid(f + self._forget_bias + self._w_f_diag * c_prev)为新的forget输出,</span>
+    <span class="c1"># sigmoid(i + self._w_i_diag * c_prev) 为新的input_gate输出</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span><span class="p">)</span> <span class="o">*</span> <span class="n">c_prev</span> <span class="o">+</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">*</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_clip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="c1"># pylint: disable=invalid-unary-operand-type</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="n">clip_ops</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_clip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_clip</span><span class="p">)</span>
+      <span class="c1"># pylint: enable=invalid-unary-operand-type</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_peepholes</span><span class="p">:</span>
+      <span class="n">m</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">o</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w_o_diag</span> <span class="o">*</span> <span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">m</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">m</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_kernel</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_clip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=invalid-unary-operand-type</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">clip_ops</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_proj_clip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_clip</span><span class="p">)</span>
+        <span class="c1"># pylint: enable=invalid-unary-operand-type</span>
+
+    <span class="n">new_state</span> <span class="o">=</span> <span class="p">(</span><span class="n">LSTMStateTuple</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span> <span class="k">else</span>
+                 <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">m</span><span class="p">,</span> <span class="n">new_state</span>
+</code></pre></div>
+<p>上面<code>call</code>方法实现的过程中，输出的维度为<code>num_proj</code>(如果设置了<code>num_proj</code>的值)或<code>num_units</code>。当计算<code>c</code>的时候取决于是否使用窥视孔，使用的时候计算方式会不同<code>sigmoid(f + self._forget_bias + self._w_f_diag * c_prev)</code>为新的<code>forget gate</code>输出(加入了窥视孔<code>self._w_f_diag * c_prev</code>), <code>sigmoid(i + self._w_i_diag * c_prev) </code>为新的<code>input gate</code>输出，然后会限制<code>c = clip_ops.clip_by_value(c, -self._cell_clip, self._cell_clip)</code>输出。再计算<code>m</code>的时候也会取决于是否使用窥视孔，再对<code>m</code>的值进行限定。最后输出<code>m</code>和<code>state</code>。</p>
+<p>当定义好了Cell后，后续就是动态或者静态计算时间步，或者多层的LSTM模型，和RNN网络中的使用就是一样的。这里就不再详细说明。</p>
+<h2 id="5refrence">5.Refrence</h2>
+<p>(1).<a href="https://www.jiqizhixin.com/articles/2017-07-24-2">LSTM入门必读：从入门基础到工作方式详解</a></p>
+<p>(2).<a href="http://blog.gdf.name/lstm-with-tensorflow/">从Tensorflow代码中理解LSTM网络</a></p>
+<p>(3).<a href="https://yugnaynehc.github.io/2017/01/03/understanding-lstm-networks/">[译]理解LSTM网络</a></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

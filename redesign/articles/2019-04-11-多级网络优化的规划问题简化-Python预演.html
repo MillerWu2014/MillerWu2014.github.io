@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>多级网络优化的规划问题简化-Python预演 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>思考</h2><a href="2020-05-28-WWDC%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1%E7%AC%94%E8%AE%B0.html">[WWDC]机器学习与产品设计笔记</a><a href="2020-01-20-%E6%94%B9%E5%96%84%E4%BB%8A%E4%BA%95%E6%AD%A3%E6%98%8E%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0.html">改善(今井正明)读书笔记</a><a href="2019-10-21-%E7%94%9F%E5%91%BD%E5%BD%A2%E6%80%81%E7%9A%84%E6%80%9D%E8%80%83.html">生命形态的思考</a><a href="2019-04-11-%E5%A4%9A%E7%BA%A7%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96%E7%9A%84%E8%A7%84%E5%88%92%E9%97%AE%E9%A2%98%E7%AE%80%E5%8C%96-Python%E9%A2%84%E6%BC%94.html" aria-current="page">多级网络优化的规划问题简化-Python预演</a><a href="2017-07-09-%E8%9D%99%E8%9D%A0%E4%BE%A0%E5%89%8D%E4%BC%A0%E9%BB%91%E6%9A%97%E9%AA%91%E5%A3%AB%E8%A7%82%E5%90%8E%E6%84%9F.html">蝙蝠侠前传黑暗骑士观后感</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2019-04-11-%E5%A4%9A%E7%BA%A7%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96%E7%9A%84%E8%A7%84%E5%88%92%E9%97%AE%E9%A2%98%E7%AE%80%E5%8C%96-Python%E9%A2%84%E6%BC%94.md" download="2019-04-11-多级网络优化的规划问题简化-Python预演.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2019-04-11">2019-04-11</time></p>
+        <h1>多级网络优化的规划问题简化-Python预演</h1>
+      </header>
+      <div class="prose" id="body"><h2 id="背景和目标">背景和目标</h2>
+<p>在物流网络中，经常存在需要优化的网络结构，比如从生产中心到一级仓库 ，到二级仓库再到配送中心，这样形成一个多级的分仓体系。在实际执行过程中会遇到DC层或TC层的选址问题，一般会遇到优化问题，优化的目标主要考虑多个方面的成本，如运输成本，仓库成本，转运成本等等。如果按照多级网络的模式进行考虑，一般规划问题会成为非线性的整数规划问题，在求解上是非常难且建模也比较难。</p>
+<p>现在对于这样的其中选址的问题进行思考：假设我们只是考虑运输成本或距离上的成本，DC层的仓库可以向周边的仓库进行供货，而且保证TC层的一个仓库只能唯一的DC层仓库供货。从常规的建模一般都是在DC层设置一个变量X， TC层设置一个变量Y，来计算目标，并设置约束，最终来进行求解，那么这个问题能简化么？</p>
+<p>如果能简化那么这个问题就能推广到多层的选址问题，不需要非线性整数规划的方式进行求解。能大大的简化整个求解，可能不是最优的解，但是能得到较优的解。经过仔细的实验和思考，是能进行简化的。将DC层和TC层的地址看为一个变量，这样就减少一个变量，转化为了线性规划的问题（LP）。DC层对TC层为1对N的方式，但是TC只能属于一个DC。而且可以控制DC层的地点或TC层的地点的个数。解决了选址中遇到的所有问题。
+<img src="../assets/img/posts/%E5%A4%9A%E7%BA%A7%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96%E7%9A%84%E8%A7%84%E5%88%92%E9%97%AE%E9%A2%98%E7%AE%80%E5%8C%96-Python%E9%A2%84%E6%BC%94/wuliufencangtixi.jpg" alt="物流的多级分仓体系" /></p>
+<h2 id="数据的准备">数据的准备</h2>
+<p>这里我们准备了一些城市的数据，其中有DC，TC层和最终的地点。数据存储于mysql数据库中，下面定义一个数据抽取的class，来进行数据查询，并生成需要的距离矩阵。便于后续使用该矩阵来进行优化目标值的计算。</p>
+<!--more-->
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># import packages</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pymprog</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pymysql</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MysqlClient</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    create mysql connect client</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="s2">&quot;glc_lpp_dev&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">3306</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span> <span class="ow">or</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">passwd</span> <span class="o">=</span> <span class="n">password</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="o">=</span> <span class="n">database</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_connection</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;get mysql connection client&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_connection</span> <span class="o">=</span> <span class="n">pymysql</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">passwd</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span>
+                                          <span class="n">database</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span> <span class="n">charset</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Connect mysql server:</span><span class="si">%s</span><span class="s2"> has error, the error is: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+            <span class="n">_connection</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">_connection</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql_scripts</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param sql_scripts: string, use this sql scripts get data.</span>
+<span class="sd">        :return: tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Get mysql connection failed. The connection is NoneType object.&quot;</span><span class="p">)</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql_scripts</span><span class="p">)</span>
+        <span class="n">fetch_data</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fetch_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+</code></pre></div>
+<h2 id="规划问题的简化方案">规划问题的简化方案</h2>
+<p>在本次的实验过程中使用pymprog来进行LP求解，并定义整个网络模型，通过距离矩阵来定义目标和约束，具体如下面代码中的说明，先定义决策变量（这里定义为了0-1整数变量），再定义目标函数（本示例中主要定义了一个距离相关的优化目标），再定义约束条件，最终求解，并格式化输出。其中约束条件定义非常灵活：</p>
+<ol>
+<li>一个TC只能属于一个DC</li>
+<li>一个DC可以有多个TC，这儿并定义了输入的DC都必须被选到</li>
+</ol>
+<p>示例代码如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">solve_link</span><span class="p">(</span><span class="n">distance_matrix_frame</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the link matrix by linear programming slove</span>
+<span class="sd">    parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    distance_matrix_frame: </span>
+<span class="sd">        pandas.DataFrame, src positions to dst positions, index is src position.</span>
+<span class="sd">    </span>
+<span class="sd">    return</span>
+<span class="sd">    ------</span>
+<span class="sd">        DataFrame, the link dataframe, the index is src positions and the columns is dst positions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t_frame</span> <span class="o">=</span> <span class="n">distance_matrix_frame</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="n">src_pos_</span><span class="p">,</span> <span class="n">dst_pos_</span> <span class="o">=</span> <span class="n">distance_matrix_frame</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">distance_matrix_frame</span><span class="o">.</span><span class="n">columns</span>
+    <span class="n">constant</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src_pos_</span><span class="p">:</span>
+        <span class="n">s_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d_</span> <span class="ow">in</span> <span class="n">dst_pos_</span><span class="p">:</span>
+            <span class="n">s_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t_frame</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">d_</span><span class="p">])</span>
+        <span class="n">constant</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s_list</span><span class="p">)</span> 
+
+    <span class="n">pymprog</span><span class="o">.</span><span class="n">begin</span><span class="p">(</span><span class="s1">&#39;link&#39;</span><span class="p">)</span>
+
+    <span class="n">index</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">src_pos_</span><span class="p">)),</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dst_pos_</span><span class="p">))</span>  <span class="c1"># the number of variable</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">pymprog</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">pymprog</span><span class="o">.</span><span class="n">iprod</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="p">),</span> <span class="nb">bool</span><span class="p">)</span>  <span class="c1"># defined variable</span>
+
+    <span class="n">min_value</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">*</span> <span class="n">constant</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span>  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">])</span>
+    <span class="n">pymprog</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="s2">&quot;min_distance&quot;</span><span class="p">)</span>  <span class="c1"># optimizer target: minimize</span>
+    
+    <span class="c1"># ------------  defined constraints -------------- #</span>
+    <span class="c1"># defined next layer map one city</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+        <span class="n">st_init</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+            <span class="n">st_init</span> <span class="o">+=</span> <span class="n">x</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span>
+        <span class="n">pymprog</span><span class="o">.</span><span class="n">st</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">st_init</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># defined current layer at least one</span>
+    <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+            <span class="n">ct_init</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+                <span class="n">ct_init</span> <span class="o">+=</span> <span class="n">x</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span>
+            <span class="n">pymprog</span><span class="o">.</span><span class="n">st</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">ct_init</span><span class="p">)</span>
+    <span class="c1"># ------------  defined constraints -------------- #</span>
+    
+    <span class="c1"># soleve linear programing</span>
+    <span class="n">pymprog</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+    <span class="c1"># build up result by dataframe</span>
+    <span class="n">output_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+            <span class="n">output_dict</span><span class="p">[</span><span class="n">dst_pos_</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="n">src_pos_</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span><span class="o">.</span><span class="n">primal</span>
+    <span class="c1"># pymprog.sensitivity()</span>
+    <span class="n">pymprog</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">output_dict</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="应用">应用</h2>
+<p>通过一些数据进行试验上面的思路，下面生产中心选取了两个：天津和重庆，DC层有4个点，TC层 有7个点，配送中心有很多个城市，如下设置所示。通过sql查询得到数据库中的距离矩阵。后面将所有的中文地址转换为英文，主要便于后面的可视化。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># built the network struct, src position, depot and dst position</span>
+<span class="n">dst_position</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;宜昌&quot;</span><span class="p">,</span> <span class="s2">&quot;长沙&quot;</span><span class="p">,</span> <span class="s2">&quot;岳阳&quot;</span><span class="p">,</span> <span class="s2">&quot;无锡&quot;</span><span class="p">,</span> <span class="s2">&quot;合肥&quot;</span><span class="p">,</span> <span class="s2">&quot;徐州&quot;</span><span class="p">,</span> <span class="s2">&quot;常州&quot;</span><span class="p">,</span><span class="s2">&quot;哈尔滨&quot;</span><span class="p">,</span> <span class="s2">&quot;长春&quot;</span><span class="p">,</span> <span class="s2">&quot;秦皇岛&quot;</span><span class="p">,</span> <span class="s2">&quot;呼和浩特&quot;</span><span class="p">,</span> <span class="s2">&quot;银川&quot;</span><span class="p">,</span> <span class="s2">&quot;西宁&quot;</span><span class="p">,</span> 
+                <span class="s2">&quot;酒泉&quot;</span><span class="p">,</span> <span class="s2">&quot;庆阳&quot;</span><span class="p">,</span> <span class="s2">&quot;许昌&quot;</span><span class="p">,</span> <span class="s2">&quot;吴忠&quot;</span><span class="p">,</span> <span class="s2">&quot;鄂尔多斯&quot;</span><span class="p">,</span> <span class="s2">&quot;广元&quot;</span><span class="p">,</span> <span class="s2">&quot;巴中&quot;</span><span class="p">,</span> <span class="s2">&quot;都江堰&quot;</span><span class="p">,</span> <span class="s2">&quot;南充&quot;</span><span class="p">,</span> <span class="s2">&quot;广安&quot;</span><span class="p">,</span> <span class="s2">&quot;乐山&quot;</span><span class="p">,</span> <span class="s2">&quot;宜宾&quot;</span><span class="p">,</span> <span class="s2">&quot;南阳&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;衡阳&quot;</span><span class="p">,</span> <span class="s2">&quot;大同&quot;</span><span class="p">,</span> <span class="s2">&quot;丽江&quot;</span><span class="p">,</span> <span class="s2">&quot;攀枝花&quot;</span><span class="p">,</span> <span class="s2">&quot;玉林&quot;</span><span class="p">,</span> <span class="s2">&quot;柳州&quot;</span><span class="p">,</span> <span class="s2">&quot;桂林&quot;</span><span class="p">,</span> <span class="s2">&quot;中山&quot;</span><span class="p">,</span> <span class="s2">&quot;南平&quot;</span><span class="p">,</span> <span class="s2">&quot;泉州&quot;</span><span class="p">,</span> <span class="s2">&quot;雅安&quot;</span><span class="p">,</span> <span class="s2">&quot;怀化&quot;</span><span class="p">,</span> <span class="s2">&quot;荆州&quot;</span><span class="p">,</span> <span class="s2">&quot;黄山&quot;</span>
+               <span class="p">]</span>
+<span class="n">src_position</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;重庆&quot;</span><span class="p">,</span> <span class="s2">&quot;天津&quot;</span><span class="p">]</span>
+<span class="n">depot_position</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;level_1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;北京&quot;</span><span class="p">,</span> <span class="s2">&quot;成都&quot;</span><span class="p">,</span> <span class="s2">&quot;西安&quot;</span><span class="p">,</span> <span class="s2">&quot;武汉&quot;</span><span class="p">],</span> 
+    <span class="s2">&quot;level_2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;绵阳&quot;</span><span class="p">,</span> <span class="s2">&quot;沈阳&quot;</span><span class="p">,</span> <span class="s2">&quot;兰州&quot;</span><span class="p">,</span> <span class="s2">&quot;南昌&quot;</span><span class="p">,</span> <span class="s2">&quot;杭州&quot;</span><span class="p">,</span> <span class="s2">&quot;南宁&quot;</span><span class="p">,</span> <span class="s2">&quot;昆明&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">middle_layer</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">depot_position</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">middle_layer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+<span class="n">node_list</span> <span class="o">=</span> <span class="n">dst_position</span> <span class="o">+</span> <span class="n">src_position</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/opt/notebook/distance.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">picker</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">picker</span><span class="p">)</span>
+    
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/opt/notebook/layer_distance.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">layer</span><span class="p">:</span>
+    <span class="n">layer_dist</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+    
+<span class="n">layer_dist</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th style="text-align:left"></th>
+<th style="text-align:right">绵阳</th>
+<th style="text-align:right">沈阳</th>
+<th style="text-align:right">兰州</th>
+<th style="text-align:right">南昌</th>
+<th style="text-align:right">杭州</th>
+<th style="text-align:right">南宁</th>
+<th style="text-align:right">昆明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">北京</td>
+<td style="text-align:right">1691</td>
+<td style="text-align:right">685</td>
+<td style="text-align:right">1617</td>
+<td style="text-align:right">1470</td>
+<td style="text-align:right">1329</td>
+<td style="text-align:right">2426</td>
+<td style="text-align:right">2834</td>
+</tr>
+<tr>
+<td style="text-align:left">成都</td>
+<td style="text-align:right">120</td>
+<td style="text-align:right">2474</td>
+<td style="text-align:right">1039</td>
+<td style="text-align:right">1496</td>
+<td style="text-align:right">1857</td>
+<td style="text-align:right">1325</td>
+<td style="text-align:right">1068</td>
+</tr>
+<tr>
+<td style="text-align:left">西安</td>
+<td style="text-align:right">606</td>
+<td style="text-align:right">1775</td>
+<td style="text-align:right">647</td>
+<td style="text-align:right">1197</td>
+<td style="text-align:right">1417</td>
+<td style="text-align:right">1932</td>
+<td style="text-align:right">1561</td>
+</tr>
+<tr>
+<td style="text-align:left">武汉</td>
+<td style="text-align:right">921</td>
+<td style="text-align:right">1845</td>
+<td style="text-align:right">1368</td>
+<td style="text-align:right">370</td>
+<td style="text-align:right">859</td>
+<td style="text-align:right">1294</td>
+<td style="text-align:right">1815</td>
+</tr>
+</tbody>
+</table>
+<p>通过线性规划求解得到了连接矩阵如下面结果所示，可以看出DC层下有多个TC层，但是TC只属于一个DC。<strong>本文中没有控制DC和TC的数量。实际是可以加入进去的</strong>。后续对得到结果通过networkx进行可视化。</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">nodes_res</span> <span class="o">=</span> <span class="n">solve_link</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">layer_res</span> <span class="o">=</span> <span class="n">solve_link</span><span class="p">(</span><span class="n">layer_dist</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cn2pingyin</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pypinyin</span><span class="w"> </span><span class="kn">import</span> <span class="n">lazy_pinyin</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lazy_pinyin</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+
+
+<span class="n">nodes_res</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">nodes_res</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">cn2pingyin</span><span class="p">)</span>
+<span class="n">nodes_res</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">nodes_res</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">cn2pingyin</span><span class="p">)</span>
+<span class="n">layer_res</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">layer_res</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">cn2pingyin</span><span class="p">)</span>
+<span class="n">layer_res</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">layer_res</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">cn2pingyin</span><span class="p">)</span>
+<span class="n">layer_res</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th style="text-align:left"></th>
+<th style="text-align:right">lanzhou</th>
+<th style="text-align:right">nanning</th>
+<th style="text-align:right">nanchang</th>
+<th style="text-align:right">kunming</th>
+<th style="text-align:right">hangzhou</th>
+<th style="text-align:right">shenyang</th>
+<th style="text-align:right">mianyang</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">beijing</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+</tr>
+<tr>
+<td style="text-align:left">chengdu</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+</tr>
+<tr>
+<td style="text-align:left">wuhan</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+</tr>
+<tr>
+<td style="text-align:left">xian</td>
+<td style="text-align:right">1.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+<td style="text-align:right">0.0</td>
+</tr>
+</tbody>
+</table>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># !pip install matplotlib netowrkx</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.font_manager</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fm</span>
+
+<span class="n">fp1</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="s2">&quot;/usr/share/fonts/adobe-source-han-sans-cn/SourceHanSansCN-Medium.otf&quot;</span><span class="p">)</span>
+<span class="c1"># nx.setitem(fp1)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+
+<span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;gray&quot;</span><span class="p">]</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="p">[</span><span class="n">layer_res</span><span class="p">,</span> <span class="n">nodes_res</span><span class="p">]:</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">res</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">columns</span>
+
+    <span class="n">pos1_list</span><span class="p">,</span> <span class="n">pos2_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">columns</span><span class="p">[</span><span class="n">y</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">pos1_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="n">pos2_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="n">y</span><span class="p">])</span>
+
+    <span class="n">esmall</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">edgelist</span><span class="o">=</span><span class="n">esmall</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;solid&#39;</span><span class="p">)</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span>
+                               <span class="n">nodelist</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">pos1_list</span><span class="p">),</span>
+                               <span class="n">node_color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                               <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+                               <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">font_family</span><span class="o">=</span><span class="s1">&#39;DejaVu Sans&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span>
+                               <span class="n">nodelist2</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">pos1_list</span><span class="p">),</span>
+                               <span class="n">node_color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                               <span class="n">node_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                               <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<p><img src="../assets/img/posts/%E5%A4%9A%E7%BA%A7%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96%E7%9A%84%E8%A7%84%E5%88%92%E9%97%AE%E9%A2%98%E7%AE%80%E5%8C%96-Python%E9%A2%84%E6%BC%94/output_6_0.png" alt="结果可视化" /></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>
