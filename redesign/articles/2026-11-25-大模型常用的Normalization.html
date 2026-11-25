@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>大模型常用的Normalization · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM</h2><a href="2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.html">LLMs为什么都采用Decoder-only结构?</a><a href="2026-11-25-MoE%EF%BC%88%E6%B7%B7%E5%90%88%E4%B8%93%E5%AE%B6%E6%A8%A1%E5%9E%8B%EF%BC%89%E6%9E%B6%E6%9E%84.html">MoE（混合专家模型）架构</a><a href="2026-11-25-Position%20Embedding.html">Position Embedding</a><a href="2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.html">从ReLU到SwiGLU</a><a href="2026-11-25-%E5%9B%BE%E8%A7%A3%20MoE%20%E6%A8%A1%E5%9E%8B.html">图解 MoE 模型</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%E7%9A%84Tokenization.html">大模型中的Tokenization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.html" aria-current="page">大模型常用的Normalization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0.html">大模型效果评估</a><a href="2026-11-25-%E7%90%86%E8%A7%A3DeepSeek%E5%9C%A8MoE%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B%E5%92%8C%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0.html">理解DeepSeek在MoE技术的演进过程和具体实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.md" download="2026-11-25-大模型常用的Normalization.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2026-11-25">2026-11-25</time></p>
+        <h1>大模型常用的Normalization</h1>
+      </header>
+      <div class="prose" id="body"><h2 id="normalization的意义">Normalization的意义</h2>
+<p><strong>Normalization</strong>就是将输入的数据进行归一化，使其服从均值为 0， 方差为 1 的分布。这样使得输入具有相同的均值和方差，固定了每一层的输入分布，从而加速网络的收敛。具体的作用如下：</p>
+<ol>
+<li>缓解梯度消失，可以对学习率进行调整。</li>
+<li>网络更稳定，Normalization可以抑制参数微小变化为深度网络带来值方法的问题。</li>
+<li>不容易过拟合，替代Dropout或少用Dropout，可以减少L2正则化的权重。</li>
+</ol>
+<h2 id="小模型的正则化">小模型的正则化</h2>
+<p><img src="../assets/img/posts/llm-framework/cb38bf1098c0f8e5.png" alt="Image" /></p>
+<h3 id="batch-normalizationhttpsarxivorgabs150203167">Batch Normalization(<a href="https://arxiv.org/pdf/1502.03167.pdf">https://arxiv.org/abs/1502.03167</a>)</h3>
+<p>主要解决<code>“Internal Covariate Shift</code>”问题（对于深度网络结构，在训练过程中，因为各层参数不停在变化，所以每个隐层都会面临<code>covariate shift</code>的问题，也就是在训练过程中，<strong>隐层的输入分布会不断变化</strong>，不够稳定。），BN具体的操作流程如下：</p>
+<p><img src="../assets/img/posts/llm-framework/9f7d777ac94dc950.png" alt="Image" /></p>
+<h4 id="bn的推理计算">BN的推理计算</h4>
+<p>在推理（inference）的过程中，输入一个实例，看不到Mini-Batch其它实例，那么进行BN计算呢？一个实例是没法算实例集合求出的均值和方差的。因此，在推理的时候用全局统计量即可：</p>
+<p><span class="math inline">\(E[x] \leftarrow E_B[\mu_B]\)</span></p>
+<p><span class="math inline">\(Var[x] \leftarrow \frac{m}{m-1}E_B[\delta_B^2]\)</span></p>
+<p>在计算整个训练集的均值和方差的值时，一般是在训练的同时用移动平均计算得到，其平滑系数取0.99。再进行缩放计算：</p>
+<p><span class="math inline">\(y=\frac{\gamma}{\sqrt{Var[x]+\epsilon}}·x+(\beta-\frac{\gamma · E[X]}{\sqrt{Var[x]+\epsilon}})\)</span></p>
+<h4 id="bn的好处">BN的好处</h4>
+<ol>
+<li>极大提升了训练速度，加快Loss收敛；</li>
+<li>能增加分类效果，一种解释是这是类似于Dropout的一种防止过拟合的正则化表达方式，所以不用Dropout也能达到相当的效果；</li>
+<li>调参过程更简单多，对初始化要求没那么高，而且可以使用大的学习率等。</li>
+</ol>
+<h3 id="instance-normalizationhttpsarxivorgabs160708022">Instance Normalization(<a href="https://arxiv.org/pdf/1607.08022.pdf">https://arxiv.org/abs/1607.08022</a>)</h3>
+<p>主要面向图像风格化任务中提出，主要对数据的<span class="math inline">\((H,W)\)</span>做归一化（假设数据维度为[B, H, W, C]），以实现模型加速收敛，并保持每个图像实例之间独立。</p>
+<p><img src="../assets/img/posts/llm-framework/21ca6cd692f40bf5.png" alt="Image" /></p>
+<h3 id="layer-normalizationhttpsarxivorgabs160706450v1">Layer Normalization(<a href="https://arxiv.org/pdf/1607.06450v1.pdf">https://arxiv.org/abs/1607.06450v1</a>)</h3>
+<p>LN是针对深度网络的某一层的所有神经元（即特征维度）的输入按以下公式进行normalize操作，对batch的大小和输入深度没有限制（LN中同层神经元输入拥有相同的均值和方差，不同的输入样本有不同的均值和方差）。其计算方式如下：</p>
+<p><img src="../assets/img/posts/llm-framework/21135c4a7255474d.png" alt="Image" /></p>
+<p>再和BN的方式一致，进行normalize和重新缩放。</p>
+<blockquote>
+<p>LN保持了一个样本间特征之间的大小关系，抹掉了样本间的大小关系，不依赖batch size，因此适合序列型任务，比如NPL领域，因此在LLMs方面用的多。</p>
+</blockquote>
+<h3 id="group-normalizationhttpsarxivorgabs180308494">Group Normalization(<a href="https://arxiv.org/pdf/1803.08494.pdf">https://arxiv.org/abs/1803.08494</a>)</h3>
+<p>GN是针对BN在<code>batch size</code>较小时错误率较高而提出的改进算法，因为BN层的计算结果依赖当前 batch 的数据，当 <code>batch size</code>较小时（比如2、4这样），该 batch 数据的均值和方差的代表性较差，因此对最后的结果影响也较大。GN根据通道进行分组，然后在每个组内做归一化，计算其均值和方差，从而不受批次中样本数量的约束。这里将通道分为G组，G是一个超参数，通常默认为32。实现方式如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="k">def</span><span class="w"> </span><span class="nf">GroupNorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+    <span class="c1"># x_shape:[B, C, H, W]</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-5</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">G</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">G</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+    <span class="n">x_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="n">True0</span><span class="p">)</span>
+    <span class="n">x_normalized</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x_mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x_var</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">x_normalized</span> <span class="o">+</span> <span class="n">beta</span>
+    <span class="k">return</span> <span class="n">results</span>
+</code></pre></div>
+<h2 id="post-norm和pre-normhttpsarxivorgabs190601787">Post-Norm和Pre-Norm(<a href="https://arxiv.org/pdf/1906.01787">https://arxiv.org/abs/1906.01787</a>)</h2>
+<p>在Transformer结构中，传统做法是在残差之后(Add操作之后)使用normalize，这种方式叫post-norm。而论文中提出了pre-norm，将normalize放在残差之前，如下图所示。</p>
+<p><img src="../assets/img/posts/llm-framework/261598e82e460517.png" alt="Image" /></p>
+<p><img src="../assets/img/posts/llm-framework/81b30b93dd1c31c7.png" alt="Image" /></p>
+<p>Post-Norm: <span class="math inline">\(x_{l+1}=LN(x_l+F(x_l;\theta_l))\)</span></p>
+<p>Pre-Norm: <span class="math inline">\(x_{l+1}=x_l+F(LN(x_l);\theta_l)\)</span></p>
+<p>结论：(1)<code>post-norm</code>在残差之后做归一化，对参数正则化的效果更强，模型收敛速度更快；(2)<code>pre-norm</code>相对于<code>post-norm</code>，部分参数直接加在了后面，不需要对这部分参数进行正则化，正好可以防止模型的梯度爆炸或者梯度消失，因此结论是如果层数少post-norm的效果其实要好一些，如果要把层数更深，pre-norm显然更好。</p>
+<h3 id="为什么pre-norm可以保证更深的网络训练稳定">为什么pre-norm可以保证更深的网络训练稳定？</h3>
+<p><img src="../assets/img/posts/llm-framework/9c40d3fb032b8bcc.png" alt="Image" /></p>
+<p><img src="../assets/img/posts/llm-framework/1f77bed9bb6ccedf.png" alt="Image" /></p>
+<p>对Post-Norm（上式1）和Pre-Norm（上式2）的反向传播进行对比，对于pre-norm，式中的1就保证了反向传播的梯度出现连乘的现象也不会梯度消除或者爆炸，一部分梯度是直接从上一层得到的。</p>
+<h3 id="为什么normalize不在激活函数f之后">为什么Normalize不在激活函数F之后？</h3>
+<p>因为在做完Normalization之后的数据不能和原始输入数据加在一起，如果这样做的话残差中从上一层出来的信息会占很大比重，这显然并不合理。</p>
+<h2 id="大模型常用的normalization方法">大模型常用的Normalization方法</h2>
+<p>主流大模型使用的Normalization主要有三类，分别是Layer-Norm，RMS-Norm和Deep-Norm。其中Layer-Norm在上面已经进行了分析。下面主要对RMS-Norm和Deep-Norm进行详细的说明。</p>
+<h3 id="rms-normhttpsarxivorgabs191007467">RMS-Norm(<a href="https://arxiv.org/abs/1910.07467">https://arxiv.org/abs/1910.07467</a>)</h3>
+<p>RMS-Norm是对Layer-Norm的一个改进，没有做<code>re-center</code>操作（移除了其中的均值项），可以看作LayerNorm在均值为0时的一个特例。</p>
+<p>论文通过实验证明，re-center操作不重要。RMS-Norm 也是一种标准化方法，但与 LayerNorm 不同，它不是使用整个样本的均值和方差，而是使用平方根的均值来归一化，这样做可以降低噪声的影响。其与LN的对比如下：</p>
+<p><span class="math inline">\(y=\frac{x-E(x)}{\sqrt{Var(x)+\epsilon}} * \gamma + \beta \rightarrow \hat{x}_i=\frac{x_i}{RMS(x)} g_i, \ where \  RMS(a)=\sqrt{\frac{1}{n}\sum_{i=1}{^n}a_i^2}\)</span></p>
+<h2 id="deep-normhttpsarxivorgabs220300555">Deep-Norm(<a href="https://arxiv.org/pdf/2203.00555">https://arxiv.org/abs/2203.00555</a>)</h2>
+<p>基于 post-norm 连接（Post-LN），pre-norm 残差连接（Pre-LN）能够提升 Transformer 的稳定性。但是，Pre-LN在底层的梯度往往大于顶层，因而导致与Post-LN相比性能下降。因此，为使多达数百层的Transformer模型训练实现稳定化，在残差连接处引入了一个新的归一化函数——DeepNorm，对LN进行了改进，最终该方法提升了Transformer模型的稳定性，并实现了将模型深度<strong>扩展到了1000多层</strong>。DeepNorm的公式如下：</p>
+<p><span class="math inline">\(x_{l+1}=LN(\alpha x_l+G_l(x_l;\theta_l))\)</span></p>
+<p>其中，<span class="math inline">\(\alpha\)</span>是一个常数，<span class="math inline">\(G_l(x_l , \theta_l)\)</span>是参数为<span class="math inline">\(\theta_l\)</span>的第<span class="math inline">\(l\)</span>个Transformer子层（即注意力或前馈网络）的函数。DeepNet还将残差内部的权重<span class="math inline">\(\theta_l\)</span>扩展了<span class="math inline">\(\beta\)</span>。其DeepNorm伪代码，<span class="math inline">\(\alpha\)</span>和<span class="math inline">\(\beta\)</span>的取值参考如下：</p>
+<p><img src="../assets/img/posts/llm-framework/0006cffcb9c8dbd7.png" alt="Image" /></p>
+<p>与 Post-LN 相比，DeepNorm在执行LN之前会放大残差连接。此外，在初始化期间会缩小权重。值得注意的是，作者仅缩放前馈网络的权重以及注意层的值投影和输出投影。此外，残差连接和初始化的规模取决于网络中Encoder和Decoder的层数。</p>
+<h2 id="参考">参考：</h2>
+<p><a href="http://www.sniper97.cn/index.php/note/deep-learning/note-deep-learning/4401/">【深度学习笔记】Pre-Norm、Post-Norm与DeepNorm</a></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

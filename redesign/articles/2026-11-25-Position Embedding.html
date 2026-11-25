@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Position Embedding · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM</h2><a href="2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.html">LLMs为什么都采用Decoder-only结构?</a><a href="2026-11-25-MoE%EF%BC%88%E6%B7%B7%E5%90%88%E4%B8%93%E5%AE%B6%E6%A8%A1%E5%9E%8B%EF%BC%89%E6%9E%B6%E6%9E%84.html">MoE（混合专家模型）架构</a><a href="2026-11-25-Position%20Embedding.html" aria-current="page">Position Embedding</a><a href="2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.html">从ReLU到SwiGLU</a><a href="2026-11-25-%E5%9B%BE%E8%A7%A3%20MoE%20%E6%A8%A1%E5%9E%8B.html">图解 MoE 模型</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%E7%9A%84Tokenization.html">大模型中的Tokenization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.html">大模型常用的Normalization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0.html">大模型效果评估</a><a href="2026-11-25-%E7%90%86%E8%A7%A3DeepSeek%E5%9C%A8MoE%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B%E5%92%8C%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0.html">理解DeepSeek在MoE技术的演进过程和具体实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2026-11-25-Position%20Embedding.md" download="2026-11-25-Position Embedding.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2026-11-25">2026-11-25</time></p>
+        <h1>Position Embedding</h1>
+      </header>
+      <div class="prose" id="body"><p>Transformer架构中采用Attention机制，但Attention对序列建模时没有位置信息，因此引入了Position Embedding（Attention is all you need），本文对常用的PE类型进行介绍，常用的PE类型如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th><strong>编码类型</strong></th>
+<th><strong>经典模型</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Learned Positional Embedding</td>
+<td>BERT, Roberta, GPT, GPT2</td>
+</tr>
+<tr>
+<td>Sinusoidal</td>
+<td>Transformer, Transformer XL</td>
+</tr>
+<tr>
+<td>RoPE</td>
+<td>RoFormer, GPT-Neo, LLaMA, ChatGLM, Baichuan7B</td>
+</tr>
+<tr>
+<td>ALiBi</td>
+<td>BLOOM, BloombergGPT, Baichuan13B</td>
+</tr>
+</tbody>
+</table>
+<h2 id="learned-position-embedding">Learned Position Embedding</h2>
+<p>通过可学习的Positional Embedding来编码位置信息，是预训练语言模型中最广泛的编码方式。这种方案直接对不同的位置随机初始化一个<code>position embedding</code>，然后与word embedding相加后输入模型。<code>position embedding</code>作为模型参数的一部分，在训练过程中进行更新。</p>
+<p><img src="../assets/img/posts/llm-framework/9c65051d137bc0f1.png" alt="Image" /></p>
+<div class="code-block"><div class="code-toolbar"><span>other</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-other"># 初始化
+self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
+# 计算
+position_embeddings = self.position_embeddings(position_ids)
+embeddings += position_embeddings
+</code></pre></div>
+<h2 id="sinusoidal位置编码">Sinusoidal位置编码</h2>
+<p>基于Sinusoidal的位置编码是最初Tranformer文章(Attention is All You Need)中的方案。具体计算方式如下图所示，通过sin和cos函数直接给出了每个位置每个维度上的绝对数值，可以认为直接初始化并固定了position embedding。</p>
+<p><img src="../assets/img/posts/llm-framework/8eda406d879e437e.png" alt="Image" /></p>
+<p>代码实现如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>other</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-other">class SinusoidalPositionEncoding(torch.nn.Module):
+  def __init__(self, dim, max_period=10000):
+    assert dim % 2 == 0        
+    self.dim = dim        
+    self.max_period = max_period        
+    super().__init__()       
+    w_arr = torch.arange(0, self.dim // 2)        
+    w_arr = 1 / (max_period) ** (w_arr * 2 / dim)        
+    self.register_buffer(&quot;w_arr&quot;, w_arr)    
+
+  def forward(self, x):        
+    &quot;&quot;&quot;
+    assume x has shape (B,T) where B=batch size, T=token size
+    (or sequence length) and values of x are integers &gt;=0. 
+    &quot;&quot;&quot;        
+    _x = torch.unsqueeze(x, -1)  # (B,T,1)        
+    v = _x * self.w_arr  # (B,T,dim//2)        
+    sin = torch.sin(v)        
+    sin = torch.unsqueeze(sin, -1)  # (B,T,m,1)        
+    cos = torch.cos(v)        
+    cos = torch.unsqueeze(cos, -1)  # (B,T,m,1)        
+    m = torch.cat([sin, cos], -1)  # (B,T,m,2)        
+    b, t, _, _ = m.shape        
+    y = m.reshape(b, t, -1)  # (B,T,dim) where 2m=`dim`        
+    return y
+</code></pre></div>
+<h3 id="与learned-position-embedding式对比">与<code>Learned Position Embedding</code>式对比</h3>
+<p>最初的Transformer中采用的是Sinusoidal编码，但是BERT以及后续的预训练模型都采用Position Embedding。对比分析可能有下面一些原因：</p>
+<ol>
+<li>实现上Position Embedding相对更简单</li>
+<li>BERT是在更大规模的数据上训练，数据量是Transformer的40倍。在更多数据上的效果可能就不一样。</li>
+<li>Transformer中是机器翻译的任务，这时候encoder的核心是提取整个句子的语义，不需要特别关注词的具体位置。但是BERT这样的NLU模型是需要的，尤其对于下游的序列标注等任务，需要对位置进行更精细的建模。这时候完全训练获得的embedding要比直接赋值更好。</li>
+</ol>
+<h2 id="rope">RoPE</h2>
+<p>RoPE旋转式位置编码是苏建林在Roformer中提出的position embedding方法，目前广泛应用于大模型模型架构中。该PE方式不是在输入层中进行应用，而是作用于Attention中的Q和K的计算中。</p>
+<p>位置m的位置权重 𝑅𝑚 是一个二维的矩阵，具体如下所示:</p>
+<p><img src="../assets/img/posts/llm-framework/a891d73aa610335f.png" alt="Image" /></p>
+<p>与位置m的词向量x相乘就是对x注入了位置信息，因为 𝑅𝑚 的矩阵性质，相乘操作可以转换成两个相加的操作:</p>
+<p><img src="../assets/img/posts/llm-framework/f8a5f8c966a09fa0.png" alt="Image" /></p>
+<p>如果按照维度两两一组拆分来看，相当于对相邻的两个维度(x1,x2)施加了一个旋转的操作，所以也称为旋转式编码：</p>
+<p><img src="../assets/img/posts/llm-framework/02d349863f75d105.png" alt="Image" /></p>
+<p><img src="../assets/img/posts/llm-framework/74392e870056b783.png" alt="Image" /></p>
+<p>所以 RoPE 的 self-attention 操作的流程是，对于 token 序列中的每个词嵌入向量，首先计算其对应的 query 和 key 向量，再对每个 token 位置都计算对应的旋转矩阵，接着对每个 token 位置的 query 和 key 向量的元素按照两两一组应用旋转变换，最后再计算 query 和 key 之间的内积得到 self-attention 的计算结果。</p>
+<p><img src="../assets/img/posts/llm-framework/d3d71a3f1b439c72.png" alt="Image" /></p>
+<h2 id="alibi">ALiBi</h2>
+<p>Attention with Linear Biases (ALiBi)[3]是一种专门提高transformer模型外推能力的编码，让模型在训练阶段的上下文不是很长，但是在预测阶段可以支持很长的上下文。具体而言，在attention计算之后，会添加一个固定的偏置项，这个偏置项是固定的不需学习的，只跟相对位置有关。如下所示:</p>
+<p><img src="../assets/img/posts/llm-framework/73e83005f2e0fedc.png" alt="Image" /></p>
+<p>对于attention score会根据距离添加“惩罚”，距离越大，惩罚也越大。不同的attention head施加的惩罚系数m是不同。具体而言，假设一共有n个head，系数m是一个等比数列，始于 2−8/𝑛，终于 2−8。</p>
+<h3 id="外推性">外推性</h3>
+<p>固定训练阶段的最大长度是512或者1024，在预测阶段，ALiBi位置编码可以保持非常稳定的外推性。如下所示:</p>
+<p><img src="../assets/img/posts/llm-framework/a2bce5521c1965c6.png" alt="Image" /></p>
+<h2 id="参考资料">参考资料</h2>
+<ol>
+<li>
+<p><a href="https://blog.nghuyong.top/2023/09/02/NLP/llm-position-embedding/">https://blog.nghuyong.top/2023/09/02/NLP/llm-position-embedding/</a>(大模型基础组件-Position Encoding)</p>
+</li>
+<li>
+<p><a href="https://zhuanlan.zhihu.com/p/642884818">https://zhuanlan.zhihu.com/p/642884818</a>(一文读懂LLaMA中的旋转位置编码)</p>
+</li>
+<li>
+<p><a href="https://www.zhihu.com/tardis/zm/art/675243992?source_id=1003">https://www.zhihu.com/tardis/zm/art/675243992?source_id=1003</a>(再论大模型位置编码及其外推性)</p>
+</li>
+</ol>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLMs为什么都采用Decoder-only结构? · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM</h2><a href="2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.html" aria-current="page">LLMs为什么都采用Decoder-only结构?</a><a href="2026-11-25-MoE%EF%BC%88%E6%B7%B7%E5%90%88%E4%B8%93%E5%AE%B6%E6%A8%A1%E5%9E%8B%EF%BC%89%E6%9E%B6%E6%9E%84.html">MoE（混合专家模型）架构</a><a href="2026-11-25-Position%20Embedding.html">Position Embedding</a><a href="2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.html">从ReLU到SwiGLU</a><a href="2026-11-25-%E5%9B%BE%E8%A7%A3%20MoE%20%E6%A8%A1%E5%9E%8B.html">图解 MoE 模型</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%E7%9A%84Tokenization.html">大模型中的Tokenization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.html">大模型常用的Normalization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0.html">大模型效果评估</a><a href="2026-11-25-%E7%90%86%E8%A7%A3DeepSeek%E5%9C%A8MoE%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B%E5%92%8C%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0.html">理解DeepSeek在MoE技术的演进过程和具体实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.md" download="2026-11-25-LLMs为什么都采用Decoder-only结构.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2026-11-25">2026-11-25</time></p>
+        <h1>LLMs为什么都采用Decoder-only结构?</h1>
+      </header>
+      <div class="prose" id="body"><p>Encoder-Only 架构，也被称为单向架构，仅包含编码器部分。Encoder-Only 架构的核心思想是利用神经网络对输入文本进行编码，提取其特征和语义信息，并将编码结果传递给后续的处理模块。它主要适用于不需要生成序列的任务，只需要对输入进行编码和处理的单向任务场景，如文本分类、情感分析等。这种架构的代表是 BERT 相关的模型，例如 BERT、RoBERT 和 ALBERT 等。</p>
+<h2 id="decoder-only结构">Decoder-Only结构</h2>
+<p>Decoder-Only 架构，也被称为生成式架构，仅包含解码器部分。Decoder-Only 架构还有一个重要特点是可以进行无监督预训练。在预训练阶段，模型通过大量的无标注数据学习语言的统计模式和语义信息。</p>
+<h2 id="encoder-decoder架构">Encoder-Decoder架构</h2>
+<p>同时包含编码器和解码器部分。核心思想是利用编码器对输入序列进行编码，提取其特征和语义信息，并将编码结果传递给解码器，解码器根据编码结果生成相应的输出序列。</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>Encoder-Only</th>
+<th>Decoder-Only</th>
+<th>Encoder-Decoder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>缺点</td>
+<td>生成能力有限：不擅长自主生成文本或内容。</td>
+<td>有限的理解能力：不擅长理解复杂的输入数据</td>
+<td>相比单一架构，更复杂需要更多的计算资源。</td>
+</tr>
+<tr>
+<td>优点</td>
+<td>强大的理解能力：能够有效处理和理解输入数据。<br>适用性广泛：适用于多种分析型任务。</td>
+<td>生成能力强：能够生成连贯、有创造性的文本。<br>灵活性：适用于各种生成型任务。</td>
+<td>灵活强大：能够理解复杂输入并生成相关输出。<br>适用于复杂任务：如机器翻译、文本摘要等。</td>
+</tr>
+<tr>
+<td>特点</td>
+<td>专注于理解和编码输入，常用于分类、标注等任务</td>
+<td>专注于从一系列输入生成或预测输出</td>
+<td>结合了编码器和解码器的优点</td>
+</tr>
+<tr>
+<td>代表模型</td>
+<td>Bert，GLM4</td>
+<td>LLaMA，GPTs，QWen等</td>
+<td>T5，ChatGLM等</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>从理论的角度讲，可以参考下面苏神的博客</p>
+</blockquote>
+<p><a href="https://kexue.fm/archives/9529/comment-page-1#comments">为什么现在的LLM都是Decoder-only的架构？ - 科学空间|Scientific Spaces</a></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

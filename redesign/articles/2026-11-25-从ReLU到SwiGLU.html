@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>从ReLU到SwiGLU · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM</h2><a href="2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.html">LLMs为什么都采用Decoder-only结构?</a><a href="2026-11-25-MoE%EF%BC%88%E6%B7%B7%E5%90%88%E4%B8%93%E5%AE%B6%E6%A8%A1%E5%9E%8B%EF%BC%89%E6%9E%B6%E6%9E%84.html">MoE（混合专家模型）架构</a><a href="2026-11-25-Position%20Embedding.html">Position Embedding</a><a href="2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.html" aria-current="page">从ReLU到SwiGLU</a><a href="2026-11-25-%E5%9B%BE%E8%A7%A3%20MoE%20%E6%A8%A1%E5%9E%8B.html">图解 MoE 模型</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%E7%9A%84Tokenization.html">大模型中的Tokenization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.html">大模型常用的Normalization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0.html">大模型效果评估</a><a href="2026-11-25-%E7%90%86%E8%A7%A3DeepSeek%E5%9C%A8MoE%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B%E5%92%8C%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0.html">理解DeepSeek在MoE技术的演进过程和具体实现</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.md" download="2026-11-25-从ReLU到SwiGLU.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2026-11-25">2026-11-25</time></p>
+        <h1>从ReLU到SwiGLU</h1>
+      </header>
+      <div class="prose" id="body"><p>在Transformer的结构中，基本都会使用到FFN(Feed Forward)层，在FFN层的激活函数主要使用了ReLU，GeLU，SwiGLU等。FFN层本质上是一个两层的全连接层，只是第一层会对输入进行升维，第二层对输入进行降维，升维和降维的过程相当于是学习更抽象的特征：</p>
+<p><span class="math inline">\(FFN(x)=f(x·W_1)·W_2\)</span></p>
+<p>其中的f一般为非线形激活函数，比如ReLU。在大模型的网络结构中，一般都使用ReLU，GeLU，SwiGLU，GeGLU等，下面对这几个激活函数进行介绍。</p>
+<h2 id="relu">ReLU</h2>
+<p>ReLU是目前深度学习中最常用的激活函数，ReLU是一个非线形的单边抑制激活函数，其激活函数如下所示：</p>
+<p><span class="math inline">\(f(x)=max(0, x)\)</span></p>
+<p>其函数图像如下：</p>
+<p><img src="../assets/img/posts/llm-framework/34a4be8ad3fe4949.jpg" alt="Image" /></p>
+<p><strong>优点</strong>：ReLU的好处在于计算简单，没有饱和区（sigmoid函数反向传播时，很容易就会出现<strong>梯度消失</strong> 的情况（在sigmoid接近饱和区时，变换太缓慢，导数趋于0，这种情况会造成信息丢失），从而无法完成深层网络的训练。），具备稀疏性，可以输出真正的零（ReLU函数在负半区的导数为0，所以一旦神经元激活值进入负半区，那么梯度就会为0，而正值不变，这种操作被成为单侧抑制。），有助于深层网络训练。</p>
+<h2 id="glu">GLU</h2>
+<p>GLU 全称为Gated Linear Unit，即门控线性单元函数，2016年由微软提出，其公式如下所示。借鉴了ReLU激活函数的思想（当输入向量x的值小于 0 时直接阻断，当时输入向量 𝑥 的值大于 0 值直接通过）。</p>
+<p><span class="math inline">\(GLU(x)=(Wx+b) \bigotimes \sigma(g(x))\)</span></p>
+<p>其中，x为输入的矩阵，<span class="math inline">\(\sigma\)</span>为sigmoid激活函数，<span class="math inline">\(g(x)\)</span>为通过全连接层或卷积层输出的矩阵。当<span class="math inline">\(\sigma\)</span>输出接近0时对输入抑制，当输出接近1时对输入进行通过，起到门控函数的效果，同时没有sigmoid函数在0或1饱和区域的缺点。</p>
+<p>将g(x)替换为x的函数图像如下图所示：</p>
+<p><img src="../assets/img/posts/llm-framework/78ad657ec7f3dd30.jpg" alt="Image" /></p>
+<h2 id="swish"><a href="https://arxiv.org/abs/1710.05941">Swish</a></h2>
+<p><strong>Swish</strong>是Google在17年10月提出的一种新型激活函数，主要针对sigmoid在<strong>饱和问题</strong>和<strong>ReLU非连续性问题</strong>上提出，其函数形式如下：</p>
+<p><span class="math inline">\(Swish(x)=x\sigma(\beta x)\)</span></p>
+<p>其中，<span class="math inline">\(\sigma\)</span>表示sigmoid函数。当<span class="math inline">\(\beta=1\)</span>时，和GLU相似。</p>
+<p>swish激活函数具有以下特点：</p>
+<p>1️⃣和ReLU一样，没有上边界，不会出现梯度饱和的现象；2️⃣存在下边界，可以产生强正则化效果，具有稀疏性；3️⃣在大于0的区域为线性函数；4️⃣处处可导，容易训练。</p>
+<h2 id="gelu">GeLU</h2>
+<p><a href="https://arxiv.org/abs/1606.08415">GeLU</a>(Gaussian Error Linear Unit)是基于ReLU、Dropout进行优化，在2020年被提出，成为优秀的常用的激活函数之一。其形式为：</p>
+<p><span class="math inline">\(GELU(x)=x \times P(X&lt;=x)=x \times \phi(x), x \in N(0,1)\)</span></p>
+<p>其中x为输入值，X是具有零均值和单位方差的高斯随机变量。<span class="math inline">\(P(X&lt;=x)\)</span>是X小于或等于给定值x的概率。<span class="math inline">\(I \times x \times \phi(x)+0 \times x \times (1-\phi(x))=x \times \phi(x)\)</span>，在论文中对该式子进行了近似：</p>
+<p><span class="math inline">\(x\phi(x) \approx \frac{1}{2} \times [1+tanh(\sqrt{\frac{2}{\pi}}(x+0.044715x^3))] \approx x\sigma(1.702x)\)</span></p>
+<p>其中<span class="math inline">\(\sigma(x)\)</span>代表sigmoid激活函数，其近似函数图像如下图所示：</p>
+<p><img src="../assets/img/posts/llm-framework/8db5ba0ef2923bc4.jpg" alt="Image" /></p>
+<p>优点，1️⃣具有更光滑的导数：GELU函数的导数是连续的，这使得在训练深度神经网络时可以更容易地传播梯度，避免了ReLU函数在 处的导数不连续的问题，从而减少了训练过程中出现的梯度消失问题2️⃣可以加速收敛：GELU函数在激活函数的非线性变换中引入了类似于sigmoid函数的变换，这使得GELU函数的输出可以落在一个更广的范围内，有助于加速模型的收敛速度。</p>
+<h2 id="swiglu">SwiGLU</h2>
+<p>SwiGLU是2019年提出的新的激活函数，它结合了SWISH和GLU两种者的特点。SwiGLU主要是为了提升<a href="https://arxiv.org/pdf/1706.03762.pdf">transformer</a>中的FFN(feed-forward network)层的实现。FFN层的原始定义如下，其中使用了ReLU的激活：</p>
+<p><span class="math inline">\(FFN(x,W1,W2,b1,b2)=max(0,xW1+b1)W2+b2\)</span></p>
+<p>SwiGLU是时Swish和GLU的结合体，其形式如下：</p>
+<p><span class="math inline">\(SwiGLU(x) = Swish(W1x+b) ) \bigotimes (Vx+c)\)</span></p>
+<p>基于SwiGLU的FFN的变种如下：</p>
+<p><span class="math inline">\(FFN-SwiGLU(x, W, V, W2) = (Swish(W*x) \bigotimes V*x )*W2\)</span></p>
+<p><img src="../assets/img/posts/llm-framework/1ffcb335e2f1cd5f.jpg" alt="Image" /></p>
+<h2 id="geglu">GeGLU</h2>
+<p>GeGLU是GeLU和GLU综合的激活函数，结合了两者的特性。函数形式如下：</p>
+<p><span class="math inline">\(GeGLU(x,W,V,b,c)=GELU(xW+b) \bigotimes (xV+c)\)</span></p>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

@@ -1,5 +1,140 @@
 window.BLOG_POSTS = [
   {
+    "title": "LLMs为什么都采用Decoder-only结构?",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "Encoder-Only 架构，也被称为单向架构，仅包含编码器部分。Encoder-Only 架构的核心思想是利用神经网络对输入文本进行编码，提取其特征和语义信息，并将编码结果传递给后续的处理模块。它主要适用于不需要生成序列的任务，只需要对输入进行编码和处理的单向任务场景，如文本…",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.html"
+  },
+  {
+    "title": "MoE（混合专家模型）架构",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-MoE%EF%BC%88%E6%B7%B7%E5%90%88%E4%B8%93%E5%AE%B6%E6%A8%A1%E5%9E%8B%EF%BC%89%E6%9E%B6%E6%9E%84.html"
+  },
+  {
+    "title": "Position Embedding",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "Transformer架构中采用Attention机制，但Attention对序列建模时没有位置信息，因此引入了Position Embedding（Attention is all you need），本文对常用的PE类型进行介绍，常用的PE类型如下表所示。",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-Position%20Embedding.html"
+  },
+  {
+    "title": "从ReLU到SwiGLU",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "在Transformer的结构中，基本都会使用到FFN(Feed Forward)层，在FFN层的激活函数主要使用了ReLU，GeLU，SwiGLU等。FFN层本质上是一个两层的全连接层，只是第一层会对输入进行升维，第二层对输入进行降维，升维和降维的过程相当于是学习更抽象的特征：",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.html"
+  },
+  {
+    "title": "图解 MoE 模型",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "原文：https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-%E5%9B%BE%E8%A7%A3%20MoE%20%E6%A8%A1%E5%9E%8B.html"
+  },
+  {
+    "title": "大模型中的Tokenization",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "Tokenization是大模型中非常关键的部分，目标是将文本转换为模型可以处理的数据，将文本转换为token，形成词表，再将token转换为模型的输入向量。其形式入下图所示：",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%E7%9A%84Tokenization.html"
+  },
+  {
+    "title": "大模型常用的Normalization",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "Normalization就是将输入的数据进行归一化，使其服从均值为 0， 方差为 1 的分布。这样使得输入具有相同的均值和方差，固定了每一层的输入分布，从而加速网络的收敛。具体的作用如下：",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.html"
+  },
+  {
+    "title": "大模型效果评估",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "自动评测和人工评测。这两种方法在评测语言模型和机器翻译等任务时起着重要的作用。自动评测方法基于计算机算法和自动生成的指标，能够快速且高效地评测模型的性能。而人工评测则侧重于人类专家的主观判断和质量评测，能够提供更深入、细致的分析和意见。了解和掌握这两种评测方法对准确评测和改进语言…",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0.html"
+  },
+  {
+    "title": "理解DeepSeek在MoE技术的演进过程和具体实现",
+    "type": "技术笔记",
+    "series": "LLM技术框架",
+    "description": "本篇讲讲deepseek在MoE（Mixture-of-Experts）上的演进过程。DeepSeek是MoE稀疏模型的忠实玩家。主版本模型从DeepSeekMoE（V1） 到 DeepSeek V3，一直坚持走MoE的技术路线，并且持续做出一些创新。本文参考paper并结合源码…",
+    "date": "2026-11-25",
+    "categories": [
+      "LLM"
+    ],
+    "tags": [
+      "llm",
+      "模型架构"
+    ],
+    "url": "articles/2026-11-25-%E7%90%86%E8%A7%A3DeepSeek%E5%9C%A8MoE%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B%E5%92%8C%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0.html"
+  },
+  {
     "title": "必读的Agent相关研究",
     "type": "知识体系",
     "series": "Agent",
