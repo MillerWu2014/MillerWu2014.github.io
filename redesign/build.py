@@ -144,7 +144,7 @@ def build_topics(posts):
             f'<article class="topic-cover"><div class="topic-cover-main">'
             f'<p class="topic-eyebrow">{len(members)} 篇文章 · 更新于 {updated}</p>'
             f'<h2><a href="{destination}">{name}</a></h2><p>{description}</p>'
-            f'<a class="topic-enter" href="{destination}">进入专题 <span aria-hidden="true">↗</span></a>'
+            f'<a class="topic-enter" href="{destination}">进入专题</a>'
             f'</div><div class="topic-cover-path"><h3>阅读路线</h3>{links}</div></article>'
         )
     path = SITE / "topics.html"

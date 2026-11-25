@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LLMs为什么都采用Decoder-only结构? · Miller Wu</title>
-  <link rel="stylesheet" href="../style.css?v=e3d8c8341a1f">
+  <link rel="stylesheet" href="../style.css?v=e2efab446adf">
   <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
   <script src="../reader.js?v=85a6a9b7afa7" defer></script>
   <script src="../header.js?v=293284986ded" defer></script>
@@ -18,7 +18,7 @@
     <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
       <details class="sidebar-panel" open>
         <summary>分类文章</summary>
-        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM</h2><a href="2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.html" aria-current="page">LLMs为什么都采用Decoder-only结构?</a><a href="2026-11-25-MoE%EF%BC%88%E6%B7%B7%E5%90%88%E4%B8%93%E5%AE%B6%E6%A8%A1%E5%9E%8B%EF%BC%89%E6%9E%B6%E6%9E%84.html">MoE（混合专家模型）架构</a><a href="2026-11-25-Position%20Embedding.html">Position Embedding</a><a href="2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.html">从ReLU到SwiGLU</a><a href="2026-11-25-%E5%9B%BE%E8%A7%A3%20MoE%20%E6%A8%A1%E5%9E%8B.html">图解 MoE 模型</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%E7%9A%84Tokenization.html">大模型中的Tokenization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.html">大模型常用的Normalization</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0.html">大模型效果评估</a><a href="2026-11-25-%E7%90%86%E8%A7%A3DeepSeek%E5%9C%A8MoE%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B%E5%92%8C%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0.html">理解DeepSeek在MoE技术的演进过程和具体实现</a></section></nav>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM</h2><a href="2026-11-25-%E7%90%86%E8%A7%A3DeepSeek%E5%9C%A8MoE%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B%E5%92%8C%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0.html">理解DeepSeek在MoE技术的演进过程和具体实现</a><a href="2026-11-25-%E5%9B%BE%E8%A7%A3%20MoE%20%E6%A8%A1%E5%9E%8B.html">图解 MoE 模型</a><a href="2026-11-25-LLMs%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%BD%E9%87%87%E7%94%A8Decoder-only%E7%BB%93%E6%9E%84.html" aria-current="page">LLMs为什么都采用Decoder-only结构?</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%B8%E7%94%A8%E7%9A%84Normalization.html">大模型常用的Normalization</a><a href="2026-11-25-%E4%BB%8EReLU%E5%88%B0SwiGLU.html">从ReLU到SwiGLU</a><a href="2026-11-25-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%AD%E7%9A%84Tokenization.html">大模型中的Tokenization</a><a href="2026-11-25-Position%20Embedding.html">Position Embedding</a></section></nav>
       </details>
     </aside>
     <main class="reader">
@@ -33,7 +33,7 @@
     <p id="status" role="status" hidden></p>
     <article>
       <header>
-        <p class="count"><time datetime="2026-11-25">2026-11-25</time></p>
+        <p class="count"><time datetime="2024-06-04">2024-06-04</time></p>
         <h1>LLMs为什么都采用Decoder-only结构?</h1>
       </header>
       <div class="prose" id="body"><p>Encoder-Only 架构，也被称为单向架构，仅包含编码器部分。Encoder-Only 架构的核心思想是利用神经网络对输入文本进行编码，提取其特征和语义信息，并将编码结果传递给后续的处理模块。它主要适用于不需要生成序列的任务，只需要对输入进行编码和处理的单向任务场景，如文本分类、情感分析等。这种架构的代表是 BERT 相关的模型，例如 BERT、RoBERT 和 ALBERT 等。</p>

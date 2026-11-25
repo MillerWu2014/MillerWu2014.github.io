@@ -1,6 +1,6 @@
 ---
 title: LLMs为什么都采用Decoder-only结构?
-date: '2026-11-25'
+date: '2024-06-04T09:09:04.000+08:00'
 series: LLM技术框架
 article_type: 技术笔记
 categories:

@@ -1,6 +1,6 @@
 ---
 title: Position Embedding
-date: '2026-11-25'
+date: '2024-04-30T16:12:16.000+08:00'
 series: LLM技术框架
 article_type: 技术笔记
 categories:

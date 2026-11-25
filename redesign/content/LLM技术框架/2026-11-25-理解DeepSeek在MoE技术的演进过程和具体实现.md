@@ -1,6 +1,6 @@
 ---
 title: 理解DeepSeek在MoE技术的演进过程和具体实现
-date: '2026-11-25'
+date: '2025-02-10T09:15:44.000+08:00'
 series: LLM技术框架
 article_type: 技术笔记
 categories:
@@ -11,8 +11,6 @@ tags:
 craft_block_id: 38106622-E084-4CF3-8DBB-DD4DAF3B32A9
 synced_at: '2026-11-25'
 ---
-
-#MOE #LLM 
 
 ## 0. 引言
 

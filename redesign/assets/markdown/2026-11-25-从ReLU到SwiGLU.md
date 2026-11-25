@@ -1,6 +1,6 @@
 ---
 title: 从ReLU到SwiGLU
-date: '2026-11-25'
+date: '2024-05-24T14:56:11.000+08:00'
 series: LLM技术框架
 article_type: 技术笔记
 categories:

@@ -43,7 +43,7 @@
   {
     "name": "LLM技术框架",
     "slug": "llm-framework",
-    "description": "从 Decoder-only 架构出发，梳理分词、位置编码、激活函数、归一化、混合专家模型与效果评估。",
+    "description": "从 Decoder-only 架构出发，梳理分词、位置编码、激活函数、归一化、混合专家模型。",
     "groups": [
       {
         "title": "模型架构与基础组件",
@@ -60,16 +60,8 @@
         "title": "混合专家模型（MoE）",
         "description": "",
         "articles": [
-          "MoE（混合专家模型）架构",
           "图解 MoE 模型",
           "理解DeepSeek在MoE技术的演进过程和具体实现"
-        ]
-      },
-      {
-        "title": "模型效果评估",
-        "description": "",
-        "articles": [
-          "大模型效果评估"
         ]
       }
     ]

@@ -1,6 +1,6 @@
 ---
 title: 大模型常用的Normalization
-date: '2026-11-25'
+date: '2024-05-29T15:34:31.000+08:00'
 series: LLM技术框架
 article_type: 技术笔记
 categories:
