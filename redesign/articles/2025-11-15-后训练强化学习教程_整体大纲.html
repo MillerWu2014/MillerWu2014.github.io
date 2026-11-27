@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>后训练强化学习算法教程：整体大纲与技术演进路线 · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=4bc2e8f6b4b3">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM后训练的强化学习</h2><a href="2025-11-15-%E5%90%8E%E8%AE%AD%E7%BB%83%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E6%95%99%E7%A8%8B_%E6%95%B4%E4%BD%93%E5%A4%A7%E7%BA%B2.html" aria-current="page">后训练强化学习算法教程：整体大纲与技术演进路线</a><a href="2023-11-23-1-Actor-Critic%E4%B8%8EGAE.html">第 1 篇：Actor-Critic 与 GAE——从采样回报到优势估计</a><a href="2023-10-30-0-%E5%9F%BA%E7%A1%80%E4%B8%8E%E7%AD%96%E7%95%A5%E6%A2%AF%E5%BA%A6_REINFORCE.html">第 0 篇：基础与策略梯度——从结果评分到 REINFORCE</a><a href="2023-09-01-3-PPO%E5%9C%A8LLM%E5%90%8E%E8%AE%AD%E7%BB%83%E4%B8%AD%E7%9A%84%E5%AE%8C%E6%95%B4%E6%8C%87%E5%8D%97_%E4%BF%AE%E8%AE%A2%E7%89%88.html">PPO 在 LLM 后训练中的完整指南</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2025-11-15-%E5%90%8E%E8%AE%AD%E7%BB%83%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E6%95%99%E7%A8%8B_%E6%95%B4%E4%BD%93%E5%A4%A7%E7%BA%B2.md" download="2025-11-15-后训练强化学习教程_整体大纲.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2025-11-15">2025-11-15</time></p>
+        <h1>后训练强化学习算法教程：整体大纲与技术演进路线</h1>
+      </header>
+      <div class="prose" id="body"><blockquote>
+<p>主线：<strong>每一种算法都是为了解决上一种算法留下的痛点而出现的。</strong> 本系列不按&quot;算法清单&quot;组织，而按&quot;痛点 → 解法 → 新痛点&quot;的链条组织。</p>
+</blockquote>
+<hr />
+<h2 id="一演进路线">一、演进路线</h2>
+<p><strong>纵向主干是&quot;痛点驱动&quot;的演进，每个节点标出它留下的痛点；PPO 之后分出三条</strong>相互正交**的轴，每个方法只放在它真正改动的那一层：</p>
+<ul>
+<li><strong>轴一　在线策略优化</strong>：改造 PPO 本身（怎么得到优势、怎么稳定更新）。</li>
+<li><strong>轴二　离线偏好优化</strong>：直接求解 RLHF 目标，不再在线采样。</li>
+<li><strong>轴三　奖励与反馈来源</strong>：信号由谁产生（人、AI 还是规则），它可以接在任一优化算法上。</li>
+</ul>
+<pre><code class="language-mermaid">flowchart TD
+    R[&quot;REINFORCE&lt;br/&gt;痛点：方差大、样本效率低&quot;] --&gt; AC[&quot;Actor-Critic + GAE&lt;br/&gt;用 Critic 降方差&lt;br/&gt;痛点：步长敏感，更新太猛会崩&quot;]
+    AC --&gt; T[&quot;TRPO&lt;br/&gt;信任区域 + KL 约束&lt;br/&gt;痛点：二阶计算，难用于大模型&quot;]
+    T --&gt; P[&quot;PPO&lt;br/&gt;clip 近似信任区域，一阶可训练&lt;br/&gt;痛点（LLM）：4 个模型、Critic 难训、在线采样贵&quot;]
+
+    subgraph A[&quot;轴一：在线策略优化&quot;]
+        direction TB
+        RLOO[&quot;ReMax / RLOO&lt;br/&gt;去掉 Critic，用 baseline 降方差&quot;] --&gt; GRPO[&quot;GRPO&lt;br/&gt;组内相对奖励，保留 clip&lt;br/&gt;痛点：信用分配粗、长度偏置&quot;]
+        GRPO --&gt; VAR[&quot;DAPO / Dr.GRPO / GSPO 等&lt;br/&gt;修长度偏置、熵塌缩、ratio 粒度&quot;]
+    end
+
+    subgraph B[&quot;轴二：离线偏好优化&quot;]
+        direction TB
+        OBJ[&quot;RLHF 目标&lt;br/&gt;奖励最大化 + KL 约束&quot;] --&gt; DPO[&quot;DPO&lt;br/&gt;闭式解，成对偏好上的分类式损失&lt;br/&gt;痛点：离线分布偏移、缺乏探索&quot;]
+        DPO --&gt; FIX[&quot;IPO / DPOP / TDPO&lt;br/&gt;修过拟合、似然下降、token 级信用分配&quot;]
+        DPO --&gt; REFF[&quot;ORPO / SimPO&lt;br/&gt;去掉参考模型&quot;]
+        DPO --&gt; KTO[&quot;KTO&lt;br/&gt;只需二元好坏信号&quot;]
+    end
+
+    subgraph C[&quot;轴三：奖励与反馈来源（与优化算法正交）&quot;]
+        direction TB
+        HUM[&quot;人类偏好 + Reward Model&lt;br/&gt;InstructGPT 的 RLHF&quot;]
+        CAI[&quot;Constitutional AI → RLAIF&lt;br/&gt;AI 依据原则评判，替代人类标注&quot;]
+        RLVR[&quot;RLVR&lt;br/&gt;规则 / 程序可验证的奖励&quot;]
+    end
+
+    P --&gt; RLOO
+    P -. 同一个 RLHF 目标 .-&gt; OBJ
+    HUM -. 提供奖励 .-&gt; P
+    CAI -. 可接任一优化算法 .-&gt; P
+    CAI -. 可接任一优化算法 .-&gt; DPO
+    RLVR -. DeepSeek-R1 ＝ GRPO ＋ RLVR .-&gt; GRPO
+</code></pre>
+<ol>
+<li><strong>DPO 不是 PPO 的后代。</strong> 两者优化的是同一个带 KL 约束的奖励最大化目标：PPO 用在线采样加策略梯度，DPO 用该目标的闭式解。所以图中用虚线表示&quot;同一目标&quot;，而不是继承关系。</li>
+<li><strong>轴三与前两条轴是组合关系。</strong> 例如 DeepSeek-R1 的训练 ＝ 轴一的 GRPO ＋ 轴三的可验证奖励；RLAIF 既可以配 PPO，也可以配 DPO。Constitutional AI（2022）早于 RLAIF（2023），且本身就是 RLAIF 的一种。</li>
+<li><strong>DPO 之后不是一条直线。</strong> 它分出三个方向：修正缺陷（IPO、DPOP、TDPO）、去掉参考模型（ORPO、SimPO）、放宽数据形式（KTO）。</li>
+</ol>
+<h3 id="时间改动点文档所在位置">时间、改动点、文档所在位置</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">时间</th>
+<th style="text-align:center">工作</th>
+<th style="text-align:center">轴</th>
+<th style="text-align:center">解决的问题 / 改动点</th>
+<th style="text-align:center">教程位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1992</td>
+<td style="text-align:center">REINFORCE（Williams）</td>
+<td style="text-align:center">主干</td>
+<td style="text-align:center">最基本的策略梯度估计</td>
+<td style="text-align:center">第 0 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2002</td>
+<td style="text-align:center">Conservative Policy Iteration（Kakade &amp; Langford）</td>
+<td style="text-align:center">主干</td>
+<td style="text-align:center">&quot;保守更新、保证改进&quot;的思想，TRPO 的前身</td>
+<td style="text-align:center">第 2 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2015</td>
+<td style="text-align:center">TRPO、GAE（Schulman 等）</td>
+<td style="text-align:center">主干</td>
+<td style="text-align:center">信任区域保证单调改进；GAE 折中偏差与方差</td>
+<td style="text-align:center">第 1、2 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2016</td>
+<td style="text-align:center">A3C / A2C（Mnih 等）</td>
+<td style="text-align:center">主干</td>
+<td style="text-align:center">Actor-Critic 的规模化与工程化</td>
+<td style="text-align:center">第 1 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2017</td>
+<td style="text-align:center">PPO（Schulman 等）</td>
+<td style="text-align:center">主干</td>
+<td style="text-align:center">用 clip 的一阶方法近似信任区域</td>
+<td style="text-align:center">第 3 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2017–2020</td>
+<td style="text-align:center">基于人类偏好的 RL（Christiano、Ziegler、Stiennon 等）</td>
+<td style="text-align:center">三</td>
+<td style="text-align:center">把偏好学习与 PPO 结合，用于语言模型</td>
+<td style="text-align:center">第 0 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2022</td>
+<td style="text-align:center">InstructGPT（Ouyang 等）</td>
+<td style="text-align:center">三</td>
+<td style="text-align:center">SFT → RM → PPO 的 RLHF 流水线成为标准范式</td>
+<td style="text-align:center">第 0、3 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2022</td>
+<td style="text-align:center">Constitutional AI</td>
+<td style="text-align:center">三</td>
+<td style="text-align:center">反馈由 AI 依据原则产生</td>
+<td style="text-align:center">第 0 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2023</td>
+<td style="text-align:center">DPO（Rafailov 等）</td>
+<td style="text-align:center">二</td>
+<td style="text-align:center">闭式解，省掉 RM 与在线采样</td>
+<td style="text-align:center">第 5 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2023</td>
+<td style="text-align:center">IPO</td>
+<td style="text-align:center">二</td>
+<td style="text-align:center">修正 DPO 的过拟合</td>
+<td style="text-align:center">第 5 篇末&quot;DPO 家族速览&quot;</td>
+</tr>
+<tr>
+<td style="text-align:center">2023</td>
+<td style="text-align:center">ReMax</td>
+<td style="text-align:center">一</td>
+<td style="text-align:center">用贪心回答作 baseline，去掉 Critic</td>
+<td style="text-align:center">第 4 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2023</td>
+<td style="text-align:center">RLAIF</td>
+<td style="text-align:center">三</td>
+<td style="text-align:center">用 AI 反馈替代人类标注</td>
+<td style="text-align:center">第 0 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2024</td>
+<td style="text-align:center">RLOO</td>
+<td style="text-align:center">一</td>
+<td style="text-align:center">留一法均值作 baseline</td>
+<td style="text-align:center">第 4 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2024</td>
+<td style="text-align:center">GRPO（DeepSeekMath）</td>
+<td style="text-align:center">一</td>
+<td style="text-align:center">组内相对奖励构造优势，去掉 Critic</td>
+<td style="text-align:center">第 4 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2024</td>
+<td style="text-align:center">DPOP、TDPO</td>
+<td style="text-align:center">二</td>
+<td style="text-align:center">修正似然下降；token 级信用分配</td>
+<td style="text-align:center">第 5 篇末&quot;DPO 家族速览&quot;</td>
+</tr>
+<tr>
+<td style="text-align:center">2024</td>
+<td style="text-align:center">ORPO、SimPO</td>
+<td style="text-align:center">二</td>
+<td style="text-align:center">去掉参考模型</td>
+<td style="text-align:center">第 5 篇末&quot;DPO 家族速览&quot;</td>
+</tr>
+<tr>
+<td style="text-align:center">2024</td>
+<td style="text-align:center">KTO</td>
+<td style="text-align:center">二</td>
+<td style="text-align:center">只需二元信号，基于前景理论的损失</td>
+<td style="text-align:center">第 5 篇末&quot;DPO 家族速览&quot;</td>
+</tr>
+<tr>
+<td style="text-align:center">2025</td>
+<td style="text-align:center">DeepSeek-R1</td>
+<td style="text-align:center">三</td>
+<td style="text-align:center">大规模使用可验证奖励，推动推理模型训练</td>
+<td style="text-align:center">第 6 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">2025</td>
+<td style="text-align:center">DAPO、Dr.GRPO、GSPO 等</td>
+<td style="text-align:center">一</td>
+<td style="text-align:center">针对 GRPO 的长度偏置、熵塌缩、ratio 粒度等问题</td>
+<td style="text-align:center">第 6 篇</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>年份、名称与&quot;改动点&quot;凭记忆整理，尚未逐条核对原文。2025 年的工作发展很快，成文前先检索确认出处与细节；DPOP、TDPO、ORPO、SimPO、KTO 的具体机制写到对应章节前需读原文。TDPO 这个缩写在文献中还有其他含义，引用时注意区分。</p>
+</blockquote>
+<hr />
+<h2 id="二系列结构总览">二、系列结构总览</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">篇</th>
+<th style="text-align:center">主题</th>
+<th style="text-align:center">它回答的核心问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">0</td>
+<td style="text-align:center">基础：MDP、策略梯度、RLHF 全貌</td>
+<td style="text-align:center">为什么用 RL 微调语言模型？</td>
+</tr>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">Actor-Critic 与 GAE</td>
+<td style="text-align:center">怎么降方差？怎么做信用分配？</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">TRPO</td>
+<td style="text-align:center">为什么更新要有信任区域？</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">PPO 在 LLM 后训练中的应用</td>
+<td style="text-align:center">如何用一阶方法实现信任区域，并落地到 RLHF？</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">GRPO 与无 Critic 方法</td>
+<td style="text-align:center">能不能不要 Critic？</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">DPO 与离线偏好优化</td>
+<td style="text-align:center">能不能连在线采样和 RM 都不要？</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">RLVR 与前沿变体</td>
+<td style="text-align:center">奖励可验证时怎么训练？各变体修了什么？</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">总对比与选型</td>
+<td style="text-align:center">什么场景用哪种？</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关于 4 与 5 的顺序</strong>：从发表时间看是 DPO（2023）在先、GRPO（2024）在后；从学习成本看，GRPO 只改&quot;优势怎么来&quot;，与 PPO 衔接更紧。因此上图把它们画成 PPO 之后的<strong>两条并列分支</strong>，章节顺序可以任选，不影响各自内容。我倾向先 GRPO 后 DPO，理由是 GRPO 与 PPO 同属在线框架，DPO 则需要换到偏好对和闭式推导的思路。</p>
+<hr />
+<h2 id="三整体结构">三、整体结构</h2>
+<h3 id="第-0-篇基础">第 0 篇　基础</h3>
+<ul>
+<li><strong>要回答</strong>：语言模型怎样变成 RL 问题；RLHF 三阶段做了什么。</li>
+<li><strong>核心内容</strong>：MDP 与 token 级建模；REINFORCE 与 baseline；Bradley-Terry 偏好模型与 Reward Model；SFT → RM → RL 的流水线。</li>
+<li><strong>留下的痛点</strong>：REINFORCE 方差大、必须新采样，更新一次就要丢数据。</li>
+<li><strong>和其他篇的关系</strong>：Bradley-Terry 会在第 5 篇（DPO）的推导里再次用到。</li>
+</ul>
+<h3 id="第-1-篇actor-critic-与-gae">第 1 篇　Actor-Critic 与 GAE</h3>
+<ul>
+<li><strong>继承的痛点</strong>：REINFORCE 方差大。</li>
+<li><strong>核心思想</strong>：用 Critic 学习 <span class="math inline">\(V(s)\)</span> 作为 baseline，把回报换成优势；用 GAE 在偏差与方差间折中。</li>
+<li><strong>核心公式</strong>：<span class="math inline">\(A=Q-V\)</span>；TD 残差；GAE 递推；value loss。</li>
+<li><strong>手算例</strong>：三 token 回答的 TD 残差与 GAE（沿用 PPO 篇的例子）。</li>
+<li><strong>留下的痛点</strong>：Actor 的步长敏感，一次更新太大会让策略崩溃，且崩溃后不易恢复。</li>
+</ul>
+<h3 id="第-2-篇trpo">第 2 篇　TRPO</h3>
+<ul>
+<li><strong>继承的痛点</strong>：步长难选。</li>
+<li><strong>核心思想</strong>：在旧策略附近构造代理目标，并用 KL 约束限制更新幅度，使更新有&quot;单调改进&quot;的理论保证。</li>
+<li><strong>核心内容</strong>：重要性采样代理目标；信任区域；自然梯度与 Fisher 矩阵、共轭梯度（讲到够说明问题即可）；线搜索。</li>
+<li><strong>定位建议</strong>：把它写成&quot;PPO 的动机&quot;，不要求读者掌握全部推导。要点是说明<strong>为什么想要信任区域</strong>，以及<strong>为什么二阶方法在大模型上不实用</strong>。</li>
+<li><strong>留下的痛点</strong>：计算复杂，难以和大规模并行训练、共享参数结构配合。</li>
+</ul>
+<h3 id="第-3-篇ppo">第 3 篇　PPO</h3>
+<ul>
+<li><strong>继承的痛点</strong>：想要信任区域，但不想算二阶。</li>
+<li><strong>核心思想</strong>：用 clip 把&quot;可信区域之外的收益&quot;砍掉，只需一阶优化。</li>
+<li><strong>已有内容</strong>：RLHF 数据流、Rollout Buffer、GAE 手算、Policy / Value loss、训练层级、代码、排错。</li>
+<li><strong>留下的痛点（LLM 场景）</strong>：需要同时维护 Actor、Critic、Reference、RM 四个模型；Critic 难训；在线采样昂贵；RM 可被钻空子。</li>
+<li><strong>整合时需要调整</strong>：详见第四节&quot;概念归属表&quot;。</li>
+</ul>
+<h3 id="第-4-篇grpo-与无-critic-方法">第 4 篇　GRPO 与无 Critic 方法</h3>
+<ul>
+<li><strong>继承的痛点</strong>：Critic 占显存、难训练、在长序列上价值估计不准。</li>
+<li><strong>核心思想</strong>：对同一 prompt 采样一组回答，用组内相对奖励替代 Critic 提供基准。</li>
+<li><strong>核心公式</strong>：组内标准化优势 <span class="math inline">\(\hat A_i=(r_i-\bar r)/\sigma_r\)</span>；沿用 PPO 的 clip 目标；KL 作为独立 loss 项。</li>
+<li><strong>手算例</strong>：沿用三 token 回答，换成&quot;同一 prompt 的一组回答&quot;，直观看到优势如何由组内比较产生。</li>
+<li><strong>同类方法</strong>：RLOO（留一法 baseline）、ReMax（贪心回答作 baseline）。</li>
+<li><strong>留下的痛点</strong>：优势在整条回答的所有 token 上相同，信用分配粗糙；聚合方式带来的长度偏置；需要多次采样。</li>
+</ul>
+<h3 id="第-5-篇dpo-与离线偏好优化">第 5 篇　DPO 与离线偏好优化</h3>
+<ul>
+<li><strong>继承的痛点</strong>：PPO 流程复杂，需要 RM、在线采样与多个模型。</li>
+<li><strong>核心思想</strong>：带 KL 约束的奖励最大化有闭式最优策略，把奖励用策略与参考策略的对数比表示，代入 Bradley-Terry 后得到对偏好对的二分类式损失。</li>
+<li><strong>核心公式</strong>：</li>
+</ul>
+<div class="math block">
+\[\mathcal L_{\rm DPO}=-\log\sigma\Big(\beta\big[\log\tfrac{\pi_\theta(y_w|x)}{\pi_{\rm ref}(y_w|x)}-\log\tfrac{\pi_\theta(y_l|x)}{\pi_{\rm ref}(y_l|x)}\big]\Big)\]
+</div>
+<ul>
+<li><strong>手算例</strong>：一对偏好回答（好 / 差），算一次 DPO 梯度的方向。</li>
+<li><strong>留下的痛点</strong>：离线数据与当前策略存在分布偏移；没有主动探索；对数据质量与长度较敏感。这也引出&quot;在线 / 迭代 DPO&quot;。</li>
+</ul>
+<h3 id="第-6-篇rlvr-与前沿变体">第 6 篇　RLVR 与前沿变体</h3>
+<ul>
+<li><strong>继承的痛点</strong>：RM 不可靠、容易被钻空子；推理任务的奖励其实可以直接验证（答案对不对、代码是否通过）。</li>
+<li><strong>核心内容</strong>：可验证奖励；DeepSeek-R1 风格的训练流程；对 GRPO 的各类改进（长度偏置、熵塌缩、序列级与 token 级 ratio 等）。</li>
+<li><strong>注意</strong>：这一篇时效性最强，成文前先检索最新资料，并逐一核对每个变体的具体修改点，避免凭印象写。</li>
+</ul>
+<h3 id="第-7-篇总对比与选型">第 7 篇　总对比与选型</h3>
+<ul>
+<li>用同一张表对比所有算法（见第五节）。</li>
+<li>给出&quot;选型决策树&quot;和&quot;常见问题排查速查&quot;。</li>
+</ul>
+<hr />
+<h2 id="四概念归属">四、概念归属</h2>
+<p>这张表解决&quot;PPO 一章承担了前两章任务&quot;的问题。<strong>每个概念只在一处主讲，其他篇用跨章引用。</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">概念</th>
+<th style="text-align:center">主讲篇</th>
+<th style="text-align:center">PPO 篇（第 3 篇）里的处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">MDP 与 token 级建模</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">保留 3–5 行复习</td>
+</tr>
+<tr>
+<td style="text-align:center">策略梯度与 baseline</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">第 9.1 节改为&quot;回顾&quot;，指向第 0 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">Bradley-Terry 与 RM 训练</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">第 1.1 节保留简介</td>
+</tr>
+<tr>
+<td style="text-align:center">Critic、TD 残差、GAE</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">第 8 节保留手算例，推导指向第 1 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">重要性采样代理目标</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">第 9.3 节保留结论，推导指向第 2 篇</td>
+</tr>
+<tr>
+<td style="text-align:center">信任区域、KL 约束</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">第 9.4 节只讲&quot;为什么需要&quot;</td>
+</tr>
+<tr>
+<td style="text-align:center">ratio、clip、dual-clip</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">主讲</td>
+</tr>
+<tr>
+<td style="text-align:center">Rollout Buffer、训练层级、对齐</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">主讲</td>
+</tr>
+<tr>
+<td style="text-align:center">组内相对优势</td>
+<td style="text-align:center">4</td>
+<td style="text-align:center">—</td>
+</tr>
+<tr>
+<td style="text-align:center">闭式最优策略与隐式奖励</td>
+<td style="text-align:center">5</td>
+<td style="text-align:center">—</td>
+</tr>
+<tr>
+<td style="text-align:center">可验证奖励</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">—</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="五全系列统一的对比维度">五、全系列统一的对比维度</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">维度</th>
+<th style="text-align:center">Actor-Critic</th>
+<th style="text-align:center">TRPO</th>
+<th style="text-align:center">PPO</th>
+<th style="text-align:center">GRPO</th>
+<th style="text-align:center">DPO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">数据来源</td>
+<td style="text-align:center">在线</td>
+<td style="text-align:center">在线</td>
+<td style="text-align:center">在线</td>
+<td style="text-align:center">在线</td>
+<td style="text-align:center">离线偏好对</td>
+</tr>
+<tr>
+<td style="text-align:center">需要 Reward Model</td>
+<td style="text-align:center">—</td>
+<td style="text-align:center">—</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">是或规则奖励</td>
+<td style="text-align:center">否（隐式）</td>
+</tr>
+<tr>
+<td style="text-align:center">需要 Critic</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">否</td>
+<td style="text-align:center">否</td>
+</tr>
+<tr>
+<td style="text-align:center">优势 / 信号来源</td>
+<td style="text-align:center"><span class="math inline">\(A=Q-V\)</span></td>
+<td style="text-align:center">GAE</td>
+<td style="text-align:center">GAE</td>
+<td style="text-align:center">组内相对奖励</td>
+<td style="text-align:center">偏好对的对数比差</td>
+</tr>
+<tr>
+<td style="text-align:center">更新幅度控制</td>
+<td style="text-align:center">无</td>
+<td style="text-align:center">KL 约束（二阶）</td>
+<td style="text-align:center">clip（一阶）</td>
+<td style="text-align:center">clip（一阶）</td>
+<td style="text-align:center">由 <span class="math inline">\(\beta\)</span> 与参考策略隐式约束</td>
+</tr>
+<tr>
+<td style="text-align:center">KL 的位置</td>
+<td style="text-align:center">—</td>
+<td style="text-align:center">约束项</td>
+<td style="text-align:center">常并入 reward</td>
+<td style="text-align:center">常为独立 loss 项</td>
+<td style="text-align:center">内嵌于目标</td>
+</tr>
+<tr>
+<td style="text-align:center">需同时加载的模型</td>
+<td style="text-align:center">Actor、Critic</td>
+<td style="text-align:center">Actor、Critic</td>
+<td style="text-align:center">Actor、Critic、Ref、RM</td>
+<td style="text-align:center">Actor、Ref、奖励来源</td>
+<td style="text-align:center">Actor、Ref</td>
+</tr>
+<tr>
+<td style="text-align:center">每轮固定 / 重算的量</td>
+<td style="text-align:center">待补</td>
+<td style="text-align:center">待补</td>
+<td style="text-align:center">见 PPO 篇第 12 节</td>
+<td style="text-align:center">待补</td>
+<td style="text-align:center">待补</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>这张表是<strong>本系列的主线工具</strong>：PPO 篇已经用它回答了&quot;哪些量固定、哪些量重算&quot;，后续每篇都沿用这个问题。表中 TRPO 与 Actor-Critic 两列的细节，写到对应章节时再核对。</p>
+</blockquote>
+<hr />
+<h2 id="六给你自己的学习路径">六、给你自己的学习路径</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">阶段</th>
+<th style="text-align:center">内容</th>
+<th style="text-align:center">学完应该能做到</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">第 0–1 篇</td>
+<td style="text-align:center">说清为什么要 Critic，手算一遍 GAE</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">第 2–3 篇</td>
+<td style="text-align:center">说清 clip 与信任区域的关系，读懂 PPO 训练日志</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">第 4 篇（或第 5 篇）</td>
+<td style="text-align:center">把同一个例子换成 GRPO 的写法，指出和 PPO 的差别</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">第 5 篇（或第 4 篇）</td>
+<td style="text-align:center">从 KL 约束下的奖励最大化推出 DPO 损失</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">第 6–7 篇</td>
+<td style="text-align:center">面对一个新任务，能给出选型理由</td>
+</tr>
+</tbody>
+</table>
+<p>每个阶段结束都可以用一个自测问题检验：<strong>&quot;这个算法比上一个算法多解决了什么，又引入了什么新问题？&quot;</strong></p>
+<hr />
+<h2 id="参考资料">参考资料</h2>
+<ol>
+<li>Williams, <em>Simple statistical gradient-following algorithms for connectionist reinforcement learning</em>, 1992.</li>
+<li>Kakade &amp; Langford, <em>Approximately Optimal Approximate Reinforcement Learning</em>, 2002.</li>
+<li>Schulman et al., <a href="https://arxiv.org/abs/1502.05477">Trust Region Policy Optimization</a>, 2015.</li>
+<li>Schulman et al., <a href="https://arxiv.org/abs/1506.02438">Generalized Advantage Estimation</a>, 2015.</li>
+<li>Mnih et al., <em>Asynchronous Methods for Deep Reinforcement Learning</em>, 2016.</li>
+<li>Schulman et al., <a href="https://arxiv.org/abs/1707.06347">Proximal Policy Optimization Algorithms</a>, 2017.</li>
+<li>Christiano et al., <em>Deep Reinforcement Learning from Human Preferences</em>, 2017.</li>
+<li>Ouyang et al., <a href="https://arxiv.org/abs/2203.02155">Training language models to follow instructions with human feedback</a>, 2022.</li>
+<li>Rafailov et al., <a href="https://arxiv.org/abs/2305.18290">Direct Preference Optimization</a>, 2023.</li>
+<li>Shao et al., <a href="https://arxiv.org/abs/2402.03300">DeepSeekMath</a>, 2024（GRPO）.</li>
+<li>Ahmadian et al., <em>Back to Basics: Revisiting REINFORCE Style Optimization for Learning from Human Feedback in LLMs</em>, 2024（RLOO）.</li>
+<li>DeepSeek-AI, <em>DeepSeek-R1</em>, 2025.</li>
+</ol>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>

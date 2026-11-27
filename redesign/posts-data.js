@@ -1,5 +1,21 @@
 window.BLOG_POSTS = [
   {
+    "title": "后训练强化学习算法教程：整体大纲与技术演进路线",
+    "type": "专题",
+    "series": "LLM后训练的强化学习(RL)系列",
+    "description": "沿着痛点、解法与新痛点，梳理后训练强化学习的演进主线和三条扩展路线。",
+    "date": "2025-11-15",
+    "categories": [
+      "LLM后训练的强化学习"
+    ],
+    "tags": [
+      "强化学习",
+      "LLM",
+      "RLHF"
+    ],
+    "url": "articles/2025-11-15-%E5%90%8E%E8%AE%AD%E7%BB%83%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E6%95%99%E7%A8%8B_%E6%95%B4%E4%BD%93%E5%A4%A7%E7%BA%B2.html"
+  },
+  {
     "title": "必读的Agent相关研究",
     "type": "知识体系",
     "series": "Agent",
@@ -257,6 +273,57 @@ window.BLOG_POSTS = [
       "模型架构"
     ],
     "url": "articles/2026-11-25-Position%20Embedding.html"
+  },
+  {
+    "title": "第 1 篇：Actor-Critic 与 GAE——从采样回报到优势估计",
+    "type": "专题",
+    "series": "LLM后训练的强化学习(RL)系列",
+    "description": "通过一个三步数学题，理解 Critic、TD 误差和优势估计，串起 Actor-Critic 与 GAE 的训练流程。",
+    "date": "2023-11-23",
+    "categories": [
+      "LLM后训练的强化学习"
+    ],
+    "tags": [
+      "强化学习",
+      "LLM",
+      "Actor-Critic",
+      "GAE"
+    ],
+    "url": "articles/2023-11-23-1-Actor-Critic%E4%B8%8EGAE.html"
+  },
+  {
+    "title": "第 0 篇：基础与策略梯度——从结果评分到 REINFORCE",
+    "type": "专题",
+    "series": "LLM后训练的强化学习(RL)系列",
+    "description": "从语言模型的生成过程出发，理解状态、动作、奖励与策略梯度，推导 REINFORCE，并认识 baseline 的作用与方法局限。",
+    "date": "2023-10-30",
+    "categories": [
+      "LLM后训练的强化学习"
+    ],
+    "tags": [
+      "强化学习",
+      "LLM",
+      "REINFORCE",
+      "策略梯度"
+    ],
+    "url": "articles/2023-10-30-0-%E5%9F%BA%E7%A1%80%E4%B8%8E%E7%AD%96%E7%95%A5%E6%A2%AF%E5%BA%A6_REINFORCE.html"
+  },
+  {
+    "title": "PPO 在 LLM 后训练中的完整指南",
+    "type": "专题",
+    "series": "LLM后训练的强化学习(RL)系列",
+    "description": "从直觉与建模到 PPO-Clip 推导，完整梳理 RLHF 的模型角色、Rollout、奖励、优势估计、损失函数与训练实现。",
+    "date": "2023-09-01",
+    "categories": [
+      "LLM后训练的强化学习"
+    ],
+    "tags": [
+      "强化学习",
+      "LLM",
+      "RLHF",
+      "PPO"
+    ],
+    "url": "articles/2023-09-01-3-PPO%E5%9C%A8LLM%E5%90%8E%E8%AE%AD%E7%BB%83%E4%B8%AD%E7%9A%84%E5%AE%8C%E6%95%B4%E6%8C%87%E5%8D%97_%E4%BF%AE%E8%AE%A2%E7%89%88.html"
   },
   {
     "title": "Autoformer:基于序列分解结构Transformer和Auto-Correlation的长序列预测",

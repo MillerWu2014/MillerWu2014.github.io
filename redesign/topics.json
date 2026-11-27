@@ -65,5 +65,34 @@
         ]
       }
     ]
+  },
+  {
+    "name": "LLM后训练的强化学习(RL)系列",
+    "slug": "llm-post-training-rl",
+    "description": "从结果评分与策略梯度出发，理解 Actor-Critic、GAE 与 PPO，沿着算法解决的痛点探索 LLM 后训练。",
+    "groups": [
+      {
+        "title": "整体路线",
+        "description": "了解算法之间的联系和技术演进方向。",
+        "articles": [
+          "后训练强化学习算法教程：整体大纲与技术演进路线"
+        ]
+      },
+      {
+        "title": "策略梯度与优势估计",
+        "description": "从 REINFORCE 走向 Actor-Critic 与 GAE，理解训练信号如何变得更稳定、更细致。",
+        "articles": [
+          "第 0 篇：基础与策略梯度——从结果评分到 REINFORCE",
+          "第 1 篇：Actor-Critic 与 GAE——从采样回报到优势估计"
+        ]
+      },
+      {
+        "title": "PPO 与 LLM 后训练实践",
+        "description": "串起 PPO-Clip 的原理、训练闭环与工程实现。",
+        "articles": [
+          "PPO 在 LLM 后训练中的完整指南"
+        ]
+      }
+    ]
   }
 ]

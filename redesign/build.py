@@ -184,6 +184,31 @@ def render_math(content, options):
     return delimiters[0] + escape(content) + delimiters[1]
 
 
+def parenthesized_math(state, silent):
+    """Preserve LaTeX inline delimiters before Markdown consumes escapes."""
+    start = state.pos
+    if not state.src.startswith(r"\(", start):
+        return False
+    end = state.src.find(r"\)", start + 2)
+    while end != -1:
+        backslashes = 0
+        cursor = end - 1
+        while cursor >= start + 2 and state.src[cursor] == "\\":
+            backslashes += 1
+            cursor -= 1
+        if backslashes % 2 == 0:
+            break
+        end = state.src.find(r"\)", end + 2)
+    if end == -1 or end >= state.posMax:
+        return False
+    if not silent:
+        token = state.push("math_inline", "math", 0)
+        token.content = state.src[start + 2:end]
+        token.markup = r"\("
+    state.pos = end + 2
+    return True
+
+
 def names(value):
     if isinstance(value, str):
         return value.split()
@@ -217,6 +242,7 @@ def main():
         .use(tasklists_plugin)
         .use(dollarmath_plugin, double_inline=True, renderer=render_math)
     )
+    renderer.inline.ruler.before("escape", "parenthesized_math", parenthesized_math)
     renderer.renderer.rules["fence"] = render_code
     renderer.renderer.rules["code_block"] = render_code
     template = Template((SITE / "post.template").read_text(encoding="utf-8"))

@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 0 篇：基础与策略梯度——从结果评分到 REINFORCE · Miller Wu</title>
+  <link rel="stylesheet" href="../style.css?v=4bc2e8f6b4b3">
+  <link rel="stylesheet" href="../reader.css?v=a54034ec1573">
+  <script src="../reader.js?v=85a6a9b7afa7" defer></script>
+  <script src="../header.js?v=293284986ded" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../">MILLER WU <span>/ NOTES</span></a>
+    <nav aria-label="主导航"><a href=".././">HOME</a><a href="../categories.html">CATEGORIES</a><a href="../archives.html">ARCHIVES</a><a href="../topics.html">TOPICS</a><a href="../tags.html">TAGS</a><a href="../about.html">ABOUT</a><form class="nav-search" role="search" action=".././#writing" method="get"><span aria-hidden="true">⌕</span><input id="search" type="search" name="q" placeholder="SEARCH…" aria-label="搜索文章" autocomplete="off"></form></nav>
+  </header>
+  <div class="reading-layout">
+    <aside class="reading-sidebar category-sidebar" aria-label="同分类文章">
+      <details class="sidebar-panel" open>
+        <summary>分类文章</summary>
+        <nav class="category-posts" aria-label="分类文章列表"><section><h2>LLM后训练的强化学习</h2><a href="2025-11-15-%E5%90%8E%E8%AE%AD%E7%BB%83%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E6%95%99%E7%A8%8B_%E6%95%B4%E4%BD%93%E5%A4%A7%E7%BA%B2.html">后训练强化学习算法教程：整体大纲与技术演进路线</a><a href="2023-11-23-1-Actor-Critic%E4%B8%8EGAE.html">第 1 篇：Actor-Critic 与 GAE——从采样回报到优势估计</a><a href="2023-10-30-0-%E5%9F%BA%E7%A1%80%E4%B8%8E%E7%AD%96%E7%95%A5%E6%A2%AF%E5%BA%A6_REINFORCE.html" aria-current="page">第 0 篇：基础与策略梯度——从结果评分到 REINFORCE</a><a href="2023-09-01-3-PPO%E5%9C%A8LLM%E5%90%8E%E8%AE%AD%E7%BB%83%E4%B8%AD%E7%9A%84%E5%AE%8C%E6%95%B4%E6%8C%87%E5%8D%97_%E4%BF%AE%E8%AE%A2%E7%89%88.html">PPO 在 LLM 后训练中的完整指南</a></section></nav>
+      </details>
+    </aside>
+    <main class="reader">
+    <div class="article-topbar">
+      <a class="jump" href="../#writing">← 文章索引</a>
+      <div class="markdown-actions" aria-label="Markdown 操作">
+        <button type="button" id="copy-markdown" hidden>复制 Markdown</button>
+        <a id="download-markdown" href="../assets/markdown/2023-10-30-0-%E5%9F%BA%E7%A1%80%E4%B8%8E%E7%AD%96%E7%95%A5%E6%A2%AF%E5%BA%A6_REINFORCE.md" download="2023-10-30-0-基础与策略梯度_REINFORCE.md">下载 Markdown ↓</a>
+      </div>
+    </div>
+    <p class="markdown-feedback" id="markdown-feedback" role="status" hidden></p>
+    <p id="status" role="status" hidden></p>
+    <article>
+      <header>
+        <p class="count"><time datetime="2023-10-30">2023-10-30</time></p>
+        <h1>第 0 篇：基础与策略梯度——从结果评分到 REINFORCE</h1>
+      </header>
+      <div class="prose" id="body"><blockquote>
+<p>学习主线：<strong>只有结果评分，没有逐步的标准答案，怎样训练生成模型？ → REINFORCE 用评分加权生成概率的梯度 → 更新信号波动大、信用分配粗、采样成本高 → 引出 Actor-Critic 与 GAE。</strong></p>
+</blockquote>
+<h2 id="阅读指南">阅读指南</h2>
+<p>本篇面向刚开始学习语言模型后训练的读者。你只需要知道：模型有可训练参数，训练通过梯度调整参数。如果暂时不熟悉求导，可以先读例子和公式的文字解释，再回看推导。</p>
+<p>学完后，你应该能够：</p>
+<ol>
+<li>把语言模型生成过程对应到状态、动作、策略、奖励。</li>
+<li>解释 REINFORCE 解决了什么问题，以及为什么评分器不需要可求导。</li>
+<li>看懂“奖励乘以 logprob”的训练 loss。</li>
+<li>解释 baseline 的作用，以及 REINFORCE 留下的问题。</li>
+</ol>
+<p>为降低理解负担，本篇先使用一个简单设置：<strong>问题固定，模型在线采样回答，回答结束后获得一个固定规则给出的分数。</strong> 暂不引入参考模型、KL 惩罚和 PPO 裁剪。</p>
+<h2 id="1-reinforce-是为了解决什么问题">1. REINFORCE 是为了解决什么问题？</h2>
+<p>理解算法之前，先弄清它面对的困难：我们能够评价生成结果，却无法直接通过离散的生成过程把评分反向传播给模型。本节从这个问题出发，说明 REINFORCE 如何利用生成概率建立评分与参数更新之间的联系。</p>
+<h3 id="11-我们能评价回答但未必能提供标准答案">1.1 我们能评价回答，但未必能提供标准答案</h3>
+<p>监督微调通常通过示范答案告诉模型：“面对这个问题，请学习生成这条答案。”但在一些任务中，完整的示范很难提供，结果却比较容易评价：模型生成代码后，我们可以运行测试；给出数学答案后，可以检查结果是否正确；生成两条回答后，人也可以判断更喜欢哪条。这些评价能够告诉我们回答的质量，却未必能指出每一步应该生成什么。因此，我们需要解决一个问题：<strong>只有生成结果的评分，怎样调整模型参数，让高分结果以后更常出现？</strong></p>
+<h3 id="12-为什么不能直接把分数反向传播">1.2 为什么不能直接把分数反向传播？</h3>
+<p>考虑一个评分程序：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="n">score</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">tests_pass</span><span class="p">(</span><span class="n">generated_code</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
+</code></pre></div>
+<p>生成过程中包含离散 token 的采样，测试结果也是离散判断。我们不能直接沿着“测试结果 → 生成文本 → 采样操作”这条链，像普通连续神经网络那样反向传播。</p>
+<p>即使评分器本身是神经网络，离散采样仍然需要处理。REINFORCE 提供了一种通用办法：**把评分当作固定权重，对“模型生成这条结果的概率”求梯度。**它不要求评分程序对生成文本可求导。</p>
+<h3 id="13-reinforce-的核心贡献">1.3 REINFORCE 的核心贡献</h3>
+<p>REINFORCE 是一种蒙特卡洛策略梯度方法。这里的“蒙特卡洛”表示：通过实际采样得到完整结果，再用这些样本估计期望。它解决的是：<strong>如何利用采样结果和对应回报，估计期望回报对策略参数的梯度。</strong></p>
+<p>它提供了可训练的梯度估计，但没有同时解决“估计是否稳定”“每一步该分到多少功劳”“采样是否便宜”等问题。我们会在最后讨论这些局限。</p>
+<h2 id="2-从调整三种回答的概率开始">2. 从调整三种回答的概率开始</h2>
+<p>先暂时忽略模型内部的参数，把训练理解为调整不同回答出现的概率。本节用三种回答的例子说明“期望奖励”的含义，帮助你建立一个直观目标：让模型多次生成时的平均得分提高。假设一个问题只有三种可能回答：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">回答</th>
+<th style="text-align:center">当前生成概率</th>
+<th style="text-align:center">评分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">A：正确且清楚</td>
+<td style="text-align:center">20%</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">B：部分正确</td>
+<td style="text-align:center">50%</td>
+<td style="text-align:center">0.4</td>
+</tr>
+<tr>
+<td style="text-align:center">C：错误</td>
+<td style="text-align:center">30%</td>
+<td style="text-align:center">0</td>
+</tr>
+</tbody>
+</table>
+<p>当前的平均得分，也叫<strong>期望奖励</strong>，是：</p>
+<div class="math block">
+\[J=0.2\times1+0.5\times0.4+0.3\times0=0.4.\]
+</div>
+<p>如果训练后概率变成 50%、35%、15%，平均得分就变为：</p>
+<div class="math block">
+\[J=0.5\times1+0.35\times0.4+0.15\times0=0.64.\]
+</div>
+<p>这就是我们的目标：<strong>调整生成概率，提高平均表现。</strong></p>
+<p>注意，我们优化的是多次生成的期望表现。一次回答碰巧正确，不代表模型已经学会。</p>
+<h2 id="3-用强化学习的语言描述生成过程">3. 用强化学习的语言描述生成过程</h2>
+<p>有了提高平均得分的目标，还需要描述模型怎样一步步生成回答。本节将熟悉的 token 生成过程对应到策略、状态和动作，再介绍组织这些概念的 MDP 框架，为后面的公式建立语言。</p>
+<h3 id="31-策略就是动作的概率分布">3.1 策略就是动作的概率分布</h3>
+<p>假设模型正在补全：</p>
+<blockquote>
+<p>法国的首都是……</p>
+</blockquote>
+<p>为了说明问题，假设“巴黎”等候选各自对应一个 token：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">下一个 token</th>
+<th style="text-align:center">概率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">巴黎</td>
+<td style="text-align:center">0.7</td>
+</tr>
+<tr>
+<td style="text-align:center">里昂</td>
+<td style="text-align:center">0.2</td>
+</tr>
+<tr>
+<td style="text-align:center">其他</td>
+<td style="text-align:center">0.1</td>
+</tr>
+</tbody>
+</table>
+<p>这个分布就是当前的<strong>策略 policy</strong>，记作：</p>
+<div class="math block">
+\[\pi_\theta(a\mid s).\]
+</div>
+<ul>
+<li><span class="math inline">\(s\)</span>：状态，表示模型当前看到的上下文。</li>
+<li><span class="math inline">\(a\)</span>：动作，表示选择哪个 token。</li>
+<li><span class="math inline">\(\theta\)</span>：模型的可训练参数。</li>
+<li><span class="math inline">\(\pi_\theta\)</span>：由这些参数决定的概率分布。</li>
+</ul>
+<p>训练策略，就是改变参数 <span class="math inline">\(\theta\)</span>，进而改变动作概率。</p>
+<h3 id="32-一次回答是一串决策">3.2 一次回答是一串决策</h3>
+<p>给定问题 <span class="math inline">\(x\)</span>，模型生成回答 <span class="math inline">\(y=(y_1,\ldots,y_T)\)</span>。在第 <span class="math inline">\(t\)</span> 步：</p>
+<div class="math block">
+\[s_t=(x,y_{&lt;t}),\qquad a_t=y_t.\]
+</div>
+<p>模型根据问题和已有前缀，采样下一个 token，再把它拼到前缀中：</p>
+<div class="math block">
+\[(x,y_{&lt;t})\xrightarrow{\text{生成 }y_t}(x,y_{\leq t}).\]
+</div>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">强化学习概念</th>
+<th style="text-align:center">语言模型中的对应</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">状态 state</td>
+<td style="text-align:center">问题与已生成的前缀</td>
+</tr>
+<tr>
+<td style="text-align:center">动作 action</td>
+<td style="text-align:center">下一个 token</td>
+</tr>
+<tr>
+<td style="text-align:center">策略 policy</td>
+<td style="text-align:center">下一个 token 的概率分布</td>
+</tr>
+<tr>
+<td style="text-align:center">状态转移 transition</td>
+<td style="text-align:center">把选出的 token 拼到前缀</td>
+</tr>
+<tr>
+<td style="text-align:center">奖励 reward</td>
+<td style="text-align:center">对行为或结果的评分</td>
+</tr>
+<tr>
+<td style="text-align:center">回合 episode</td>
+<td style="text-align:center">从开始回答到回答结束</td>
+</tr>
+<tr>
+<td style="text-align:center">轨迹 trajectory</td>
+<td style="text-align:center">这一回合中的状态、动作等记录</td>
+</tr>
+</tbody>
+</table>
+<p>通常生成 EOS 表示回答自然结束。达到长度上限也会停止生成，但它与自然结束的区别，会在后续价值估计中变得重要。</p>
+<h3 id="33-mdp-是什么">3.3 MDP 是什么？</h3>
+<p>MDP，即马尔可夫决策过程，是描述连续决策的一套数学框架。它包括状态、动作、转移、奖励和折扣因子。关键要求是：**当前状态已经包含预测下一步所需的历史信息。**在这里，我们把问题与完整生成前缀作为状态，保留下一步决策所需的上下文。现阶段理解这个对应关系即可，不必先背形式化定义。</p>
+<h2 id="4-区分奖励回报与训练目标">4. 区分奖励、回报与训练目标</h2>
+<p>一次回答包含多个生成步骤，而评分可能只在最后出现。为了说明最后的评分怎样影响前面的决策，本节区分当前一步的奖励、从当前步开始的累计回报，以及整个训练希望最大化的期望回报。</p>
+<h3 id="41-奖励当前这一步得到多少分">4.1 奖励：当前这一步得到多少分</h3>
+<p>奖励记作 <span class="math inline">\(r_t\)</span>。假设回答有三个 token，只在最后评分：</p>
+<div class="math block">
+\[r_1=0,\qquad r_2=0,\qquad r_3=1.\]
+</div>
+<p>前两步没有即时奖励，不代表它们对结果没有贡献。</p>
+<h3 id="42-回报从这一步开始之后总共能得多少分">4.2 回报：从这一步开始，之后总共能得多少分</h3>
+<p>从第 <span class="math inline">\(t\)</span> 步开始的回报记作 <span class="math inline">\(G_t\)</span>：</p>
+<div class="math block">
+\[G_t=\sum_{k=t}^{T}\gamma^{k-t}r_k.\]
+</div>
+<p><span class="math inline">\(\gamma\)</span> 是折扣因子，用来决定未来奖励的权重。本篇的有限长度生成任务先取 <span class="math inline">\(\gamma=1\)</span>。</p>
+<p>因此，刚才的例子中：</p>
+<div class="math block">
+\[G_1=1,\qquad G_2=1,\qquad G_3=1.\]
+</div>
+<p>虽然前两步的即时奖励是零，但它们的未来累计回报包含最后的那一分。</p>
+<h3 id="43-整条回答的评分与逐步回报是什么关系">4.3 整条回答的评分与逐步回报是什么关系？</h3>
+<p><span class="math inline">\(R(x,y)\)</span> 表示评分规则对完整回答给出的分数，<span class="math inline">\(G_t\)</span> 表示从第 <span class="math inline">\(t\)</span> 步开始的未来累计奖励。<strong>一个是结果评分，一个是按时间位置计算的回报，概念不同；只有在特定设置下，它们才数值相同。</strong></p>
+<p>本篇把完整回答的评分放在最后一步，作为终止奖励：</p>
+<div class="math block">
+\[r_t=0\quad(t&lt;T),\qquad r_T=R(x,y).\]
+</div>
+<p>代入回报定义，得到二者的关系：</p>
+<div class="math block">
+\[\boxed{G_t=\gamma^{T-t}R(x,y).}\]
+</div>
+<p>因此，在本篇主要采用的 <span class="math inline">\(\gamma=1\)</span> 设置下：</p>
+<div class="math block">
+\[\boxed{G_1=G_2=\cdots=G_T=R(x,y).}\]
+</div>
+<p>这就是后面 loss 能使用 <span class="math inline">\(R(x,y)\)</span> 的原因：<strong>逐步回报没有被省略，而是在“仅最终评分、无折扣”的条件下被替换成相同的最终分数。</strong> 如果中间还有奖励，或折扣因子小于 1，就不能直接作这个替换。</p>
+<p>例如，三个 token 的回答最终得 1 分，若 <span class="math inline">\(\gamma=0.9\)</span>，则 <span class="math inline">\(G_1=0.81\)</span>、<span class="math inline">\(G_2=0.9\)</span>、<span class="math inline">\(G_3=1\)</span>。此时还需要明确优化目标，才能决定 loss 的权重；第 8 节将说明折扣目标的完整写法。</p>
+<h3 id="44-目标最大化期望回报">4.4 目标：最大化期望回报</h3>
+<p>在只给最终评分、且 <span class="math inline">\(\gamma=1\)</span> 的设置中，用 <span class="math inline">\(R(x,y)\)</span> 表示整条回答的评分：</p>
+<div class="math block">
+\[J(\theta)=\mathbb E_{x\sim\mathcal D}\mathbb E_{y\sim\pi_\theta(\cdot\mid x)}[R(x,y)].\]
+</div>
+<p>读成一句话：</p>
+<blockquote>
+<p>从问题分布中取问题，用当前模型生成回答，希望平均评分尽可能高。</p>
+</blockquote>
+<h2 id="5-推导-reinforce怎样把评分变成梯度">5. 推导 REINFORCE：怎样把评分变成梯度？</h2>
+<p>前面已经明确要提高期望回报，现在要找到调整模型参数的方向。本节先把目标写成概率加权的求和，再利用对数求导恒等式，将它改写成能够通过采样估计的梯度。推导中最值得关注的是：评分始终作为权重，求导发生在生成概率上。</p>
+<h3 id="51-将期望展开">5.1 将期望展开</h3>
+<p>固定问题 <span class="math inline">\(x\)</span>，暂时省略它：</p>
+<div class="math block">
+\[J(\theta)=\sum_y\pi_\theta(y)R(y).\]
+</div>
+<p>假设评分规则固定，不直接依赖 <span class="math inline">\(\theta\)</span>，则：</p>
+<div class="math block">
+\[\nabla_\theta J=\sum_yR(y)\nabla_\theta\pi_\theta(y).\]
+</div>
+<p><span class="math inline">\(\nabla_\theta\)</span> 表示对模型参数求梯度。梯度给出使目标局部上升的方向。</p>
+<h3 id="52-使用对数求导恒等式">5.2 使用对数求导恒等式</h3>
+<p>因为：</p>
+<div class="math block">
+\[\nabla_\theta\log\pi_\theta(y)
+=\frac{\nabla_\theta\pi_\theta(y)}{\pi_\theta(y)},\]
+</div>
+<p>所以：</p>
+<div class="math block">
+\[\nabla_\theta\pi_\theta(y)
+=\pi_\theta(y)\nabla_\theta\log\pi_\theta(y).\]
+</div>
+<p>代回原式：</p>
+<div class="math block">
+\[\nabla_\theta J
+=\sum_y\pi_\theta(y)R(y)\nabla_\theta\log\pi_\theta(y).\]
+</div>
+<p>右边是按生成概率加权的平均值，因此：</p>
+<div class="math block">
+\[\boxed{
+\nabla_\theta J
+=\mathbb E_{y\sim\pi_\theta}
+[R(y)\nabla_\theta\log\pi_\theta(y)]
+}\]
+</div>
+<p>这就是 REINFORCE 的核心。</p>
+<h3 id="53-为什么这个改写有用">5.3 为什么这个改写有用？</h3>
+<p>完整枚举所有回答是不现实的。但期望可以用采样平均估计：</p>
+<div class="math block">
+\[\widehat g=\frac{1}{N}\sum_{i=1}^{N}
+R(y^{(i)})\nabla_\theta\log\pi_\theta(y^{(i)}).\]
+</div>
+<p>实际训练因此变成：</p>
+<div class="code-block"><div class="code-toolbar"><span>tex</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-tex">1. 用当前模型采样 N 条回答。
+2. 给每条回答打分。
+3. 计算生成这些回答的 logprob 梯度。
+4. 乘以评分，求平均，再更新参数。
+</code></pre></div>
+<p><strong>评分负责提供权重，生成概率负责提供梯度。</strong> 我们没有对评分器求导。在符合上述假设、采样分布与公式一致的条件下，这是期望梯度的无偏估计；“无偏”表示反复采样后的平均值等于真实梯度，不表示每一批样本都准确。</p>
+<h2 id="6-将整条回答拆到-token">6. 将整条回答拆到 token</h2>
+<p>上一节把整条回答当作一个采样结果，但语言模型实际逐个 token 输出概率。本节利用自回归分解，把回答的 logprob 写成各 token 的 logprob 之和，进而得到可以用于梯度下降的 loss，并与监督微调作比较。</p>
+<p>完整回答的概率是各步条件概率之积：</p>
+<div class="math block">
+\[\pi_\theta(y\mid x)=\prod_{t=1}^{T}\pi_\theta(y_t\mid x,y_{&lt;t}).\]
+</div>
+<p>取对数后，乘积变成求和：</p>
+<div class="math block">
+\[\log\pi_\theta(y\mid x)=\sum_{t=1}^{T}\log\pi_\theta(y_t\mid x,y_{&lt;t}).\]
+</div>
+<p>所以，最终评分可以加权整条回答各 token 的 logprob 梯度：</p>
+<div class="math block">
+\[\nabla_\theta J
+=\mathbb E\left[R(x,y)\sum_{t=1}^{T}
+\nabla_\theta\log\pi_\theta(y_t\mid s_t)\right].\]
+</div>
+<p>为了看清 <span class="math inline">\(G_t\)</span> 在哪里起作用，先写单条样本、<span class="math inline">\(\gamma=1\)</span>、不加 baseline 时的逐步回报 loss：</p>
+<div class="math block">
+\[\mathcal L(y)=-\sum_{t=1}^{T}G_t\log\pi_\theta(y_t\mid s_t).\]
+</div>
+<p>每个 token 的 logprob 由该位置开始的实际累计回报加权。在本篇仅有终止奖励的条件下，代入 <span class="math inline">\(G_t=R(x,y)\)</span>：</p>
+<div class="math block">
+\[\mathcal L(y)
+=-\sum_{t=1}^{T}R(x,y)\log\pi_\theta(y_t\mid s_t)
+=-R(x,y)\sum_{t=1}^{T}\log\pi_\theta(y_t\mid s_t).\]
+</div>
+<p>因此，对多条采样回答取平均，就得到后面的 loss。负号是因为训练框架最小化 loss，而我们要最大化期望回报：</p>
+<div class="math block">
+\[\boxed{
+\mathcal L_{\mathrm{REINFORCE}}
+=-\frac1N\sum_{i=1}^{N}R(x^{(i)},y^{(i)})
+\sum_{t=1}^{T_i}\log\pi_\theta(y_t^{(i)}\mid s_t^{(i)})
+}\]
+</div>
+<p>梯度下降最小化这个 loss，对应沿采样估计的方向提高期望奖励。</p>
+<h3 id="61-一个数值例子">6.1 一个数值例子</h3>
+<p>假设三个已采样 token 在各自前缀下的概率为 <span class="math inline">\(0.5,0.4,0.8\)</span>：</p>
+<div class="math block">
+\[\pi_\theta(y\mid x)=0.5\times0.4\times0.8=0.16,\]
+</div>
+<div class="math block">
+\[\log\pi_\theta(y\mid x)=\log0.16\approx-1.833.\]
+</div>
+<p>若评分为 <span class="math inline">\(1\)</span>，单样本 loss 就是 <span class="math inline">\(1.833\)</span>。最小化它，倾向于提高该回答的概率。若权重为负，方向反过来；若权重为零，该样本没有直接的策略梯度。这里调整的是<strong>对应前缀下已采样 token 的概率</strong>，不是让这些词在所有语境里都更常见。模型参数共享，因此实际更新也会影响其他输出。</p>
+<h3 id="62-它与监督微调的联系">6.2 它与监督微调的联系</h3>
+<div class="math block">
+\[\mathcal L_{\mathrm{SFT}}=-\sum_t\log\pi_\theta(y_t^{\mathrm{示范}}\mid s_t)\]
+</div>
+<div class="math block">
+\[\mathcal L_{\mathrm{REINFORCE}}=-R(x,y)\sum_t\log\pi_\theta(y_t^{\mathrm{采样}}\mid s_t)\]
+</div>
+<p>两者都使用 token 的 logprob。但 SFT 学习给定示范，REINFORCE 学习当前策略采样的回答，<strong>更新权重由回报决定</strong>。</p>
+<h2 id="7-为什么需要-baseline分数需要参照">7. 为什么需要 baseline：分数需要参照</h2>
+<p>原始评分能提供更新信号，但这个信号未必稳定。引入 baseline 后，可以用“比基准好多少”作为权重。本节先用例子建立直觉，再解释减去合适基准为何不改变期望梯度，以及它如何减少采样波动。</p>
+<p>假设某个问题通常能得 <span class="math inline">\(0.8\)</span> 分，这次只得 <span class="math inline">\(0.6\)</span> 分。直接使用原始分数，<span class="math inline">\(0.6\)</span> 仍然是正权重。我们希望表达“这次低于预期”，因此减去一个基准 <span class="math inline">\(b(x)\)</span>：</p>
+<div class="math block">
+\[\boxed{
+\nabla_\theta J
+=\mathbb E[(R(x,y)-b(x))\nabla_\theta\log\pi_\theta(y\mid x)]
+}\]
+</div>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">得分</th>
+<th style="text-align:center">baseline</th>
+<th style="text-align:center">更新权重</th>
+<th style="text-align:center">直接更新倾向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1.0</td>
+<td style="text-align:center">0.8</td>
+<td style="text-align:center">+0.2</td>
+<td style="text-align:center">提高该回答概率</td>
+</tr>
+<tr>
+<td style="text-align:center">0.8</td>
+<td style="text-align:center">0.8</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">无直接梯度</td>
+</tr>
+<tr>
+<td style="text-align:center">0.6</td>
+<td style="text-align:center">0.8</td>
+<td style="text-align:center">−0.2</td>
+<td style="text-align:center">降低该回答概率</td>
+</tr>
+</tbody>
+</table>
+<p>权重从“得了多少分”变成“比基准好多少”。</p>
+<h3 id="71-为什么可以减去它">7.1 为什么可以减去它？</h3>
+<p>对于不依赖当前采样回答的 <span class="math inline">\(b(x)\)</span>：</p>
+<div class="math block">
+\[\begin{aligned}
+\mathbb E_y[b(x)\nabla_\theta\log\pi_\theta(y\mid x)]
+&amp;=b(x)\sum_y\nabla_\theta\pi_\theta(y\mid x)\\
+&amp;=b(x)\nabla_\theta1=0.
+\end{aligned}\]
+</div>
+<p>因此，减去这个 baseline 不改变期望梯度。<strong>合适的 baseline 能降低梯度估计的方差</strong>；任意选择并不保证降低方差。在策略 loss 中，应停止通过 baseline 传播梯度。baseline 自己若需要学习，可以使用单独的训练目标。</p>
+<p>这里的条件很重要：直接用包含当前样本的同批平均分作 baseline，不能原封不动套用上述独立性证明；例如可以使用独立估计，或用其他样本构造留一基准。后续无 Critic 方法会讨论这一点。</p>
+<h3 id="72-一个两动作例子">7.2 一个两动作例子</h3>
+<p>假设只有两个动作：A 得 <span class="math inline">\(1\)</span> 分，B 得 <span class="math inline">\(0\)</span> 分。令：</p>
+<div class="math block">
+\[p=P(A)=\operatorname{sigmoid}(z),\qquad P(B)=1-p.\]
+</div>
+<p>期望奖励为 <span class="math inline">\(J=p\)</span>，其真实梯度是：</p>
+<div class="math block">
+\[\frac{dJ}{dz}=p(1-p).\]
+</div>
+<p>当 <span class="math inline">\(p=0.5\)</span> 时，对不同采样结果，REINFORCE 给出：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">采样结果</th>
+<th style="text-align:center">无 baseline 的梯度估计</th>
+<th style="text-align:center">baseline 为 0.5 的梯度估计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">A</td>
+<td style="text-align:center"><span class="math inline">\(1\times(1-p)=0.5\)</span></td>
+<td style="text-align:center"><span class="math inline">\((1-0.5)(1-p)=0.25\)</span></td>
+</tr>
+<tr>
+<td style="text-align:center">B</td>
+<td style="text-align:center"><span class="math inline">\(0\times(-p)=0\)</span></td>
+<td style="text-align:center"><span class="math inline">\((0-0.5)(-p)=0.25\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>两列的期望都是 <span class="math inline">\(0.25\)</span>，但右列在这个特定例子中完全没有采样波动。这说明 baseline 的意义：<strong>保持平均更新方向，同时改善估计的稳定性。</strong> 实际复杂任务不会总有这么理想的效果。</p>
+<h2 id="8-奖励不只在最后出现时怎么办">8. 奖励不只在最后出现时怎么办？</h2>
+<p>前面的例子只在回答结束时评分，现在将方法扩展到每一步都可能获得奖励的情形。本节说明为什么当前动作只需要考虑未来回报，以及 baseline 如何从问题相关的基准扩展为状态相关的基准。</p>
+<p>前面假设只有最终评分。一般连续决策任务中，每一步都可能获得奖励。对于有限回合、<span class="math inline">\(\gamma=1\)</span> 的目标，可以使用：</p>
+<div class="math block">
+\[\nabla_\theta J
+=\mathbb E\left[\sum_tG_t\nabla_\theta\log\pi_\theta(a_t\mid s_t)\right].\]
+</div>
+<p>它称为使用 reward-to-go，也就是从当前步开始的回报。原因很直观：<strong>当前动作不能改变过去已经发生的奖励，因此不必让过去奖励参与当前动作的权重。</strong></p>
+<p>还可以使用状态相关的 baseline：</p>
+<div class="math block">
+\[\mathbb E\left[\sum_t(G_t-b(s_t))\nabla_\theta\log\pi_\theta(a_t\mid s_t)\right].\]
+</div>
+<p>注意区分两个设置：整条回答作为采样结果时，baseline 不依赖采样回答；逐步决策时，baseline 可以依赖当前状态，但不能依赖当前所采样的动作。</p>
+<h3 id="81-如果折扣因子不为-1loss-怎样写">8.1 如果折扣因子不为 1，loss 怎样写？</h3>
+<p>先明确目标。若优化从回合起点计算的折扣总回报：</p>
+<div class="math block">
+\[J_\gamma(\theta)=\mathbb E\left[\sum_{t=1}^{T}\gamma^{t-1}r_t\right]\]
+</div>
+<p>使用完整回合采样估计时，对应的单样本策略 loss 为：</p>
+<div class="math block">
+\[\boxed{\mathcal L_\gamma(y)
+=-\sum_{t=1}^{T}\gamma^{t-1}G_t
+\log\pi_\theta(y_t\mid s_t).}\]
+</div>
+<p>这里有两层折扣：<span class="math inline">\(G_t\)</span> 内部以当前步骤为起点计算未来奖励；外层 <span class="math inline">\(\gamma^{t-1}\)</span> 将这一权重换算到回合起点。计算策略梯度时，采样得到的回报作为固定权重，不通过回报本身反向传播。</p>
+<p>若只有最终奖励，代入 <span class="math inline">\(G_t=\gamma^{T-t}R(x,y)\)</span>，得到：</p>
+<div class="math block">
+\[\mathcal L_\gamma(y)
+=-\gamma^{T-1}R(x,y)
+\sum_{t=1}^{T}\log\pi_\theta(y_t\mid s_t).\]
+</div>
+<p>同一条回答中，各 token 的最终权重仍相同；不同回答长度可能不同，因此同样评分的长回答会受到更多折扣。若长度固定，这个因子只是整体缩放；若长度变化，它会改变优化目标对不同回答的偏好。</p>
+<p><strong>若目标仍是最大化不折扣的最终评分 <span class="math inline">\(\mathbb E[R(x,y)]\)</span>，就继续使用第 6 节的 loss。</strong> 不能只把回报中的 <span class="math inline">\(\gamma\)</span> 改小，却不说明目标是否改变。部分资料省略外层折扣可能采用了不同的采样或状态分布约定，不能直接与这里的完整回合公式混用。</p>
+<hr />
+<h2 id="9-用伪代码串起整个训练过程">9. 用伪代码串起整个训练过程</h2>
+<p>公式中的采样、评分、logprob 和梯度更新，在程序里各对应什么操作？本节把它们连成一次完整训练过程，并说明梯度保留、有效 token 统计和采样分布一致性这几个关键实现条件。下面对应“最终评分 + 问题相关 baseline”的基础设置：</p>
+<div class="code-block"><div class="code-toolbar"><span>python</span><button type="button" class="copy-code" aria-label="复制代码">复制</button></div><pre tabindex="0"><code class="language-python"><span class="c1"># 1. 用当前策略采样完整回答</span>
+<span class="n">responses</span><span class="p">,</span> <span class="n">response_mask</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span><span class="n">actor</span><span class="p">,</span> <span class="n">prompts</span><span class="p">)</span>
+
+<span class="c1"># 2. 评价结果；基准不依赖本次采样回答</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">prompts</span><span class="p">,</span> <span class="n">responses</span><span class="p">)</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">scores</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">(</span><span class="n">prompts</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+
+<span class="c1"># 3. 计算已采样回答 token 的 logprob</span>
+<span class="c1"># 这里必须保留对 actor 参数的梯度</span>
+<span class="n">token_logprobs</span> <span class="o">=</span> <span class="n">actor</span><span class="o">.</span><span class="n">logprob</span><span class="p">(</span><span class="n">prompts</span><span class="p">,</span> <span class="n">responses</span><span class="p">)</span>
+<span class="n">sequence_logprobs</span> <span class="o">=</span> <span class="p">(</span><span class="n">token_logprobs</span> <span class="o">*</span> <span class="n">response_mask</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># 4. 以评价权重构造策略 loss</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">sequence_logprobs</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+<span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</code></pre></div>
+<p>理解时抓住四点：</p>
+<ol>
+<li><strong>采样 token 本身不需要可求导。</strong> logprob 对模型参数可求导。</li>
+<li><strong>只统计有效的回答 token。</strong> prompt 与 padding 不作为本例的生成动作计入 loss。</li>
+<li><strong>先对一条回答的 token 求和，再对回答求平均。</strong> 随意除以每条回答长度，会改变不同长度回答的权重。</li>
+<li><strong>采样分布要与公式中的策略一致。</strong> 若使用 temperature 或截断采样，需要明确实际行为策略及其 logprob。</li>
+</ol>
+<p>这段伪代码表达的是当前策略采样后进行一次更新。更新参数之后，原数据便来自旧策略，不能不加处理地一直当作当前策略数据反复使用。</p>
+<hr />
+<h2 id="10-reinforce-存在什么问题">10. REINFORCE 存在什么问题？</h2>
+<p>REINFORCE 已经解决了如何从结果评分估计策略梯度的问题，但训练效果还取决于估计是否稳定、反馈是否充分、更新是否适度。本节依次讨论它的主要局限，并区分梯度估计、数据利用和奖励设计带来的不同困难。</p>
+<h3 id="101-问题一梯度方差大训练容易受采样运气影响">10.1 问题一：梯度方差大，训练容易受采样运气影响</h3>
+<p>同一个问题，有时采样到优秀回答，有时采样到错误回答。如果一批样本很少，估计出来的梯度就容易波动。可以把真实梯度想成一个稳定方向，而每批采样梯度是围绕它摆动的箭头。**无偏表示箭头的平均值正确，并不表示每个箭头都准确。**增加样本数可以缓解，但会增加生成与评分成本。合适的 baseline 也能缓解，但怎样得到可靠的基准，又成为新问题。</p>
+<h3 id="102-问题二最终评分对中间步骤的信用分配很粗">10.2 问题二：最终评分对中间步骤的信用分配很粗</h3>
+<p>设一条长回答：</p>
+<blockquote>
+<p>正确理解条件 → 正确建立方程 → 正确推导 → 最后算错。</p>
+</blockquote>
+<p>如果最终评分是零，最朴素、无 baseline 的 REINFORCE 对这条回答没有直接梯度；若使用正 baseline，整条回答的 token 可能都获得负权重。</p>
+<p>但我们真正想知道的是：哪些步骤值得保留，哪个选择导致结果变差？使用整条最终回报时，各位置共享同一个分数，<strong>没有精细区分每个动作的贡献</strong>。它仍能通过大量采样中的统计差异学习，但信号可能很低效。</p>
+<h3 id="103-问题三需要完整结果采样利用效率受限">10.3 问题三：需要完整结果，采样利用效率受限</h3>
+<p>蒙特卡洛回报通常要等回答结束、评分完成后才能得到。长回答意味着较长等待；稀疏奖励意味着大量样本可能提供相似甚至全为零的反馈。</p>
+<p>基础 REINFORCE 又使用当前策略的数据。更新后若想反复利用旧数据，需要重要性采样等额外处理；并不是“旧样本必须丢弃”，而是<strong>不能忽略采样分布已经改变</strong>。</p>
+<h3 id="104-问题四梯度方向合理不代表更新幅度安全">10.4 问题四：梯度方向合理，不代表更新幅度安全</h3>
+<p>即使梯度估计准确，学习率过大也可能让策略一次变化太多。REINFORCE 本身没有提供信任区域或策略变化幅度约束。这也是后续 TRPO、PPO 要处理的问题。Actor-Critic 可以改善梯度估计，但不会自动解决更新过猛。</p>
+<h3 id="105-问题五它优化给定奖励奖励未必等于真实质量">10.5 问题五：它优化给定奖励，奖励未必等于真实质量</h3>
+<p>若评分规则有漏洞，模型可能学会提高分数，却没有提高实际回答质量。这是奖励设计与反馈来源的问题，不是 REINFORCE 独有的问题。换用更稳定的优化算法，也不能自动修复错误的评价标准。</p>
+<hr />
+<h2 id="11-下一步为什么引入-actor-critic-与-gae">11. 下一步：为什么引入 Actor-Critic 与 GAE？</h2>
+<p>针对高方差与粗粒度信用分配，一个自然想法是预测每个生成前缀的未来回报，用它为当前动作提供更有针对性的参照。本节介绍 Critic 与优势估计的基本含义，并说明为什么价值预测还会带来偏差与方差之间的新取舍。</p>
+<p>针对前两个问题，我们希望为每一个生成前缀建立一个更有针对性的基准：</p>
+<blockquote>
+<p>从这个前缀继续生成，通常能拿多少回报？</p>
+</blockquote>
+<p>这就是状态价值函数：</p>
+<div class="math block">
+\[V^\pi(s_t)=\mathbb E_\pi[G_t\mid s_t].\]
+</div>
+<p>用一个参数为 <span class="math inline">\(\phi\)</span> 的模型 <span class="math inline">\(V_\phi(s_t)\)</span> 来预测它，这个模型叫 <strong>Critic</strong>。负责生成动作的策略叫 <strong>Actor</strong>。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">角色</th>
+<th style="text-align:center">要回答的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Actor</td>
+<td style="text-align:center">当前前缀下，下一个 token 怎么选？</td>
+</tr>
+<tr>
+<td style="text-align:center">Critic</td>
+<td style="text-align:center">当前前缀下，未来累计回报预计是多少？</td>
+</tr>
+</tbody>
+</table>
+<p>于是，可以用：</p>
+<div class="math block">
+\[\widehat A_t=G_t-V_\phi(s_t)\]
+</div>
+<p>作为一种优势估计，表示这次采样的回报相对当前状态的预测好多少。</p>
+<p>严格的优势函数是：</p>
+<div class="math block">
+\[A^\pi(s,a)=Q^\pi(s,a)-V^\pi(s),\]
+</div>
+<p>其中 <span class="math inline">\(Q^\pi(s,a)\)</span> 表示在状态 <span class="math inline">\(s\)</span> 先选动作 <span class="math inline">\(a\)</span>、之后按策略继续行动的期望回报。采样回报减去价值预测，是它的一种估计方式。</p>
+<p><strong>使用学习到的 baseline，仍然可以保留蒙特卡洛 REINFORCE 的回报形式。</strong> 进一步的 Actor-Critic 方法通常会利用 Critic 的下一状态预测进行自举，减少对完整蒙特卡洛回报的依赖。</p>
+<p>这会带来新的取舍：价值预测能减少波动，但预测误差也可能引入偏差。GAE 将进一步处理这个问题，在偏差与方差之间作折中。</p>
+<p>因此，本篇与下一篇的衔接是：</p>
+<blockquote>
+<p><strong>REINFORCE：用采样回报得到可训练的策略梯度。</strong><br />
+<strong>Actor-Critic 与 GAE：借助价值预测，构造更稳定、逐步可用的优势估计。</strong></p>
+</blockquote>
+<p>Critic 并不会自动知道每个 token 的真实功劳；它提供的是可学习的预期回报，信用分配仍取决于估计方法与奖励信息。</p>
+<hr />
+<h2 id="12-自测能否用自己的话讲清楚">12. 自测：能否用自己的话讲清楚？</h2>
+<p>下面的问题覆盖本篇的学习主线：REINFORCE 的动机、梯度来源、baseline 的作用以及算法的局限。建议先用自己的话回答，再与参考答案对照；如果某个问题只能复述公式，可以回到对应例子重新解释一遍。</p>
+<ol>
+<li>REINFORCE 解决的核心问题是什么？</li>
+<li>为什么评分器不需要可求导？</li>
+<li>只有最后一个 token 得到奖励，前面的 token 为什么仍能学习？</li>
+<li>为什么一条正分回答也可能被降低生成概率？</li>
+<li>“梯度估计无偏”是否意味着每次更新都提高真实表现？</li>
+<li>引入 Critic 之后，哪些问题仍然存在？</li>
+</ol>
+<h3 id="参考答案">参考答案</h3>
+<ol>
+<li>利用采样结果与回报，估计期望回报对策略参数的梯度。</li>
+<li>回报作为权重，对生成这些结果的 logprob 求导，不沿评分程序反向传播。</li>
+<li>它们影响最终结果，最终奖励包含在它们的后续回报中，可以加权对应动作的梯度。</li>
+<li>减去 baseline 后，它可能低于预期，从而获得负权重。</li>
+<li>不意味着。有限采样有噪声，有限步长也不保证改进。</li>
+<li>更新过猛、在线采样成本、奖励漏洞等问题仍可能存在；Critic 还带来预测误差和训练成本。</li>
+</ol>
+<hr />
+<h2 id="一页速查">一页速查</h2>
+<p>这一节集中整理核心概念、策略梯度公式与学习主线，便于读完后复习。使用时可以先遮住解释，尝试说出每个概念的含义，再检查它们如何共同组成 REINFORCE 的训练过程。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">概念</th>
+<th style="text-align:center">一句话解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">策略 <span class="math inline">\(\pi_\theta(a\mid s)\)</span></td>
+<td style="text-align:center">当前状态下，各动作的概率分布</td>
+</tr>
+<tr>
+<td style="text-align:center">奖励 <span class="math inline">\(r_t\)</span></td>
+<td style="text-align:center">当前一步获得的分数</td>
+</tr>
+<tr>
+<td style="text-align:center">回报 <span class="math inline">\(G_t\)</span></td>
+<td style="text-align:center">从当前步开始的未来累计奖励</td>
+</tr>
+<tr>
+<td style="text-align:center">目标 <span class="math inline">\(J(\theta)\)</span></td>
+<td style="text-align:center">希望最大化的期望回报</td>
+</tr>
+<tr>
+<td style="text-align:center">REINFORCE</td>
+<td style="text-align:center">用采样回报加权 logprob 梯度，估计策略梯度</td>
+</tr>
+<tr>
+<td style="text-align:center">baseline</td>
+<td style="text-align:center">不依赖当前动作的参照，用于改善梯度估计</td>
+</tr>
+<tr>
+<td style="text-align:center">Critic</td>
+<td style="text-align:center">学习预测状态的未来累计回报</td>
+</tr>
+<tr>
+<td style="text-align:center">优势</td>
+<td style="text-align:center">某个动作的预期表现，相对当前状态通常表现的差值</td>
+</tr>
+</tbody>
+</table>
+<p>本篇核心公式：</p>
+<div class="math block">
+\[\boxed{
+\nabla_\theta J
+=\mathbb E\left[(R-b)\nabla_\theta\log\pi_\theta(y\mid x)\right]
+}\]
+</div>
+<p>本篇学习闭环：<strong>只有结果评价 → 对生成概率求梯度 → REINFORCE → 高方差与粗粒度信用分配 → 状态价值预测与优势估计。</strong></p>
+<h2 id="延伸阅读">延伸阅读</h2>
+<p>如果已经能够完成例子和自测，可以进一步阅读下面的经典材料。原始论文有助于理解方法的提出，教材则便于将本篇内容放回完整的策略梯度框架中。</p>
+<ul>
+<li>Williams（1992），<em>Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning</em>：REINFORCE 的经典论文。</li>
+<li>Sutton 与 Barto，<em>Reinforcement Learning: An Introduction</em>，第 13 章：策略梯度、REINFORCE、baseline 与 Actor-Critic。</li>
+</ul>
+</div>
+    </article>
+  </main>
+    <aside class="reading-sidebar toc-sidebar" aria-label="文章目录">
+      <details id="outline" class="sidebar-panel" open hidden><summary>文章目录</summary><nav aria-label="文章目录"></nav></details>
+    </aside>
+  </div>
+</body>
+</html>
