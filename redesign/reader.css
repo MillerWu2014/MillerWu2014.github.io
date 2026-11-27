@@ -113,7 +113,7 @@
 .code-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid #d9dfd0; background: #e6eadf; color: #5b6853; font: .72rem/1.6 var(--mono); }
 .copy-code { color: #40583f; background: transparent; border: 1px solid #c8d1be; border-radius: 4px; padding: 3px 9px; cursor: pointer; font: inherit; }
 .copy-code:hover { background: #dbe3d1; }
-.prose table { display: block; width: fit-content; max-width: 100%; margin: 1.6em 0; overflow-x: auto; border-collapse: collapse; font: .9rem/1.75 'DM Sans', 'PingFang SC', sans-serif; }
+.prose table { display: block; width: fit-content; max-width: 100%; margin: 1.6em auto; overflow-x: auto; border-collapse: collapse; font: .9rem/1.75 'DM Sans', 'PingFang SC', sans-serif; }
 .prose th, .prose td { border: 1px solid #d8ddcf; padding: .65em .9em; }
 .prose th { background: #e8ecdf; font-weight: 600; }
 .prose tbody tr:nth-child(even) { background: #f0f1e9; }
