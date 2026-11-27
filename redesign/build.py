@@ -291,11 +291,27 @@ def main():
             "url": "articles/" + quote(filename),
         })
     posts.sort(key=lambda post: post["date"], reverse=True)
+    topics = json.loads((SITE / "topics.json").read_text(encoding="utf-8"))
+    reading_orders = {
+        topic["name"]: {
+            title: index
+            for index, title in enumerate(
+                title for group in topic["groups"] for title in group["articles"]
+            )
+        }
+        for topic in topics
+    }
     for post in posts:
+        reading_order = reading_orders.get(post["series"], {})
+        sidebar_posts = sorted(posts, key=lambda related: (
+            0 if related["series"] == post["series"] and related["title"] in reading_order else 1,
+            reading_order.get(related["title"], len(reading_order))
+            if related["series"] == post["series"] else len(reading_order),
+        ))
         groups = []
         for category in post["categories"]:
             links = []
-            for related in posts:
+            for related in sidebar_posts:
                 if category not in related["categories"]:
                     continue
                 current = ' aria-current="page"' if related["url"] == post["url"] else ""
